@@ -20,6 +20,8 @@
       }
     ],
     "paths": {
+      "@angelengineering/*": ["packages/*"],
+      "@angelengineering/flashlight": ["packages/flashlight/index.d.ts"],
       "@demo/shared": ["tools/demo/index.ts"]
     }
   },

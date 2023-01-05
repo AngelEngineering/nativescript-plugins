@@ -35,32 +35,21 @@ module.exports = {
           description: '⚆  Run Android  🤖',
         },
       },
-      '...Angular...': {
-        script: `npx cowsay "Test all the Angles!"`,
-        description: ` 🔻 Angular`,
-      },
-      'demo-angular': {
-        clean: {
-          script: 'nx run demo-angular:clean',
-          description: '⚆  Clean  🧹',
-        },
-        ios: {
-          script: 'nx run demo-angular:ios',
-          description: '⚆  Run iOS  ',
-        },
-        android: {
-          script: 'nx run demo-angular:android',
-          description: '⚆  Run Android  🤖',
-        },
-      },
     },
     '⚙️': {
-      script: `npx cowsay "@nativescript/* packages will keep your ⚙️ cranking"`,
-      description: '_____________  @nativescript/*  _____________',
+      script: `npx cowsay "@angelengineering/* packages will keep your ⚙️ cranking"`,
+      description: '_____________  @angelengineering/*  _____________',
     },
     // packages
     // build output is always in dist/packages
-    '@nativescript': {
+    '@angelengineering': {
+      // @angelengineering/flashlight
+      flashlight: {
+        build: {
+          script: 'nx run flashlight:build.all',
+          description: '@angelengineering/flashlight: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -71,8 +60,12 @@ module.exports = {
       description: '_____________  Focus (VS Code supported)  _____________',
     },
     focus: {
+      flashlight: {
+        script: 'nx run flashlight:focus',
+        description: 'Focus on @angelengineering/flashlight',
+      },
       reset: {
-        script: 'nx g @nativescript/plugin-tools:focus-packages',
+        script: 'nx g @angelengineering/plugin-tools:focus-packages',
         description: 'Reset Focus',
       },
     },

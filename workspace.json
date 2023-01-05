@@ -2,7 +2,7 @@
   "version": 2,
   "projects": {
     "demo": "apps/demo",
-    "demo-angular": "apps/demo-angular"
+    "flashlight": "packages/flashlight"
   },
   "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }
