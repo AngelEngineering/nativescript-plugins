@@ -24,7 +24,17 @@
     {
       "files": ["*.ts", "*.tsx"],
       "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier", "plugin:@nrwl/nx/typescript"],
-      "rules": {}
+      "rules": {
+        "no-unused-vars": "warn",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "prefer-const": [
+          "warn",
+          {
+            "destructuring": "any",
+            "ignoreReadBeforeAssign": false
+          }
+        ]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],

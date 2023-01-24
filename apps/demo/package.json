@@ -4,8 +4,10 @@
   "license": "SEE LICENSE IN <your-license-filename>",
   "repository": "<fill-your-repository-here>",
   "dependencies": {
+    "@angelengineering/filepicker": "file:../../packages/filepicker",
+    "@angelengineering/flashlight": "file:../../packages/flashlight",
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
-    "@angelengineering/flashlight": "file:../../packages/flashlight"
+    "@nstudio/nativescript-checkbox": "^2.0.5"
   },
   "devDependencies": {
     "@nativescript/android": "~8.4.0",

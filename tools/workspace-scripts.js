@@ -50,6 +50,13 @@ module.exports = {
           description: '@angelengineering/flashlight: Build',
         },
       },
+      // @angelengineering/filepicker
+      filepicker: {
+        build: {
+          script: 'nx run filepicker:build.all',
+          description: '@angelengineering/filepicker: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -63,6 +70,10 @@ module.exports = {
       flashlight: {
         script: 'nx run flashlight:focus',
         description: 'Focus on @angelengineering/flashlight',
+      },
+      filepicker: {
+        script: 'nx run filepicker:focus',
+        description: 'Focus on @angelengineering/filepicker',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',

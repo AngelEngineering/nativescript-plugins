@@ -6,6 +6,7 @@
     <ScrollView class="h-full">
       <StackLayout>
         <Button text="flashlight" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
+        <Button text="filepicker" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
       </StackLayout>
     </ScrollView>
   </StackLayout>
