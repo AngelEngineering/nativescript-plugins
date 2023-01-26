@@ -423,6 +423,10 @@ function getMediaTypes(type: MediaType): Array<string> {
     // log('adding document type');
     fileTypes = fileTypes.concat(MediaFileTypes[MediaType.DOCUMENT]);
   }
+  if (type & MediaType.ARCHIVE) {
+    // log('adding archive type');
+    fileTypes = fileTypes.concat(MediaFileTypes[MediaType.ARCHIVE]);
+  }
   // log('final type array:', fileTypes);
   return fileTypes;
 }
@@ -430,9 +434,11 @@ function getMediaTypes(type: MediaType): Array<string> {
 // iOS File types for document picker
 //https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html
 //https://escapetech.eu/manuals/qdrop/uti.html
+//node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreServices.d.ts
 const MediaFileTypes: { [index: string]: string[] } = {
-  [MediaType.IMAGE]: [kUTTypeImage, kUTTypeBMP, kUTTypeGIF, kUTTypeJPEG, kUTTypeJPEG2000, kUTTypePNG, kUTTypeQuickTimeImage, kUTTypeRawImage, kUTTypeScalableVectorGraphics, kUTTypeTIFF, 'public.image', 'public.camera-raw-image'],
-  [MediaType.AUDIO]: [kUTTypeMP3, kUTTypeMPEG4Audio, kUTTypeAudio, kUTTypeAppleProtectedMPEG4Audio, kUTTypeMIDIAudio, kUTTypeWaveformAudio, 'public.aifc-audio', 'public.aiff-audio', 'com.microsoft.waveform-​audio', 'com.microsoft.windows-​media-wma', 'public.audio'],
-  [MediaType.VIDEO]: [kUTTypeVideo, kUTTypeMovie, kUTTypeAudiovisualContent, kUTTypeAVIMovie, kUTTypeAppleProtectedMPEG4Audio, kUTTypeAppleProtectedMPEG4Video, kUTTypeMPEG, kUTTypeMPEG2TransportStream, kUTTypeMPEG2Video, kUTTypeMPEG4, kUTTypeMPEG4Audio, kUTTypeQuickTimeMovie, 'public.movie', 'public.audiovisual-content'],
-  [MediaType.DOCUMENT]: [kUTTypePDF, kUTTypeText, kUTTypePresentation, kUTTypeRTF, kUTTypeRTFD, kUTTypeSpreadsheet, 'com.microsoft.word.doc', 'com.microsoft.word.docx', 'org.openxmlformats.wordprocessingml.document', 'com.microsoft.powerpoint.ppt', 'com.microsoft.powerpoint.pptx', 'org.openxmlformats.presentationml.presentation', 'public.rtf', 'com.adobe.postscript', 'com.adobe.encapsulated-postscript', 'public.presentation', 'public.text'],
+  [MediaType.AUDIO]: [kUTTypeMP3, kUTTypeMPEG4Audio, kUTTypeAudio, kUTTypeAudioInterchangeFileFormat, kUTTypeAppleProtectedMPEG4Audio, kUTTypeMIDIAudio, kUTTypeWaveformAudio, 'public.aifc-audio', 'public.aiff-audio', 'com.microsoft.waveform-​audio', 'com.microsoft.windows-​media-wma', 'public.audio', 'public.ulaw-audio', 'com.apple.coreaudio-​format', kUTTypeLivePhoto],
+  [MediaType.IMAGE]: [kUTTypeImage, kUTTypeBMP, kUTTypeGIF, kUTTypeJPEG, kUTTypeJPEG2000, kUTTypePNG, kUTTypeQuickTimeImage, kUTTypeRawImage, kUTTypeScalableVectorGraphics, kUTTypeTIFF, 'public.image', 'public.camera-raw-image', kUTTypePICT, kUTTypeAppleICNS, kUTTypeICO],
+  [MediaType.VIDEO]: [kUTTypeVideo, kUTTypeMovie, kUTTypeAudiovisualContent, kUTTypeAVIMovie, kUTTypeAppleProtectedMPEG4Video, kUTTypeMPEG, kUTTypeMPEG2TransportStream, kUTTypeMPEG2Video, kUTTypeMPEG4, kUTTypeQuickTimeMovie, 'public.movie', 'public.audiovisual-content', 'public.avi', 'public.3gpp', 'public.3gpp2', kUTTypeLivePhoto],
+  [MediaType.DOCUMENT]: [kUTTypePDF, kUTTypeText, kUTTypePlainText, kUTTypeUTF8PlainText, kUTTypeUTF16ExternalPlainText, kUTTypeUTF16PlainText, kUTTypeUTF8TabSeparatedText, kUTTypePresentation, kUTTypeRTF, kUTTypeRTFD, kUTTypeSpreadsheet, kUTTypeHTML, kUTTypeXML, kUTTypeSourceCode, 'com.microsoft.word.doc', 'com.microsoft.word.docx', 'org.openxmlformats.wordprocessingml.document', 'com.microsoft.powerpoint.ppt', 'com.microsoft.powerpoint.pptx', 'org.openxmlformats.presentationml.presentation', 'public.rtf', 'com.adobe.postscript', 'com.adobe.encapsulated-postscript', 'public.presentation', 'public.text', kUTTypeCommaSeparatedText, kUTTypeDelimitedText, kUTTypeElectronicPublication, kUTTypeFlatRTFD, kUTTypeScript, kUTTypeShellScript],
+  [MediaType.ARCHIVE]: [kUTTypeArchive, kUTTypeBzip2Archive, kUTTypeGNUZipArchive, 'com.sun.java-archive', 'org.gnu.gnu-tar-archive', 'public.tar-archive', 'org.gnu.gnu-zip-archive', 'org.gnu.gnu-zip-tar-archive', 'com.apple.binhex-archive', 'com.apple.macbinary-​archive', 'public.cpio-archive', 'com.pkware.zip-archive', kUTTypeWebArchive, kUTTypeZipArchive],
 };

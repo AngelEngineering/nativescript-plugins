@@ -111,6 +111,10 @@ function getMediaTypes(types: MediaType) {
     console.log('adding document types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.DOCUMENT]);
   }
+  if (types & MediaType.ARCHIVE) {
+    console.log('adding archive type');
+    fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.ARCHIVE]);
+  }
   console.log('final types array:', fileTypes);
   let mimeTypes = fileTypes.map((s) => android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(s)).filter((s) => !!s);
   //convert to android type syntax
@@ -160,16 +164,17 @@ function getActivity(): android.app.Activity {
 }
 
 //Android file mime types reference
+//https://developer.android.com/reference/androidx/media3/common/MimeTypes
+//https://android.googlesource.com/platform/external/mime-support/+/9817b71a54a2ee8b691c1dfa937c0f9b16b3473c/mime.types
+//https://developer.android.com/guide/topics/media/media-formats
 //http://androidxref.com/4.4.4_r1/xref/frameworks/base/media/java/android/media/MediaFile.java#174
 //http://androidxref.com/4.4.4_r1/xref/libcore/luni/src/main/java/libcore/net/MimeUtils.java
-//set of all file types server should accept for processing, although Android may not have mime types for each one
 const MediaFileTypeExts: { [index: string]: string[] } = {
-  [MediaType.IMAGE]: ['jpg', 'jpeg', 'pjpeg', 'pjp', 'kjp2', 'j2k', 'jpf', 'jpx', 'jpm', 'mj2', 'ico', 'png', 'svg', 'gif', 'tif', 'tiff', 'psd', 'ai', 'eps', 'raw', 'webp', 'heif', 'heic', 'indd', 'ind', 'indt', 'jpe', 'jif', 'jfif', 'jfi', 'arw', 'cr2', 'k25', 'bmp', 'dib'],
-  [MediaType.AUDIO]: ['wav', 'wave', 'mp2', 'g723', 'mp3', 'm4a', 'mpa', 'aac', 'aif', 'aifc', 'aiff', 'wma', 'oga', 'flac', 'alac', 'pcm', 'au', 'gsm', 'ra', 'tta', 'webm', 'weba', 'mid', 'ac3', 'mpu', '3ga', 'm4p'],
-  [MediaType.VIDEO]: ['3gp', '3g2', 'asf', 'avi', 'flv', 'f4v', 'swf', 'mkv', 'mov', 'mpeg', 'mpe', 'mp2', 'mp4', 'mpv', 'm4p', 'm1v', 'm2v', 'm4v', 'mts', 'ogg', 'ogv', 'qt', 'rm', 'ts', 'vob', 'wmv', 'webm', 'avhcd'],
-  // caption uploads not currently supported by app
-  // [MediaType.CAPTION]: ['dfxp', 'srt', 'sami', 'sbv', 'scc'],
-  [MediaType.DOCUMENT]: ['doc', 'docx', 'odt', 'pdf', 'ppt', 'pptx', 'rtf', 'wpd', 'xls', 'xlsx', 'odp'],
+  [MediaType.AUDIO]: ['wav', 'wave', 'mp2', 'g723', 'mp3', 'm4a', 'mpa', 'mpga', 'mpega', 'aac', 'aif', 'aifc', 'aiff', 'wma', 'wax', 'oga', 'flac', 'alac', 'pcm', 'au', 'gsm', 'ra', 'rm', 'ram', 'tta', 'webm', 'weba', 'mid', 'midi', 'ac3', 'mpu', '3ga', 'm4p', 'amr', 'amb', 'mka', 'awb', 'snd', 'sd2'],
+  [MediaType.IMAGE]: ['jpg', 'jpeg', 'jpe', 'jp2', 'jpg2', 'pjpeg', 'pjp', 'kjp2', 'j2k', 'jpf', 'jpx', 'jpm', 'mj2', 'ico', 'png', 'svg', 'svgz', 'gif', 'tif', 'tiff', 'psd', 'ai', 'eps', 'ps', 'raw', 'webp', 'wbmp', 'heif', 'heic', 'ief', 'indd', 'ind', 'indt', 'jif', 'jfif', 'jfi', 'arw', 'cr2', 'crw', 'k25', 'bmp', 'dib', 'odg', 'cur', 'ief', 'pcx', 'odi', 'art', 'jng', 'nef', 'orf', 'avif'],
+  [MediaType.VIDEO]: ['3gp', '3gpp', '3g2', '3gpp2', 'asf', 'avi', 'fli', 'flv', 'f4v', 'swf', 'mkv', 'mov', 'mpeg', 'mpe', 'mp4', 'mpv', 'm4p', 'ts', 'm1v', 'm2v', 'm4v', 'mts', 'ogg', 'ogv', 'qt', 'rm', 'vob', 'wmv', 'webm', 'avhcd'],
+  [MediaType.DOCUMENT]: ['doc', 'docx', 'dot', 'dotx', 'pdf', 'pot', 'potx', 'pps', 'ppsx', 'ppt', 'pptx', 'rtf', 'wpd', 'xlb', 'xls', 'xlsx', 'xlt', 'xltx', 'odp', 'ods', 'odt', 'txt', 'htm', 'html', 'shtml', 'xhtml', 'md', 'latex', 'ics', 'icz', 'csv', 'css', 'asc', 'text', 'diff', 'rtx', 'tsv', 'xml', 'xsd', 'epub', 'mobi', 'azw', 'wpd', 'wp5', 'vcf', 'vcard', 'abw', 'js', 'json', 'php'],
+  [MediaType.ARCHIVE]: ['zip', 'zipx', 'rar', 'gtar', 'iso', 'taz', 'gz', 'tar', 'tgz', 'jar', '7z', '7zip', 'dmg', 'lzh', 'lzx', 'lha', 'wz', 'arc', 'bz', 'bz2', 'pkg', 'ipa', 'rpm', 'pz', 'z'],
 };
 
 // Not sure why DocumentsContact is not defined in Android types yet?
