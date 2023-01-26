@@ -3,10 +3,6 @@
 <plist version="1.0">
 <dict>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Requires access to photo library.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>Requires access to camera.</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Requires access to microphone.</string>
+    <string>Requires access to photo library.</string>    
 </dict>
 </plist>

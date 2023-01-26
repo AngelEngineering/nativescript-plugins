@@ -7,7 +7,7 @@
   <StackLayout class="p-20">
     <ScrollView class="h-full">
       <StackLayout>
-        <CheckBox:CheckBox text="Multiple items?" id="demoCheckbox" />
+        <CheckBox:CheckBox color="black" text="Multiple items?" id="demoCheckbox" />
         <Button text="Pick Documents" tap="{{ pickDocs }}" class="btn btn-primary"/>
         <Button text="Pick Images" tap="{{ pickImages }}" class="btn btn-primary"/>
         <Button text="Pick Video" tap="{{ pickVideos }}" class="btn btn-primary"/>
