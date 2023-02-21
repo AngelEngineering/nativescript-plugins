@@ -16,7 +16,7 @@ export class Filepicker extends FilepickerCommon {
   protected _iosGalleryPickerController: UIImagePickerController;
   protected _iosPHPickerController: any; //for iOS<14 we use UIImagePicker. ios14+ uses PHPicker
 
-  public showPicker(type: MediaType, multiple: boolean): Promise<[FPFile]> {
+  public showPicker(type: MediaType, multiple: boolean): Promise<FPFile[]> {
     // console.log('showPicker() ', type, multiple);
 
     if (type == MediaType.IMAGE || type == MediaType.VIDEO || type == MediaType.IMAGE + MediaType.VIDEO) {
@@ -149,7 +149,17 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
     let success = NSFileManager.defaultManager.copyItemAtPathToPathError(url.path, tmppath);
     // log('copy success?', success);
     const file = File.fromPath(tmppath);
-    file['originalFilename'] = url.lastPathComponent;
+    // persist original file name and extension in tmp file
+    const originalFilename = url.lastPathComponent;
+    const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
+    if (File.exists(newPath)) {
+      // remove file if it exists
+      File.fromPath(newPath).removeSync();
+    }
+    // add originalFilename property
+    file['originalFilename'] = originalFilename;
+    // update name so uploaded file will have the same name as the original file
+    file.renameSync(originalFilename);
     url.stopAccessingSecurityScopedResource();
     controller.dismissViewControllerAnimatedCompletion(true, null);
     this._resolve([file]);
@@ -158,7 +168,7 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
 
   //if multiple selections allowed:
   documentPickerDidPickDocumentsAtURLs(controller: UIDocumentPickerViewController, urls: NSArray<NSURL>): void {
-    const files = [];
+    const files: File[] = [];
     //This view can't display an UIActivityIndicatorView inside it using our usual ios spinner approach,
     //    but picker shows a small spinner on the "Open" button while processing
     //Process picker results
@@ -174,8 +184,20 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
       let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(url.path, tmppath);
       // log('copy success?', suc);
       const file = File.fromPath(tmppath);
-      file['originalFilename'] = url.lastPathComponent;
-      files.push(file);
+      // file['originalFilename'] = url.lastPathComponent;
+      // files.push(file);
+      // persist original file name and extension in tmp file
+      const originalFilename = url.lastPathComponent;
+      const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
+      if (File.exists(newPath)) {
+        // remove file if it exists
+        File.fromPath(newPath).removeSync();
+      }
+      // add originalFilename property
+      file['originalFilename'] = originalFilename;
+      // update name so uploaded file will have the same name as the original file
+      file.renameSync(originalFilename);
+      files.push(file as File);
       if (access) url.stopAccessingSecurityScopedResource();
     }
     controller.dismissViewControllerAnimatedCompletion(true, null);
@@ -307,7 +329,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
   pickerDidFinishPicking(picker: PHPickerViewController, results: NSArray<PHPickerResult>): void {
     // log('>>> imagePickerControllerDidFinishPickingMediaWithInfo >>>');
 
-    let files = [];
+    let files: File[] = [];
     let waitCount = results.count;
     let errorCount = 0;
     let livePhotoFound = false;
@@ -348,7 +370,18 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
             let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(result.path, tmppath);
             // log('copy success?', suc);
             const file = File.fromPath(tmppath);
-            file['originalFilename'] = result.lastPathComponent;
+            // file['originalFilename'] = result.lastPathComponent;
+            // persist original file name and extension in tmp file
+            const originalFilename = result.lastPathComponent;
+            const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
+            if (File.exists(newPath)) {
+              // remove file if it exists
+              File.fromPath(newPath).removeSync();
+            }
+            // add originalFilename property
+            file['originalFilename'] = originalFilename;
+            // update name so uploaded file will have the same name as the original file
+            file.renameSync(originalFilename);
             // log('added file', file);
             files.push(file);
           }

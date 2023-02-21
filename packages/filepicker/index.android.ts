@@ -18,19 +18,20 @@ export class Filepicker extends FilepickerCommon {
   /**
    * @function showPicker
    */
-  public showPicker(type: MediaType, multiple: boolean): Promise<[FPFile]> {
+  public showPicker(type: MediaType, multiple: boolean): Promise<FPFile[]> {
     console.log('showPicker() type:', type);
     return new Promise((resolve, reject) => {
       // callback for androidActivity.showActivityForResult
       function onResult(e: AndroidActivityResultEventData): void {
         if (e.requestCode != Filepicker.FILE_PICKER_CODE) return;
+        if (e.resultCode == android.app.Activity.RESULT_CANCELED) return;
         if (e.resultCode != android.app.Activity.RESULT_OK) {
           removeResultListener();
           reject(new Error('ERROR: VTFilePicker - ' + e.resultCode));
           return;
         }
         try {
-          let results;
+          let results: FPFile[];
           const clipData = e.intent.getClipData() as android.content.ClipData;
           if (clipData) {
             results = [];
@@ -42,7 +43,7 @@ export class Filepicker extends FilepickerCommon {
               const file = getNSFile(item.getUri(), fileName);
               if (file) {
                 file['originalFilename'] = fileName;
-                results.push(file);
+                results.push(file as FPFile);
               }
             }
           } else {
@@ -52,7 +53,7 @@ export class Filepicker extends FilepickerCommon {
             const file = getNSFile(uri, fileName);
             if (file) {
               file['originalFilename'] = fileName;
-              results = [file];
+              results = [file as FPFile];
             } else return reject(null);
           }
           removeResultListener();
@@ -149,9 +150,14 @@ function getNSFile(uri, fileName) {
   let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
   let filePrefix = fileSuffix.length > 1 ? fileName.slice(0, fileName.length - fileSuffix.length) : fileName;
   let outputFilePath = TempFile.getPath(filePrefix, fileSuffix);
-  const success = copyFileFromUri(uri, outputFilePath);
+  const newPath = outputFilePath.replace(/\/[^/]+$/, `/${fileName}`);
+  if (File.exists(newPath)) {
+    // remove file if it exists
+    File.fromPath(newPath).removeSync();
+  }
+  const success = copyFileFromUri(uri, newPath);
   if (!success) return null;
-  const file = File.fromPath(outputFilePath);
+  const file = File.fromPath(newPath);
   return file;
 }
 
