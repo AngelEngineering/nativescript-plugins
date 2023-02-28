@@ -1,11 +1,14 @@
 {
   "main": "./src/app.ts",
-  "description": "NativeScript Application",
-  "license": "SEE LICENSE IN <your-license-filename>",
-  "repository": "<fill-your-repository-here>",
+  "description": "NativeScript Plugins Demo",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": "https://github.com/AngelEngineering/nativescript-plugins",
   "dependencies": {
+    "@angelengineering/filepicker": "file:../../packages/filepicker",
+    "@angelengineering/flashlight": "file:../../packages/flashlight",
+    "@nativescript-community/perms": "^2.2.25",
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
-    "@angelengineering/flashlight": "file:../../packages/flashlight"
+    "@nstudio/nativescript-checkbox": "^2.0.5"
   },
   "devDependencies": {
     "@nativescript/android": "~8.4.0",

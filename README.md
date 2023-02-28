@@ -1,10 +1,4 @@
-# @angelengineering/\* plugins
-
-```
-npm run setup
-npm start
-```
-
+- [@angelengineering/filepicker](packages/filepicker/README.md)
 - [@angelengineering/flashlight](packages/flashlight/README.md)
 
 # How to use?

@@ -1,0 +1,23 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  xmlns:CheckBox="@nstudio/nativescript-checkbox" navigatingTo="navigatingTo" class="page">
+  <Page.actionBar>
+    <ActionBar title="filepicker" icon="" class="action-bar">
+    </ActionBar>
+  </Page.actionBar>
+  <StackLayout class="p-20">
+    <ScrollView class="h-full">
+      <StackLayout>
+        <CheckBox:CheckBox color="black" text="Multiple items?" id="demoCheckbox" checked="true" />
+        <Button text="Pick Documents" tap="{{ pickDocs }}" class="btn btn-primary"/>
+        <Button text="Pick Images" tap="{{ pickImages }}" class="btn btn-primary"/>
+        <Button text="Pick Video" tap="{{ pickVideos }}" class="btn btn-primary"/>
+        <Button text="Pick Audio" tap="{{ pickAudio }}" class="btn btn-primary"/>
+        <Button text="Pick Archives" tap="{{ pickArchives }}" class="btn btn-primary"/>
+        <Button text="Pick All" tap="{{ pickAll }}" class="btn btn-primary"/>
+        <Button text="Pick Images and Videos" tap="{{ pickImageVideo }}" class="btn btn-primary"/>
+        <Label text="Picked files:"/>
+        <StackLayout id="pickedFiles"/>
+      </StackLayout>
+    </ScrollView>
+  </StackLayout>
+</Page>

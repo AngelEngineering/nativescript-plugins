@@ -2,7 +2,8 @@
   "version": 2,
   "projects": {
     "demo": "apps/demo",
-    "flashlight": "packages/flashlight"
+    "flashlight": "packages/flashlight",
+    "filepicker": "packages/filepicker"
   },
   "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }
