@@ -1,9 +1,8 @@
-import { FilepickerCommon, MediaType, FPFile } from './common';
-import { Application, action, ActionOptions, File, Color } from '@nativescript/core';
+import { FilepickerCommon, MediaType } from './common';
+import { Application, action, ActionOptions, File } from '@nativescript/core';
 import { iOSNativeHelper } from '@nativescript/core/utils';
 import { AssetDownloader, TempFile } from './files';
 
-export { FPFile } from './common';
 export { MediaType } from './common';
 export { getFreeMBs } from './common';
 
@@ -16,7 +15,7 @@ export class Filepicker extends FilepickerCommon {
   protected _iosGalleryPickerController: UIImagePickerController;
   protected _iosPHPickerController: any; //for iOS<14 we use UIImagePicker. ios14+ uses PHPicker
 
-  public showPicker(type: MediaType, multiple: boolean): Promise<FPFile[]> {
+  public showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
     // console.log('showPicker() ', type, multiple);
 
     if (type == MediaType.IMAGE || type == MediaType.VIDEO || type == MediaType.IMAGE + MediaType.VIDEO) {
@@ -51,7 +50,7 @@ export class Filepicker extends FilepickerCommon {
     }
   }
 
-  private PHPicker(type: MediaType, multiple: boolean): Promise<[FPFile]> {
+  private PHPicker(type: MediaType, multiple: boolean): Promise<[File]> {
     return new Promise((resolve, reject) => {
       console.log('multiple?', multiple);
       const config: PHPickerConfiguration = PHPickerConfiguration.new();
@@ -65,7 +64,7 @@ export class Filepicker extends FilepickerCommon {
     });
   }
 
-  private ImgPicker(type: MediaType): Promise<[FPFile]> {
+  private ImgPicker(type: MediaType): Promise<[File]> {
     return new Promise((resolve, reject) => {
       this._iosGalleryPickerController = UIImagePickerController.new();
       let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
@@ -81,7 +80,7 @@ export class Filepicker extends FilepickerCommon {
     });
   }
 
-  private DocPicker(type: MediaType, multiple: boolean): Promise<[FPFile]> {
+  private DocPicker(type: MediaType, multiple: boolean): Promise<[File]> {
     return new Promise((resolve, reject) => {
       let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
       this._iosDocumentPickerController = UIDocumentPickerViewController.alloc().initWithDocumentTypesInMode(

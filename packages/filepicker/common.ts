@@ -1,5 +1,4 @@
 import { Observable, File } from '@nativescript/core';
-
 export const enum MediaType {
   IMAGE = 0x01,
   AUDIO = 0x02,
@@ -8,16 +7,10 @@ export const enum MediaType {
   ARCHIVE = 0x10,
   ALL = IMAGE | AUDIO | VIDEO | DOCUMENT | ARCHIVE,
 }
-
-export declare type FPFile = File & {
-  originalFilename: string;
-};
-
 export class FilepickerCommon extends Observable {
-  public showPicker(type: MediaType, multiple: boolean): Promise<FPFile[]> {
+  public showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
     throw new Error('"showPicker" has not been implemented');
   }
 }
-
 export { getFreeMBs } from './storage';
 export { TempFile } from './files';

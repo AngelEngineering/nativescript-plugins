@@ -1,8 +1,9 @@
-import { EventData, Page, Frame, StackLayout, GridLayout, Color, Label, Image } from '@nativescript/core';
+import { EventData, Page, File, Frame, StackLayout, GridLayout, Color, Label, Image, alert } from '@nativescript/core';
 import { DemoSharedFilepicker } from '@demo/shared';
-import { Filepicker, FPFile, MediaType, getFreeMBs } from '@angelengineering/filepicker';
+import { Filepicker, MediaType, getFreeMBs } from '@angelengineering/filepicker';
 import { CheckBox } from '@nstudio/nativescript-checkbox';
 import { TempFile } from '@angelengineering/filepicker/files';
+import { check as checkPermission, request as requestPermission } from '@nativescript-community/perms';
 
 let picker = new Filepicker();
 
@@ -13,8 +14,9 @@ export function navigatingTo(args: EventData) {
 
 export class DemoModel extends DemoSharedFilepicker {
   async pickDocs() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
+
     try {
       pickedFiles = await picker.showPicker(MediaType.DOCUMENT, checkBox.checked);
     } catch (err) {
@@ -23,19 +25,29 @@ export class DemoModel extends DemoSharedFilepicker {
       this.handleFiles(pickedFiles);
     }
   }
+
   async pickImages() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
-    try {
-      pickedFiles = await picker.showPicker(MediaType.IMAGE, checkBox.checked);
-    } catch (err) {
-      if (err) alert(err?.message);
-    } finally {
-      this.handleFiles(pickedFiles);
-    }
+
+    checkPermission('photo').then(async (permres) => {
+      if (permres[0] == 'undetermined' || permres[0] == 'authorized') {
+        await requestPermission('photo').then(async (result) => {
+          if (result[0] == 'authorized') {
+            try {
+              pickedFiles = await picker.showPicker(MediaType.IMAGE, checkBox.checked);
+            } catch (err) {
+              if (err) alert(err?.message);
+            } finally {
+              this.handleFiles(pickedFiles);
+            }
+          } else alert("No permission for files, can't open picker");
+        });
+      } else alert("No permission for files, can't open picker. Grant this permission in app settings first");
+    });
   }
   async pickVideos() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
       let tempPath = TempFile.getPath('tempfile', 'tmp');
@@ -54,7 +66,7 @@ export class DemoModel extends DemoSharedFilepicker {
     }
   }
   async pickAudio() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
       pickedFiles = await picker.showPicker(MediaType.AUDIO, checkBox.checked);
@@ -65,7 +77,7 @@ export class DemoModel extends DemoSharedFilepicker {
     }
   }
   async pickArchives() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
       pickedFiles = await picker.showPicker(MediaType.ARCHIVE, checkBox.checked);
@@ -76,7 +88,7 @@ export class DemoModel extends DemoSharedFilepicker {
     }
   }
   async pickAll() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
       pickedFiles = await picker.showPicker(MediaType.ALL, checkBox.checked);
@@ -87,7 +99,7 @@ export class DemoModel extends DemoSharedFilepicker {
     }
   }
   async pickImageVideo() {
-    let pickedFiles: FPFile[];
+    let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
       pickedFiles = await picker.showPicker(MediaType.IMAGE + MediaType.VIDEO, checkBox.checked);
@@ -98,12 +110,12 @@ export class DemoModel extends DemoSharedFilepicker {
     }
   }
 
-  handleFiles(results: FPFile[]): void {
+  handleFiles(results: File[]): void {
     console.log('showed the picker, results:', results);
     const itemList: StackLayout = Frame.topmost().getViewById('pickedFiles');
     itemList.removeChildren();
     if (results)
-      results.forEach((file: FPFile) => {
+      results.forEach((file: File) => {
         const fileContainer = new GridLayout();
         fileContainer['rows'] = 'auto';
         fileContainer['columns'] = 'auto, 8, *';
@@ -116,7 +128,7 @@ export class DemoModel extends DemoSharedFilepicker {
         textContainer['row'] = 0;
         textContainer['col'] = 2;
         const fileLabel = new Label();
-        fileLabel.text = file.originalFilename;
+        fileLabel.text = file['originalFilename'];
         fileLabel.textWrap = true;
         fileLabel.color = new Color('black');
         fileLabel.row = 0;

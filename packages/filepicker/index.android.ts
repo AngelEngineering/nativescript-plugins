@@ -1,8 +1,7 @@
-import { FilepickerCommon, MediaType, FPFile } from './common';
-import { AndroidApplication, AndroidActivityResultEventData, Application, Device, knownFolders, Folder, path, File } from '@nativescript/core';
+import { FilepickerCommon, MediaType } from './common';
+import { AndroidApplication, AndroidActivityResultEventData, Application, Device, File } from '@nativescript/core';
 import { TempFile } from './files';
 
-export { FPFile } from './common';
 export { MediaType } from './common';
 export { getFreeMBs } from './common';
 
@@ -18,7 +17,7 @@ export class Filepicker extends FilepickerCommon {
   /**
    * @function showPicker
    */
-  public showPicker(type: MediaType, multiple: boolean): Promise<FPFile[]> {
+  public showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
     console.log('showPicker() type:', type);
     return new Promise((resolve, reject) => {
       // callback for androidActivity.showActivityForResult
@@ -31,7 +30,7 @@ export class Filepicker extends FilepickerCommon {
           return;
         }
         try {
-          let results: FPFile[];
+          let results: File[];
           const clipData = e.intent.getClipData() as android.content.ClipData;
           if (clipData) {
             results = [];
@@ -43,7 +42,7 @@ export class Filepicker extends FilepickerCommon {
               const file = getNSFile(item.getUri(), fileName);
               if (file) {
                 file['originalFilename'] = fileName;
-                results.push(file as FPFile);
+                results.push(file as File);
               }
             }
           } else {
@@ -53,7 +52,7 @@ export class Filepicker extends FilepickerCommon {
             const file = getNSFile(uri, fileName);
             if (file) {
               file['originalFilename'] = fileName;
-              results = [file as FPFile];
+              results = [file as File];
             } else return reject(null);
           }
           removeResultListener();
