@@ -59,7 +59,7 @@ let picker = new Filepicker();
 </manifest>
 ```
 
-> **NOTE**: Using the plugin on iOS to select from the Photos gallery requires photo library permission. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding the following key:
+> **NOTE**: Using the plugin on iOS to select from the Photos gallery requires user to grant photo library permission first in order to access the selected image, otherwise it will return without any files. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding the following key:
 
 ```xml
 <key>NSPhotoLibraryUsageDescription</key>

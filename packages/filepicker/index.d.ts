@@ -1,9 +1,12 @@
-import { FilepickerCommon } from './common';
-import { MediaType, File } from './common';
+import { File } from '@nativescript/core';
 
-export declare class Filepicker extends FilepickerCommon {
-  showPicker(type: MediaType, multiple: boolean): Promise<File[]>;
+export enum MediaType {
+  IMAGE = 0x01,
+  AUDIO = 0x02,
+  VIDEO = 0x04,
+  DOCUMENT = 0x08,
+  ARCHIVE = 0x10,
+  ALL = IMAGE | AUDIO | VIDEO | DOCUMENT | ARCHIVE,
 }
-
-export { MediaType } from './common';
-export { getFreeMBs } from './common';
+export function showPicker(type: MediaType, multiple: boolean): Promise<File[]>;
+export function getFreeMBs(filepath: string): number;

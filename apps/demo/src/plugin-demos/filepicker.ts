@@ -1,11 +1,9 @@
 import { EventData, Page, File, Frame, StackLayout, GridLayout, Color, Label, Image, alert } from '@nativescript/core';
 import { DemoSharedFilepicker } from '@demo/shared';
-import { Filepicker, MediaType, getFreeMBs } from '@angelengineering/filepicker';
+import { showPicker, MediaType, getFreeMBs } from '@angelengineering/filepicker';
 import { CheckBox } from '@nstudio/nativescript-checkbox';
 import { TempFile } from '@angelengineering/filepicker/files';
 import { check as checkPermission, request as requestPermission } from '@nativescript-community/perms';
-
-let picker = new Filepicker();
 
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
@@ -18,7 +16,7 @@ export class DemoModel extends DemoSharedFilepicker {
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
 
     try {
-      pickedFiles = await picker.showPicker(MediaType.DOCUMENT, checkBox.checked);
+      pickedFiles = await showPicker(MediaType.DOCUMENT, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
@@ -35,7 +33,7 @@ export class DemoModel extends DemoSharedFilepicker {
         await requestPermission('photo').then(async (result) => {
           if (result[0] == 'authorized') {
             try {
-              pickedFiles = await picker.showPicker(MediaType.IMAGE, checkBox.checked);
+              pickedFiles = await showPicker(MediaType.IMAGE, checkBox.checked);
             } catch (err) {
               if (err) alert(err?.message);
             } finally {
@@ -43,7 +41,7 @@ export class DemoModel extends DemoSharedFilepicker {
             }
           } else alert("No permission for files, can't open picker");
         });
-      } else alert("No permission for files, can't open picker. Grant this permission in app settings first");
+      } else alert("No permission for files, can't open  Grant this permission in app settings first");
     });
   }
   async pickVideos() {
@@ -57,7 +55,7 @@ export class DemoModel extends DemoSharedFilepicker {
       console.log('temp directory path: ', tempPath);
       if (freeSpace > 400) {
         //check before allowing picker to create temp copy of selected files
-        pickedFiles = await picker.showPicker(MediaType.VIDEO, checkBox.checked);
+        pickedFiles = await showPicker(MediaType.VIDEO, checkBox.checked);
       } else alert('Low free space on device, picking not allowed');
     } catch (err) {
       if (err) alert(err?.message);
@@ -69,7 +67,7 @@ export class DemoModel extends DemoSharedFilepicker {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await picker.showPicker(MediaType.AUDIO, checkBox.checked);
+      pickedFiles = await showPicker(MediaType.AUDIO, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
@@ -80,7 +78,7 @@ export class DemoModel extends DemoSharedFilepicker {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await picker.showPicker(MediaType.ARCHIVE, checkBox.checked);
+      pickedFiles = await showPicker(MediaType.ARCHIVE, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
@@ -91,7 +89,7 @@ export class DemoModel extends DemoSharedFilepicker {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await picker.showPicker(MediaType.ALL, checkBox.checked);
+      pickedFiles = await showPicker(MediaType.ALL, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
@@ -102,7 +100,7 @@ export class DemoModel extends DemoSharedFilepicker {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await picker.showPicker(MediaType.IMAGE + MediaType.VIDEO, checkBox.checked);
+      pickedFiles = await showPicker(MediaType.IMAGE + MediaType.VIDEO, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
