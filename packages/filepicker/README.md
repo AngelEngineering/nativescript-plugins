@@ -2,8 +2,9 @@
 
 # Nativescript filepicker ![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png) ![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)
 
-File picker plugin supporting both single and multiple selection (for iOS, multiple selection only supported on iOS 14+) using only native picker approaches.<br>
-<br />For **iOS**, the plugin uses UIImagePicker for iOS 13 and below, and PHPicker for iOS 14+.<br>
+File picker plugin supporting both single and multiple selection (for iOS, multiple selection feature depends on media source and OS version) using only native picker approaches.<br>
+<br />For **iOS**, when selecting from the Photos Gallery the plugin uses UIImagePicker  for iOS 13 and below only, which supports single selections. PHPicker is used for iOS 14+ which does support multiple selections from the Photos Gallery.
+When selecting from Files, uses UIDocumentPicker which supports multiple selections.<br>
 <br />For **Android**, it uses Intents to open the stock file picker. For Android 6 (API 23) and above the permissions to read file storage should be explicitly required in AndroidManifest. See demo for implementation details.
 
 ```javascript
@@ -59,7 +60,7 @@ let picker = new Filepicker();
 </manifest>
 ```
 
-> **NOTE**: Using the plugin on iOS to select from the Photos gallery requires photo library permission. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding the following key:
+> **NOTE**: Using the plugin on iOS to select from the Photos gallery requires user to grant photo library permission first in order to access the selected image, otherwise it will return without any files. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding the following key:
 
 ```xml
 <key>NSPhotoLibraryUsageDescription</key>
@@ -71,10 +72,10 @@ let picker = new Filepicker();
 MediaType {
   IMAGE,
   AUDIO,
-  VIDEO,
-  DOCUMENT,
+  VIDEO,  
   ARCHIVE,
-  ALL     =>   (IMAGE | AUDIO | VIDEO | DOCUMENT | ARCHIVE)
+  DOCUMENT,
+  ALL     =>   (IMAGE | AUDIO | VIDEO | ARCHIVE | DOCUMENT )
 }
 ```
 

@@ -1,109 +1,113 @@
-import { FilepickerCommon, MediaType } from './common';
+import { MediaType } from './index.common';
 import { Application, action, ActionOptions, File } from '@nativescript/core';
 import { iOSNativeHelper } from '@nativescript/core/utils';
 import { AssetDownloader, TempFile } from './files';
 
-export { MediaType } from './common';
-export { getFreeMBs } from './common';
+export { MediaType } from './index.common';
 
-export class Filepicker extends FilepickerCommon {
-  constructor() {
-    super();
-  }
+let _iosDocumentPickerController: UIDocumentPickerViewController;
+let _iosGalleryPickerController: UIImagePickerController;
+let _iosPHPickerController: any; //for iOS<14 we use UIImagePicker. ios14+ uses PHPicker
 
-  protected _iosDocumentPickerController: UIDocumentPickerViewController;
-  protected _iosGalleryPickerController: UIImagePickerController;
-  protected _iosPHPickerController: any; //for iOS<14 we use UIImagePicker. ios14+ uses PHPicker
+export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
+  // console.log('showPicker() ', type, multiple);
 
-  public showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
-    // console.log('showPicker() ', type, multiple);
-
-    if (type == MediaType.IMAGE || type == MediaType.VIDEO || type == MediaType.IMAGE + MediaType.VIDEO) {
-      // console.log('Only selecting image/video/both, show choice dialog');
-      // present an action dialog to determine where they'd like to load from
-      const message = 'Add ' + (type == MediaType.IMAGE ? 'Images' : type == MediaType.VIDEO ? 'Videos' : 'Images and Videos') + ' from?';
-      const actionOptions: ActionOptions = {
-        message: message,
-        cancelButtonText: 'Cancel',
-        actions: ['Photos', 'Files'],
-      };
-      return action(actionOptions).then((result) => {
-        console.log(result);
-        if (result == 'Photos') {
-          //NOTE: iOS 14 adds new photo gallery privacy access restrictions for UIImagePicker, and introduces
-          //     the new PHPicker component which doesn't requires perms and now supports multiple selections.
-          if (+iOSNativeHelper.MajorVersion >= 14) {
-            console.log('iOS version>=14, using Phpicker');
-            return this.PHPicker(type, multiple);
-          }
-          //gallery UIImage Picker version(images and video) for ios<14
-          //NOTE: the iOS UIImagePickerController does not allow multiple selections
-          else return this.ImgPicker(type);
-        } else if (result == 'Files') {
-          //file provider picker version (doesn't need file system/gallery permissions)
-          return this.DocPicker(type, multiple);
-        } else return Promise.reject(null);
-      });
-    } else {
-      // console.log('Can only select these types from document picker');
-      return this.DocPicker(type, multiple);
-    }
-  }
-
-  private PHPicker(type: MediaType, multiple: boolean): Promise<[File]> {
-    return new Promise((resolve, reject) => {
-      console.log('multiple?', multiple);
-      const config: PHPickerConfiguration = PHPickerConfiguration.new();
-      config.selectionLimit = multiple ? 0 : 1;
-      config.filter = PHPickerFilter.anyFilterMatchingSubfilters(iOSNativeHelper.collections.jsArrayToNSArray(getPHTypes(type)));
-      this._iosPHPickerController = new PHPickerViewController({ configuration: config });
-      const delegate = PHPickerViewControllerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
-      delegate.registerToGlobal();
-      this._iosPHPickerController.delegate = delegate;
-      (Application.ios.rootController as UIViewController).presentViewControllerAnimatedCompletion(this._iosPHPickerController, true, null);
+  if (type == MediaType.IMAGE || type == MediaType.VIDEO || type == MediaType.IMAGE + MediaType.VIDEO) {
+    // console.log('Only selecting image/video/both, show choice dialog');
+    // present an action dialog to determine where they'd like to load from
+    const message = 'Add ' + (type == MediaType.IMAGE ? 'Images' : type == MediaType.VIDEO ? 'Videos' : 'Images and Videos') + ' from?';
+    const actionOptions: ActionOptions = {
+      message: message,
+      cancelButtonText: 'Cancel',
+      actions: ['Photos', 'Files'],
+    };
+    return action(actionOptions).then((result) => {
+      if (result == 'Photos') {
+        //NOTE: iOS 14 adds new photo gallery privacy access restrictions for UIImagePicker, and introduces
+        //     the new PHPicker component which doesn't requires perms and now supports multiple selections.
+        if (+iOSNativeHelper.MajorVersion >= 14) {
+          // console.log('iOS version>=14, using Phpicker');
+          return PHPicker(type, multiple);
+        }
+        //gallery UIImage Picker version(images and video) for ios<14
+        //NOTE: the iOS UIImagePickerController does not allow multiple selections
+        else {
+          console.warn('iOS Photos Gallery only allows single selections!');
+          return ImgPicker(type);
+        }
+      } else if (result == 'Files') {
+        //file provider picker version (doesn't need file system/gallery permissions)
+        return DocPicker(type, multiple);
+      } else return Promise.reject(null);
     });
-  }
-
-  private ImgPicker(type: MediaType): Promise<[File]> {
-    return new Promise((resolve, reject) => {
-      this._iosGalleryPickerController = UIImagePickerController.new();
-      let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
-      this._iosGalleryPickerController.mediaTypes = mediaTypes;
-      //image/video editing not allowed for now as we need to process changes manually for iOS gallery picker
-      this._iosGalleryPickerController.allowsEditing = false;
-      this._iosGalleryPickerController.allowsImageEditing = false;
-
-      const delegate = UIImagePickerControllerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
-      delegate.registerToGlobal();
-      this._iosGalleryPickerController.delegate = delegate;
-      (Application.ios.rootController as UIViewController).presentViewControllerAnimatedCompletion(this._iosGalleryPickerController, true, null);
-    });
-  }
-
-  private DocPicker(type: MediaType, multiple: boolean): Promise<[File]> {
-    return new Promise((resolve, reject) => {
-      let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
-      this._iosDocumentPickerController = UIDocumentPickerViewController.alloc().initWithDocumentTypesInMode(
-        mediaTypes,
-        UIDocumentPickerMode.Import
-        //Import mode is less restrictive than Open and doesn't require a file coordinator
-      );
-      // This picker does allow multiple selections if user chooses selection view
-      this._iosDocumentPickerController.allowsMultipleSelection = multiple;
-      // This doesn't actually show extensions, but we'll set it anyway
-      this._iosDocumentPickerController.shouldShowFileExtensions = true;
-      // If fullscreen style is used, delegate return handler throws an access error
-      // If CurrentContext or others are used, delegate methods are never called
-      this._iosDocumentPickerController.modalPresentationStyle = UIModalPresentationStyle.FormSheet;
-
-      const delegate = UIDocumentPickerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
-      delegate.registerToGlobal();
-      this._iosDocumentPickerController.delegate = delegate;
-
-      (Application.ios.rootController as UIViewController).presentViewControllerAnimatedCompletion(this._iosDocumentPickerController, true, null);
-    });
+  } else {
+    // console.log('Can only select these types from document picker');
+    return DocPicker(type, multiple);
   }
 }
+
+export function getFreeMBs(filepath: string): number {
+  //iOS devices only have a single storage partition to work with, so we can use any path to check stats
+  const attributeDictionary: NSDictionary<string, any> = NSFileManager.defaultManager.attributesOfFileSystemForPathError(filepath);
+  let totalsize: number = +attributeDictionary.valueForKey(NSFileSystemSize) / (1024 * 1024);
+  const freesize: number = +attributeDictionary.valueForKey(NSFileSystemFreeSize) / (1024 * 1024);
+  return freesize;
+}
+
+function PHPicker(type: MediaType, multiple: boolean): Promise<[File]> {
+  return new Promise((resolve, reject) => {
+    // console.log('multiple?', multiple);
+    const config: PHPickerConfiguration = PHPickerConfiguration.new();
+    config.selectionLimit = multiple ? 0 : 1;
+    config.filter = PHPickerFilter.anyFilterMatchingSubfilters(iOSNativeHelper.collections.jsArrayToNSArray(getPHTypes(type)));
+    _iosPHPickerController = new PHPickerViewController({ configuration: config });
+    const delegate = PHPickerViewControllerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
+    delegate.registerToGlobal();
+    _iosPHPickerController.delegate = delegate;
+    (Application.ios.rootController as UIViewController).presentViewControllerAnimatedCompletion(_iosPHPickerController, true, null);
+  });
+}
+
+function ImgPicker(type: MediaType): Promise<[File]> {
+  return new Promise((resolve, reject) => {
+    _iosGalleryPickerController = UIImagePickerController.new();
+    let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
+    _iosGalleryPickerController.mediaTypes = mediaTypes;
+    //image/video editing not allowed for now as we need to process changes manually for iOS gallery picker
+    _iosGalleryPickerController.allowsEditing = false;
+    _iosGalleryPickerController.allowsImageEditing = false;
+
+    const delegate = UIImagePickerControllerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
+    delegate.registerToGlobal();
+    _iosGalleryPickerController.delegate = delegate;
+    (Application.ios.rootController as UIViewController).presentViewControllerAnimatedCompletion(_iosGalleryPickerController, true, null);
+  });
+}
+
+function DocPicker(type: MediaType, multiple: boolean): Promise<[File]> {
+  return new Promise((resolve, reject) => {
+    let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
+    _iosDocumentPickerController = UIDocumentPickerViewController.alloc().initWithDocumentTypesInMode(
+      mediaTypes,
+      UIDocumentPickerMode.Import
+      //Import mode is less restrictive than Open and doesn't require a file coordinator
+    );
+    // This picker does allow multiple selections if user chooses selection view
+    _iosDocumentPickerController.allowsMultipleSelection = multiple;
+    // This doesn't actually show extensions, but we'll set it anyway
+    _iosDocumentPickerController.shouldShowFileExtensions = true;
+    // If fullscreen style is used, delegate return handler throws an access error
+    // If CurrentContext or others are used, delegate methods are never called
+    _iosDocumentPickerController.modalPresentationStyle = UIModalPresentationStyle.FormSheet;
+
+    const delegate = UIDocumentPickerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
+    delegate.registerToGlobal();
+    _iosDocumentPickerController.delegate = delegate;
+
+    (Application.ios.rootController as UIViewController).presentViewControllerAnimatedCompletion(_iosDocumentPickerController, true, null);
+  });
+}
+// }
 
 //Document Picker delegate
 @NativeClass()
@@ -114,7 +118,7 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
     return <UIDocumentPickerDelegateImpl>super.new();
   }
 
-  private _owner: WeakRef<Filepicker>;
+  private _owner: WeakRef<any>;
   private _resolve: any;
   private _reject: any;
   public initWithCallbackAndOptions(callback: (result?) => void, errorCallback: (result?) => void, owner: any): UIDocumentPickerDelegateImpl {
@@ -135,7 +139,7 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
 
   public owner() {
     if (!this._owner) return null;
-    return this._owner.get() as Filepicker;
+    return this._owner.get();
   }
 
   // if only single selection is allowed? sometimes, usually the next one handles all returns
@@ -221,7 +225,7 @@ class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePic
     return <UIImagePickerControllerDelegateImpl>super.new();
   }
 
-  private _owner: WeakRef<Filepicker>;
+  private _owner: WeakRef<any>;
   private _resolve: any;
   private _reject: any;
 
@@ -243,7 +247,7 @@ class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePic
 
   public owner() {
     if (!this._owner) return null;
-    return this._owner.get() as Filepicker;
+    return this._owner.get();
   }
 
   //returns media item picked from gallery
@@ -301,7 +305,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
     return <PHPickerViewControllerDelegateImpl>super.new();
   }
 
-  private _owner: WeakRef<Filepicker>;
+  private _owner: WeakRef<any>;
   private _resolve: any;
   private _reject: any;
   public initWithCallbackAndOptions(callback: (result?) => void, errorCallback: (result?) => void, owner: any): PHPickerViewControllerDelegateImpl {
@@ -322,7 +326,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
 
   public owner() {
     if (!this._owner) return null;
-    return this._owner.get() as Filepicker;
+    return this._owner.get();
   }
   //returns media items picked from gallery
   pickerDidFinishPicking(picker: PHPickerViewController, results: NSArray<PHPickerResult>): void {
@@ -397,7 +401,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
           setTimeout(() => waitForComplete(delegate), 500);
         } else {
           if (!!picker && !!picker.presentingViewController) picker.presentingViewController.dismissViewControllerAnimatedCompletion(true, null);
-          console.log('done preparing results, resolving files array', files);
+          // console.log('done preparing results, resolving files array', files);
           delegate._resolve(files);
           delegate.deRegisterFromGlobal();
 

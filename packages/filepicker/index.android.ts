@@ -1,128 +1,169 @@
-import { FilepickerCommon, MediaType } from './common';
+import { MediaType } from './index.common';
 import { AndroidApplication, AndroidActivityResultEventData, Application, Device, File } from '@nativescript/core';
 import { TempFile } from './files';
+import { getNativeApplication } from '@nativescript/core/application';
 
-export { MediaType } from './common';
-export { getFreeMBs } from './common';
+export { MediaType } from './index.common';
 
-export class Filepicker extends FilepickerCommon {
-  /**
-   * @staticProperty FILE_PICKER_CODE
-   * This is the code that the Filepicker class passes when making
-   * async system requests (ie `startActvityForResult`)
-   * NOTE: this is entirely arbitrary
-   */
-  public static FILE_PICKER_CODE = 10321;
+/**
+ * @const FILE_PICKER_CODE
+ * This is the code that the Filepicker class passes when making
+ * async system requests (ie `startActvityForResult`)
+ * NOTE: this is entirely arbitrary
+ */
+const FILE_PICKER_CODE = 10321;
 
-  /**
-   * @function showPicker
-   */
-  public showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
-    console.log('showPicker() type:', type);
-    return new Promise((resolve, reject) => {
-      // callback for androidActivity.showActivityForResult
-      function onResult(e: AndroidActivityResultEventData): void {
-        if (e.requestCode != Filepicker.FILE_PICKER_CODE) return;
-        if (e.resultCode == android.app.Activity.RESULT_CANCELED) return;
-        if (e.resultCode != android.app.Activity.RESULT_OK) {
-          removeResultListener();
-          reject(new Error('ERROR: VTFilePicker - ' + e.resultCode));
-          return;
-        }
-        try {
-          let results: File[];
-          const clipData = e.intent.getClipData() as android.content.ClipData;
-          if (clipData) {
-            results = [];
-            for (let i = 0; i < clipData.getItemCount(); i++) {
-              const item = clipData.getItemAt(i);
-              if (!item) continue;
-              const uriPath = getPathFromURI(item.getUri());
-              const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
-              const file = getNSFile(item.getUri(), fileName);
-              if (file) {
-                file['originalFilename'] = fileName;
-                results.push(file as File);
-              }
-            }
-          } else {
-            const uri = e.intent.getData() as android.net.Uri;
-            const uriPath = getPathFromURI(uri);
-            const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
-            const file = getNSFile(uri, fileName);
-            if (file) {
-              file['originalFilename'] = fileName;
-              results = [file as File];
-            } else return reject(null);
-          }
-          removeResultListener();
-          resolve(results);
-        } catch (e) {
-          console.error(e, { sentryCategory: 'showPicker' });
-          removeResultListener();
-          reject(e);
-        }
-      }
-
-      // convenience for removing the results listener
-      function removeResultListener(): void {
-        AndroidApplication.off(AndroidApplication.activityResultEvent, onResult);
-      }
-      // add the results listener to the android app
-      AndroidApplication.on(AndroidApplication.activityResultEvent, onResult);
-      // create an intent that will open the system file picker (Android 4.4+)
-      const Intent = android.content.Intent;
-      // const intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);//this is just for the device file system
-      const intent = new Intent(Intent.ACTION_GET_CONTENT); //this will include all file providers
-      intent.setType('*/*'); //this will allow all files to be picked by default
-
-      //set a filter to restrict by desired mime type
-      intent.putExtra(android.content.Intent.EXTRA_MIME_TYPES, getMediaTypes(type));
-      if (multiple) {
-        intent.putExtra('android.intent.extra.ALLOW_MULTIPLE', true);
-      }
-      intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
-      // intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-      intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-      intent.putExtra('android.content.extra.SHOW_ADVANCED', true);
-      intent.putExtra('android.content.extra.FANCY', true);
-      intent.putExtra('android.content.extra.SHOW_FILESIZE', true);
-      // console.log('showing picker activity');
-      // show the picker
-      getActivity().startActivityForResult(intent, Filepicker.FILE_PICKER_CODE);
-    });
+/**
+ * @function getFreeMBs returns the number of megabytes free on file system containing argument filepath
+ * @param {string} filepath full filepath on device
+ */
+export function getFreeMBs(filepath: string): number {
+  try {
+    const applicationContext = getNativeApplication().getApplicationContext();
+    let freesize: number, totalsize: number;
+    if (+Device.sdkVersion > 25) {
+      //only available in API26+
+      const fileManager: android.os.storage.StorageManager = applicationContext.getSystemService(android.os.storage.StorageManager.class);
+      const statsManager: android.app.usage.StorageStatsManager = applicationContext.getSystemService(android.app.usage.StorageStatsManager.class);
+      const fileUUID: java.util.UUID = fileManager.getUuidForPath(new java.io.File(filepath + '.tmp'));
+      //the following returns total free space if we clear all cache data from other apps
+      // https://stackoverflow.com/questions/56663624/how-to-get-free-and-total-size-of-each-storagevolume
+      // freesize = +(fileManager.getAllocatableBytes(file(1024 * 1024);UUID) / (1024 * 1024));
+      //the following returns total free space currently
+      freesize = +statsManager.getFreeBytes(fileUUID) / (1024 * 1024);
+      totalsize = +statsManager.getTotalBytes(fileUUID) / (1024 * 1024);
+    } else {
+      const stat = new android.os.StatFs(filepath);
+      const blockSize = stat.getBlockSize();
+      const freeBlocks = stat.getAvailableBlocks();
+      const totalBlocks = stat.getBlockCount();
+      freesize = (freeBlocks * blockSize) / (1024 * 1024);
+      totalsize = (totalBlocks * blockSize) / (1024 * 1024);
+    }
+    console.log('total space: MB', totalsize);
+    console.log('free space: MB', freesize);
+    return freesize;
+  } catch (e) {
+    console.error(e);
   }
 }
+
+/**
+ * @function showPicker returns an array of files selected by user
+ * @param {MediaType} type  OR'ed from all possible MediaType's to describe types of files allowed in selection
+ * @param {boolean} multiple if multiple selections are allowed
+ */
+export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
+  // console.log('showPicker() type:', type);
+  return new Promise((resolve, reject) => {
+    // callback for androidActivity.showActivityForResult
+    function onResult(e: AndroidActivityResultEventData): void {
+      if (e.requestCode != FILE_PICKER_CODE) return;
+      if (e.resultCode == android.app.Activity.RESULT_CANCELED) return;
+      if (e.resultCode != android.app.Activity.RESULT_OK) {
+        removeResultListener();
+        reject(new Error('ERROR: FilePicker - ' + e.resultCode));
+        return;
+      }
+      try {
+        let results: File[];
+        const clipData = e.intent.getClipData() as android.content.ClipData;
+        if (clipData) {
+          results = [];
+          for (let i = 0; i < clipData.getItemCount(); i++) {
+            const item = clipData.getItemAt(i);
+            if (!item) continue;
+            const uriPath = getPathFromURI(item.getUri());
+            const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
+            const file = getNSFile(item.getUri(), fileName);
+            if (file) {
+              file['originalFilename'] = fileName;
+              results.push(file as File);
+            }
+          }
+        } else {
+          const uri = e.intent.getData() as android.net.Uri;
+          const uriPath = getPathFromURI(uri);
+          const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
+          const file = getNSFile(uri, fileName);
+          if (file) {
+            file['originalFilename'] = fileName;
+            results = [file as File];
+          } else return reject(null);
+        }
+        removeResultListener();
+        resolve(results);
+      } catch (e) {
+        console.error(e, { sentryCategory: 'showPicker' });
+        removeResultListener();
+        reject(e);
+      }
+    }
+
+    // convenience for removing the results listener
+    function removeResultListener(): void {
+      AndroidApplication.off(AndroidApplication.activityResultEvent, onResult);
+    }
+
+    // add the results listener to the android app
+    AndroidApplication.on(AndroidApplication.activityResultEvent, onResult);
+
+    // create an intent that will open the system file picker (Android 4.4+)
+    const Intent = android.content.Intent;
+    // const intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);//this is just for the device file system
+    const intent = new Intent(Intent.ACTION_GET_CONTENT); //this will include all file providers
+
+    intent.setType('*/*'); //this will allow all files to be picked by default
+
+    //set a filter to restrict by desired mime type
+    intent.putExtra(android.content.Intent.EXTRA_MIME_TYPES, getMediaTypes(type));
+    if (multiple) {
+      intent.putExtra('android.intent.extra.ALLOW_MULTIPLE', true);
+    }
+    intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    intent.putExtra('android.content.extra.SHOW_ADVANCED', true);
+    intent.putExtra('android.content.extra.FANCY', true);
+    intent.putExtra('android.content.extra.SHOW_FILESIZE', true);
+    // show the picker
+    getActivity().startActivityForResult(intent, FILE_PICKER_CODE);
+  });
+}
+
+/**
+ * @function getMediaTypes returns an array of mime types for Android picker intent
+ * @param {MediaType} types  OR'ed from all possible MediaType's to describe types of files allowed in selection
+ */
 function getMediaTypes(types: MediaType) {
   let fileTypes = [];
   if (types & MediaType.AUDIO) {
-    console.log('adding audio types');
+    // console.log('adding audio types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.AUDIO]);
   }
   if (types & MediaType.VIDEO) {
-    console.log('adding video types');
+    // console.log('adding video types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.VIDEO]);
   }
   if (types & MediaType.IMAGE) {
-    console.log('adding image types');
+    // console.log('adding image types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.IMAGE]);
   }
   if (types & MediaType.DOCUMENT) {
-    console.log('adding document types');
+    // console.log('adding document types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.DOCUMENT]);
   }
   if (types & MediaType.ARCHIVE) {
-    console.log('adding archive type');
+    // console.log('adding archive type');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.ARCHIVE]);
   }
-  console.log('final types array:', fileTypes);
+  // console.log('final types array:', fileTypes);
   let mimeTypes = fileTypes.map((s) => android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(s)).filter((s) => !!s);
   //convert to android type syntax
   return convertToArray(mimeTypes);
 }
 
 /**
- * Convert to android Array
+ * @function convertToArray Convert to Android Array of Strings
  */
 function convertToArray(types) {
   let mimeTypes: string[];
@@ -134,6 +175,7 @@ function convertToArray(types) {
   }
   return mimeTypes;
 }
+
 /**
  * @function getNSFile
  * @param uri:android.net.Uri
@@ -207,18 +249,15 @@ export function getPathFromURI(uri: android.net.Uri) {
       let read = 0;
       let maxBufferSize = 1 * 1024 * 1024;
       let bytesAvailable = inputStream.available();
-
-      //int bufferSize = 1024;
       let bufferSize = Math.min(bytesAvailable, maxBufferSize);
-
       let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
       while ((read = inputStream.read(buffers)) != -1) {
         outputStream.write(buffers, 0, read);
       }
       inputStream.close();
       outputStream.close();
-      console.log('File Path', 'Path ' + file.getPath());
-      console.log('File Size', 'Size ' + file.length());
+      // console.log('File Path', 'Path ' + file.getPath());
+      // console.log('File Size', 'Size ' + file.length());
     } catch (e) {
       console.error(e, { sentryCategory: 'picker:error:getDriveFilePath' });
     }
@@ -270,10 +309,10 @@ export function getPathFromURI(uri: android.net.Uri) {
   }
   // DocumentProvider
   if ((<ProviderWithDocumentsContact>android.provider).DocumentsContract.isDocumentUri(context, uri)) {
-    console.log('API version >19, using scoped storage');
+    // console.log('API version >19, using scoped storage');
     // ExternalStorageProvider
     if (isExternalStorageDocument(uri)) {
-      console.log('isExternalStorageDocument()');
+      // console.log('isExternalStorageDocument()');
       const docId: string = (<ProviderWithDocumentsContact>android.provider).DocumentsContract.getDocumentId(uri);
       const split = docId.split(':');
       const type: string = split[0].toLowerCase();
@@ -293,7 +332,7 @@ export function getPathFromURI(uri: android.net.Uri) {
     }
     // DownloadsProvider
     else if (isDownloadsDocument(uri)) {
-      console.log('isDownloadsDocument()');
+      // console.log('isDownloadsDocument()');
       if (parseInt(Device.sdkVersion, 10) >= 23) {
         let cursor = null;
         try {
@@ -302,7 +341,7 @@ export function getPathFromURI(uri: android.net.Uri) {
             let fileName = cursor.getString(0);
             let path = android.os.Environment.getExternalStorageDirectory().toString() + '/Download/' + fileName;
             if (!android.text.TextUtils.isEmpty(path)) {
-              console.log('isDownloadsDocument: return path ', path);
+              // console.log('isDownloadsDocument: return path ', path);
               return path;
             }
           }
@@ -345,7 +384,7 @@ export function getPathFromURI(uri: android.net.Uri) {
     }
     // MediaProvider
     else if (isMediaDocument(uri)) {
-      console.log('isMediaDocument()');
+      // console.log('isMediaDocument()');
       const docId = (<ProviderWithDocumentsContact>android.provider).DocumentsContract.getDocumentId(uri);
       const split = docId.split(':');
       const type = split[0];
@@ -371,14 +410,14 @@ export function getPathFromURI(uri: android.net.Uri) {
   }
   // MediaStore (and general)
   else if ('content' === uri.getScheme().toLowerCase()) {
-    console.log('content()');
+    // console.log('content()');
     if (isGooglePhotosUri(uri)) {
-      console.log('isGooglePhotosUri()');
+      // console.log('isGooglePhotosUri()');
       return uri.getLastPathSegment();
     }
 
     if (isGoogleDriveUri(uri)) {
-      console.log('isGoogleDriveUri()');
+      // console.log('isGoogleDriveUri()');
       return getDriveFilePath(uri, context);
     }
 
@@ -387,7 +426,7 @@ export function getPathFromURI(uri: android.net.Uri) {
   }
   // File
   else if ('file' === uri.getScheme().toLowerCase()) {
-    console.log('file type, using getPath()');
+    // console.log('file type, using getPath()');
     return uri.getPath();
   }
 

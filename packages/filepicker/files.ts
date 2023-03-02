@@ -36,7 +36,7 @@ export class TempFile {
       path = knownFolders.temp().getFile(prefix + name + suffix).path;
     }
     TempFile.deletePathLater(path);
-    // log('TempFile returning path', path);
+    // console.log('TempFile returning path', path);
     return path;
   }
 
@@ -66,7 +66,7 @@ export class TempFile {
         continue;
       }
       const file = File.fromPath(path);
-      // log('removing temporary file ', path);
+      // console.log('removing temporary file ', path);
       file.remove().catch((reason: any) => {
         console.warn('Failed to delete file at ' + path + ' : ' + reason.toString());
         TempFile.deletePathLater(path);
@@ -75,94 +75,6 @@ export class TempFile {
     setPathList([]);
   }
 }
-
-// export class NSFileReference extends EventDispatcher implements IFileReference {
-//   constructor(file?: File) {
-//     super();
-//     if (file) this._file = file;
-//   }
-
-//   public get name(): string {
-//     if (!this._file) return '';
-//     return this._file.name;
-//   }
-//   public get size(): number {
-//     if (!this._file) return 0;
-//     return this._file.size;
-//   }
-//   public get type(): string {
-//     if (!this._file) return '';
-//     return this._file.extension;
-//   }
-//   public get path(): string {
-//     if (!this._file) return '';
-//     return this._file.path;
-//   }
-//   private _file: File;
-
-//   browse(types: MediaType): void {
-//     const fp = new VTFilePicker();
-//     fp.showPicker(types, false)
-//       .then((files: File[]) => {
-//         files = files.filter(f => f instanceof File);
-//         if (files.length > 0) {
-//           this._file = files[0];
-//           this.dispatchEvent(new BaseEvent(BaseEvent.SELECT, false, false));
-//         } else {
-//           this.dispatchEvent(new BaseEvent(BaseEvent.CANCEL, false, false));
-//         }
-//       })
-//       .catch(() => {
-//         this.dispatchEvent(new BaseEvent(BaseEvent.CANCEL, false, false));
-//       });
-//   }
-
-//   upload(request: URLRequest, fieldName?: string): void {
-//     if (!this._file) {
-//       error(new Error('No file to upload'), {sentryCategory: 'files-upload'});
-//       return;
-//     }
-//     const loader = new NSURLLoader();
-//     loader.dispatchProgress = true;
-//     const passthrough = (e: BaseEvent) => {
-//       this.dispatchEvent(e);
-//     };
-//     loader.addEventListener(BaseEvent.COMPLETE, passthrough, this);
-//     loader.addEventListener(ErrorEvent.IO_ERROR, passthrough, this);
-//     loader.addEventListener(ProgressEvent.PROGRESS, passthrough, this);
-//     request.method = URLRequestMethod.POST;
-//     request.data = this._file;
-//     this.dispatchEvent(new BaseEvent(BaseEvent.OPEN, false, false));
-//     loader.load(request);
-//   }
-
-//   download(request: URLRequest, defaultFileName?: string): void {
-//     error(new Error('Not implemented on mobile'), { sentryCategory: 'not-implemented' });
-//   }
-// }
-
-// export class NSFileReferenceList extends EventDispatcher implements IFileReferenceList {
-//   browse(types: MediaType): void {
-//     const fp = new VTFilePicker();
-//     fp.showPicker(types, true)
-//       .then((files: File[]) => {
-//         files = files.filter(f => f instanceof File);
-//         if (files.length > 0) {
-//           for (const file of files) {
-//             this.fileList.push(new NSFileReference(file));
-//           }
-//           this.dispatchEvent(new BaseEvent(BaseEvent.SELECT, false, false));
-//         } else {
-//           this.dispatchEvent(new BaseEvent(BaseEvent.CANCEL, false, false));
-//         }
-//       })
-//       .catch(() => {
-//         this.dispatchEvent(new BaseEvent(BaseEvent.CANCEL, false, false));
-//       });
-//   }
-
-//   readonly fileList: IFileReference[] = [];
-// }
 
 type FileResolver = (value?: File | PromiseLike<File>) => void;
 
