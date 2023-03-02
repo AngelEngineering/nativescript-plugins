@@ -1,7 +1,7 @@
 {
   "name": "@angelengineering/filepicker",
-  "version": "1.0.1",
-  "description": "Add a plugin description",
+  "version": "1.0.2",
+  "description": "Nativescript File/Media Picker",
   "main": "index",
   "typings": "index.d.ts",
   "nativescript": {
@@ -29,7 +29,7 @@
     "url": "https://github.com/AngelEngineering/nativescript-plugins/issues"
   },
   "license": "Apache-2.0",
-  "homepage": "https://github.com/AngelEngineering/nativescript-plugins",
+  "homepage": "https://github.com/AngelEngineering/nativescript-plugins/blob/main/packages/filepicker/README.md",
   "readmeFilename": "README.md",
   "bootstrapper": "@nativescript/plugin-seed"
 }
