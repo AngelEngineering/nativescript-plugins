@@ -8,7 +8,9 @@
     "@angelengineering/flashlight": "file:../../packages/flashlight",
     "@nativescript-community/perms": "^2.2.25",
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
-    "@nstudio/nativescript-checkbox": "^2.0.5"
+    "@nstudio/nativescript-checkbox": "^2.0.5",
+    "@angelengineering/audio-recorder": "file:../../packages/audio-recorder",
+    "@angelengineering/audio-player": "file:../../packages/audio-player"
   },
   "devDependencies": {
     "@nativescript/android": "~8.4.0",

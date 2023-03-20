@@ -23,7 +23,9 @@
       "@angelengineering/*": ["packages/*"],
       "@angelengineering/flashlight": ["packages/flashlight/index.d.ts"],
       "@demo/shared": ["tools/demo/index.ts"],
-      "@angelengineering/filepicker": ["packages/filepicker/index.d.ts"]
+      "@angelengineering/filepicker": ["packages/filepicker/index.d.ts"],
+      "@angelengineering/audio-recorder": ["packages/audio-recorder/index.d.ts"],
+      "@angelengineering/audio-player": ["packages/audio-player/index.d.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

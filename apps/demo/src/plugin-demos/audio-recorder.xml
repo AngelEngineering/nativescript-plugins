@@ -1,0 +1,16 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+  <Page.actionBar>
+    <ActionBar title="audio-recorder" icon="" class="action-bar">
+    </ActionBar>
+  </Page.actionBar>
+  <StackLayout class="p-20">
+    <ScrollView class="h-full">
+      <StackLayout>
+        <Button text="Record audio" tap="{{ recordAudio }}" id="recordBtn" class="btn btn-primary"/>
+        <Button text="Stop recording" tap="{{ stopRecording }}" id="stopBtn" class="btn btn-primary" visibility="collapsed"/>
+        <Label text="Recorded audio file info:" id="outputLabel" visibility="collapsed"/>
+        <StackLayout id="recordedFile" id="outputStack" visibility="collapsed"/>
+      </StackLayout>
+    </ScrollView>
+  </StackLayout>
+</Page>

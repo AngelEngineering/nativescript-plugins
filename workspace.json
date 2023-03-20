@@ -3,7 +3,9 @@
   "projects": {
     "demo": "apps/demo",
     "flashlight": "packages/flashlight",
-    "filepicker": "packages/filepicker"
+    "filepicker": "packages/filepicker",
+    "audio-recorder": "packages/audio-recorder",
+    "audio-player": "packages/audio-player"
   },
   "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }
