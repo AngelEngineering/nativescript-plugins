@@ -44,7 +44,7 @@ export interface AudioRecorderOptions {
   infoCallback?: Function;
 }
 
-export interface AudioRecorderI {
+export interface IAudioRecorder {
   start(options: AudioRecorderOptions): Promise<any>;
   pause(): Promise<any>;
   resume(): Promise<any>;

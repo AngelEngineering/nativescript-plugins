@@ -1,9 +1,9 @@
 /* eslint-disable no-async-promise-executor */
 import { Application, Observable } from '@nativescript/core';
-import { AudioRecorderI } from './common';
+import { IAudioRecorder } from './common';
 import { AudioRecorderOptions } from './options';
 
-export class AudioRecorder extends Observable implements AudioRecorderI {
+export class AudioRecorder extends Observable implements IAudioRecorder {
   private _recorder: any;
 
   get android() {

@@ -3,6 +3,7 @@ import { DemoSharedAudioRecorder } from '@demo/shared';
 import { AudioRecorder, AudioRecorderOptions } from '@angelengineering/audio-recorder';
 import { TempFile } from '@angelengineering/filepicker/files';
 import { check as checkPermission, request as requestPermission } from '@nativescript-community/perms';
+import { AudioPlayer, AudioPlayerOptions } from '@angelengineering/audio-player';
 
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
@@ -13,10 +14,13 @@ export class DemoModel extends DemoSharedAudioRecorder {
   constructor() {
     super();
     this.recorder = new AudioRecorder();
+    this.player = new AudioPlayer();
   }
 
   protected recorder: AudioRecorder;
+  protected player: AudioPlayer;
   protected _isRecording = false;
+
   protected _recordOptions: AudioRecorderOptions = isAndroid
     ? {
         filename: '',
@@ -29,11 +33,11 @@ export class DemoModel extends DemoSharedAudioRecorder {
         // android: { encoder: android.media.MediaRecorder.AudioEncoder.AAC },
         // audioMixing: false,
         infoCallback: (infoObject) => {
-          console.log('infoCallback: ', JSON.stringify(infoObject));
+          console.log('AudioRecorder infoCallback: ', JSON.stringify(infoObject));
         },
 
         errorCallback: (errorObject) => {
-          console.log('errorCallback: ', JSON.stringify(errorObject));
+          console.log('AudioRecorder errorCallback: ', JSON.stringify(errorObject));
         },
       }
     : {
@@ -46,16 +50,39 @@ export class DemoModel extends DemoSharedAudioRecorder {
         // ios:{},
         // audioMixing: false,
         infoCallback: (infoObject) => {
-          console.log('infoCallback: ', JSON.stringify(infoObject));
+          console.log('AudioRecorder infoCallback: ', JSON.stringify(infoObject));
         },
 
         errorCallback: (errorObject) => {
-          console.log('errorCallback: ', JSON.stringify(errorObject));
+          console.log('AudioRecorder errorCallback: ', JSON.stringify(errorObject));
         },
         // sessionCategory: 'AVAudioSessionCategoryPlayAndRecord',
         // sessionMode:'',
         // sessionRouteSharingPolicy:'',
       };
+
+  protected _playOptions: AudioPlayerOptions = {
+    audioFile: '',
+    loop: false,
+    autoPlay: false,
+    // metering:?,
+    // pitch:?,
+    audioMixing: false,
+    // sessionCategory: 'AVAudioSessionCategoryPlayAndRecord',
+    //sessionMode:?,
+    //sessionRouteSharingPolicy:?,
+    completeCallback: async () => {
+      console.log('Audio file recording complete.');
+    },
+
+    errorCallback: (errorObject) => {
+      console.log(JSON.stringify(errorObject));
+    },
+
+    infoCallback: (infoObject) => {
+      console.log(JSON.stringify(infoObject));
+    },
+  };
 
   recordAudio() {
     checkPermission('microphone').then(async (permres) => {
@@ -71,7 +98,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
 
               //set record options and record
               let tempPath = TempFile.getPath('audio', isAndroid ? '.m4a' : '.caf');
-              this._recordOptions.filename = tempPath;
+              this._playOptions.audioFile = this._recordOptions.filename = tempPath;
               if (File.exists(tempPath)) {
                 // remove file if it exists
                 File.fromPath(tempPath).removeSync();
@@ -108,10 +135,30 @@ export class DemoModel extends DemoSharedAudioRecorder {
     console.log(file);
     if (file.size) {
       console.log('YaY! have a non-zero output file with name', this._recordOptions.filename);
+      const playBtn: Button = Frame.topmost().getViewById('playBtn');
+      playBtn.visibility = 'visible';
       this.handleRecording(file);
     } else {
       console.error('No file found for audio recording with name', this._recordOptions.filename);
     }
+  }
+
+  playRecording() {
+    console.log('playing audio that was last recorded');
+    this.player.initFromFile(this._playOptions);
+    this.player.play();
+    const playBtn: Button = Frame.topmost().getViewById('playBtn');
+    playBtn.visibility = 'collapsed';
+    const stopPlayBtn: Button = Frame.topmost().getViewById('stopPlayBtn');
+    stopPlayBtn.visibility = 'visible';
+  }
+
+  stopPlayback() {
+    this.player.pause();
+    const playBtn: Button = Frame.topmost().getViewById('playBtn');
+    playBtn.visibility = 'visible';
+    const stopPlayBtn: Button = Frame.topmost().getViewById('stopPlayBtn');
+    stopPlayBtn.visibility = 'collapsed';
   }
 
   handleRecording(result: File): void {

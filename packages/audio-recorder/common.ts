@@ -1,7 +1,7 @@
 import { knownFolders, path as nsFilePath, Utils } from '@nativescript/core';
 import { AudioRecorderOptions } from './options';
 
-export interface AudioRecorderI {
+export interface IAudioRecorder {
   /**
    * Starts the native audio recording control.
    */

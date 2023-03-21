@@ -8,8 +8,10 @@
       <StackLayout>
         <Button text="Record audio" tap="{{ recordAudio }}" id="recordBtn" class="btn btn-primary"/>
         <Button text="Stop recording" tap="{{ stopRecording }}" id="stopBtn" class="btn btn-primary" visibility="collapsed"/>
+        <Button text="Play recording" tap="{{ playRecording }}" id="playBtn" class="btn btn-primary" visibility="collapsed"/>
+        <Button text="Stop playing" tap="{{ stopPlayback }}" id="stopPlayBtn" class="btn btn-primary" visibility="collapsed"/>
         <Label text="Recorded audio file info:" id="outputLabel" visibility="collapsed"/>
-        <StackLayout id="recordedFile" id="outputStack" visibility="collapsed"/>
+        <StackLayout id="outputLabel" visibility="collapsed"/>
       </StackLayout>
     </ScrollView>
   </StackLayout>

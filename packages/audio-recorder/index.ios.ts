@@ -1,6 +1,6 @@
 // import { AudioRecorderCommon } from './common';
 import { Observable } from '@nativescript/core';
-import { AudioRecorderI } from './common';
+import { IAudioRecorder } from './common';
 import { AudioRecorderOptions } from './options';
 
 declare const kAudioFormatAppleLossless, kAudioFormatMPEG4AAC;
@@ -39,7 +39,7 @@ class TNSRecorderDelegate extends NSObject implements AVAudioRecorderDelegate {
 
 export { TNSRecorderDelegate };
 
-export class AudioRecorder extends Observable implements AudioRecorderI {
+export class AudioRecorder extends Observable implements IAudioRecorder {
   private _recorder: any;
   private _recordingSession: any;
 
