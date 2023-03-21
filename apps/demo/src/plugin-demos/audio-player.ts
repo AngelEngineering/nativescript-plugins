@@ -18,7 +18,7 @@ export class DemoModel extends DemoSharedAudioPlayer {
   protected _playOptions: AudioPlayerOptions = {
     audioFile: '',
     loop: false,
-    autoPlay: false,
+    autoPlay: true, //play once loaded until logic fixed with initFromFile async waits for url prepared before allowing play()
     // metering:?,
     // pitch:?,
     audioMixing: false,
@@ -38,60 +38,19 @@ export class DemoModel extends DemoSharedAudioPlayer {
     },
   };
 
-  //Doesn't load on Android
+  //Doesn't load on Android, iOS only
   playLocalCafAudio() {
-    // this._playOptions.audioFile = knownFolders.currentApp().path + '/assets/audio/example.caf';
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.caf';
-    // this._playOptions.audioFile = '~/audio/example.caf';
-    // if (!File.exists(this._playOptions.audioFile)) {
-    //   console.log("ERROR! File for playback doesn't exist!!!!", this._playOptions.audioFile);
-    //   if (Folder.exists('~/audio')) {
-    //     const folder = Folder.fromPath('~/audio');
-    //     console.log('dumping files in path ', '~/audio');
-    //     folder
-    //       .getEntities()
-    //       .then((entities) => {
-    //         // entities is an array of files and folders.
-    //         entities.forEach((entity) => {
-    //           console.log(entity.name);
-    //         });
-    //       })
-    //       .catch((err) => {
-    //         // Failed to obtain folder's contents.
-    //         console.log(err);
-    //       });
-    //   } else {
-    //     console.log("Audio folder doesn't exist!");
-    //     const folder = Folder.fromPath('~/');
-    //     console.log('dumping files in path ~/');
-    //     folder
-    //       .getEntities()
-    //       .then((entities) => {
-    //         // entities is an array of files and folders.
-    //         entities.forEach((entity) => {
-    //           console.log(entity.name, entity.path);
-    //         });
-    //       })
-    //       .catch((err) => {
-    //         // Failed to obtain folder's contents.
-    //         console.log(err);
-    //       });
-    //     return;
-    //   }
-    // } else {
-    this.player.initFromFile(this._playOptions);
-    this.player.play();
+    this.player.playFromFile(this._playOptions);
 
     const file = File.fromPath(this._playOptions.audioFile);
     console.log('playing file ', file.path, ' with size', file.size);
     this.showInfo(file);
-    // }
   }
 
   playLocalM4aAudio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.m4a';
-    this.player.initFromFile(this._playOptions);
-    this.player.play();
+    this.player.playFromFile(this._playOptions);
 
     const file = File.fromPath(this._playOptions.audioFile);
     this.showInfo(file);
@@ -99,8 +58,7 @@ export class DemoModel extends DemoSharedAudioPlayer {
 
   playLocalMp3Audio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.mp3';
-    this.player.initFromFile(this._playOptions);
-    this.player.play();
+    this.player.playFromFile(this._playOptions);
 
     const file = File.fromPath(this._playOptions.audioFile);
     this.showInfo(file);
@@ -108,30 +66,21 @@ export class DemoModel extends DemoSharedAudioPlayer {
 
   playLocalWavAudio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.wav';
-    this.player.initFromFile(this._playOptions);
-    this.player.play();
+    this.player.playFromFile(this._playOptions);
 
     const file = File.fromPath(this._playOptions.audioFile);
     this.showInfo(file);
   }
 
-  // url: 'https://www.noiseaddicts.com/samples_1w72b820/2514.mp3';
-  // url: 'https://www.noiseaddicts.com/samples_1w72b820/17.mp3';
-  // url: 'https://www.noiseaddicts.com/samples_1w72b820/47.mp3';
   playRemoteAudio() {
-    this._playOptions.audioFile = 'https://www.noiseaddicts.com/samples_1w72b820/2514.mp3';
-    this.player.initFromFile(this._playOptions);
-    this.player.play();
+    this._playOptions.audioFile = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+    this.player.playFromUrl(this._playOptions); //for iOS this must be used, for Android it just calls playFromFile
     this.showInfo(null);
   }
 
   stopPlayback() {
-    console.log('pausing player');
+    console.log('stop player');
     this.player.pause();
-    // const playBtn: Button = Frame.topmost().getViewById('playBtn');
-    // playBtn.visibility = 'visible';
-    // const stopPlayBtn: Button = Frame.topmost().getViewById('stopPlayBtn');
-    // stopPlayBtn.visibility = 'collapsed';
   }
 
   showInfo(result: File): void {
