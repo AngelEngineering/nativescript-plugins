@@ -1,6 +1,6 @@
 import { EventData, Page, File, Frame, StackLayout, GridLayout, Color, Label, Image, alert } from '@nativescript/core';
 import { DemoSharedFilepicker } from '@demo/shared';
-import { showPicker, MediaType, getFreeMBs } from '@angelengineering/filepicker';
+import { filePicker, galleryPicker, MediaType, getFreeMBs } from '@angelengineering/filepicker';
 import { CheckBox } from '@nstudio/nativescript-checkbox';
 import { TempFile } from '@angelengineering/filepicker/files';
 import { check as checkPermission, request as requestPermission } from '@nativescript-community/perms';
@@ -16,7 +16,7 @@ export class DemoModel extends DemoSharedFilepicker {
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
 
     try {
-      pickedFiles = await showPicker(MediaType.DOCUMENT, checkBox.checked);
+      pickedFiles = await filePicker(MediaType.DOCUMENT, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
@@ -28,21 +28,13 @@ export class DemoModel extends DemoSharedFilepicker {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
 
-    checkPermission('photo').then(async (permres) => {
-      if (permres[0] == 'undetermined' || permres[0] == 'authorized') {
-        await requestPermission('photo').then(async (result) => {
-          if (result[0] == 'authorized') {
-            try {
-              pickedFiles = await showPicker(MediaType.IMAGE, checkBox.checked);
-            } catch (err) {
-              if (err) alert(err?.message);
-            } finally {
-              this.handleFiles(pickedFiles);
-            }
-          } else alert("No permission for files, can't open picker");
-        });
-      } else alert("No permission for files, can't open  Grant this permission in app settings first");
-    });
+    try {
+      pickedFiles = await filePicker(MediaType.IMAGE, checkBox.checked);
+    } catch (err) {
+      if (err) alert(err?.message);
+    } finally {
+      this.handleFiles(pickedFiles);
+    }
   }
   async pickVideos() {
     let pickedFiles: File[];
@@ -55,7 +47,7 @@ export class DemoModel extends DemoSharedFilepicker {
       console.log('temp directory path: ', tempPath);
       if (freeSpace > 400) {
         //check before allowing picker to create temp copy of selected files
-        pickedFiles = await showPicker(MediaType.VIDEO, checkBox.checked);
+        pickedFiles = await filePicker(MediaType.VIDEO, checkBox.checked);
       } else alert('Low free space on device, picking not allowed');
     } catch (err) {
       if (err) alert(err?.message);
@@ -63,49 +55,63 @@ export class DemoModel extends DemoSharedFilepicker {
       this.handleFiles(pickedFiles);
     }
   }
+
   async pickAudio() {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await showPicker(MediaType.AUDIO, checkBox.checked);
+      pickedFiles = await filePicker(MediaType.AUDIO, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
       this.handleFiles(pickedFiles);
     }
   }
+
   async pickArchives() {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await showPicker(MediaType.ARCHIVE, checkBox.checked);
+      pickedFiles = await filePicker(MediaType.ARCHIVE, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
       this.handleFiles(pickedFiles);
     }
   }
+
   async pickAll() {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
-      pickedFiles = await showPicker(MediaType.ALL, checkBox.checked);
+      pickedFiles = await filePicker(MediaType.ALL, checkBox.checked);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
       this.handleFiles(pickedFiles);
     }
   }
+
   async pickImageVideo() {
     let pickedFiles: File[];
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
-    try {
-      pickedFiles = await showPicker(MediaType.IMAGE + MediaType.VIDEO, checkBox.checked);
-    } catch (err) {
-      if (err) alert(err?.message);
-    } finally {
-      this.handleFiles(pickedFiles);
-    }
+    //on Android, thils will not trigger a perm request
+    //on iOS, this will ask user only the first time. Once denied, user has to change in settings
+    checkPermission('photo').then(async (permres) => {
+      if (permres[0] == 'undetermined' || permres[0] == 'authorized') {
+        await requestPermission('photo').then(async (result) => {
+          if (result[0] == 'authorized') {
+            try {
+              pickedFiles = await galleryPicker(MediaType.IMAGE + MediaType.VIDEO, checkBox.checked);
+            } catch (err) {
+              if (err) alert(err?.message);
+            } finally {
+              this.handleFiles(pickedFiles);
+            }
+          } else alert("No permission for files, can't open picker");
+        });
+      } else alert("No permission for files, can't open  Grant this permission in app settings first");
+    });
   }
 
   handleFiles(results: File[]): void {
