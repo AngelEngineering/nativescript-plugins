@@ -1,6 +1,6 @@
 {
   "name": "@angelengineering/filepicker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Nativescript File/Media Picker",
   "main": "index",
   "typings": "index.d.ts",
