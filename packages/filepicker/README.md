@@ -2,10 +2,10 @@
 
 # Nativescript filepicker ![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png) ![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)
 
-File picker plugin supporting both single and multiple selection (for iOS, multiple selection feature depends on media source and OS version) using only native picker approaches.<br>
-<br />For **iOS**, when selecting from the Photos Gallery the plugin uses UIImagePicker  for iOS 13 and below only, which supports single selections. PHPicker is used for iOS 14+ which does support multiple selections from the Photos Gallery.
-When selecting from Files, uses UIDocumentPicker which supports multiple selections.<br>
-<br />For **Android**, it uses Intents to open the stock file picker. For Android 6 (API 23) and above the permissions to read file storage should be explicitly required in AndroidManifest. See demo for implementation details.
+This file picker plugin exports function _filePicker()_ that supports both single and multiple selection (for iOS, multiple selection feature depends on OS version) using only native picker approaches.<br>
+<br />For **iOS**, _filePicker()_ uses UIDocumentPicker to allow selection from publicly available files that can be accessed via iOS Files app. When selecting from Files, UIDocumentPicker supports multiple selections. <br> <br> iOS also has access to the _galleryPicker()_ function which selects from the iOS Photos Gallery. This picker uses UIImagePicker for iOS 13 and below, which only supports single selections. PHPicker is used for iOS 14+ which does support multiple selections from the Photos Gallery. This picker does require user permission before allowing access to media on iOS.
+
+<br />For **Android**, _filePicker()_ uses Intents to open the stock file picker. For Android 6 (API 23) and above the permissions to read file storage should be explicitly required in AndroidManifest. See demo for implementation details. Note: _galleryPicker()_ will just call _filePicker()_ internally.
 
 ```javascript
 ns plugin add @angelengineering/filepicker
@@ -38,7 +38,7 @@ let picker = new Filepicker();
 
 ```
     try {
-      pickedFiles = await picker.showPicker(MediaType.IMAGE + MediaType.VIDEO, true);
+      pickedFiles = await picker.filePicker(MediaType.IMAGE + MediaType.VIDEO + MediaType.AUDIO, true);
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
@@ -46,9 +46,9 @@ let picker = new Filepicker();
     }
 ```
 
-> **NOTE**: To request permissions for Android 6+ (API 23+) in the demo app, we use [perms plugin](https://github.com/nativescript-community/perms).
+> **NOTE**: To request permissions in the demo app, we use [perms plugin](https://github.com/nativescript-community/perms). While this is not required for all OS versions and corresponding pickers, just to be safe you should request it so user is aware. 
 
-> **NOTE**: Be sure to have permissions add the following lines in AndroidManifest.xml, although this will be ignored on Android API 32+.
+> **NOTE**: Be sure to have permissions add the following lines in AndroidManifest.xml.
 
 ```
 <manifest ... >
@@ -60,35 +60,39 @@ let picker = new Filepicker();
 </manifest>
 ```
 
-> **NOTE**: Using the plugin on iOS to select from the Photos gallery requires user to grant photo library permission first in order to access the selected image, otherwise it will return without any files. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding the following key:
+> **NOTE**: Using the plugin on iOS to select from the Photos gallery with _galleryPicker()_ requires user to grant photo library permission first in order to access the selected image, otherwise it will return without any files. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding the following key:
 
 ```xml
 <key>NSPhotoLibraryUsageDescription</key>
 <string>Requires access to photo library to upload media.</string>
 ```
+> **NOTE**: if you do use the perms plugin, make sure to read their README.md first, as using this plugin in production apps will require you to add all iOS Info.plist permission strings to avoid being rejected by automatic processing since the plugin includes code for all permission types. 
 
 ## Supported Picker File Types
+
 ```
 MediaType {
   IMAGE,
   AUDIO,
-  VIDEO,  
+  VIDEO,
   ARCHIVE,
   DOCUMENT,
   ALL     =>   (IMAGE | AUDIO | VIDEO | ARCHIVE | DOCUMENT )
 }
 ```
 
-## Android 
+## Android
+
 The Android stock file picker also supports selecting files from Google Photos and Google Drive if you have an account signed in on the Android device.
 
 ## iOS
-When requesting Image, Video or both on iOS, the user will be presented with a system option dialog asking which source to use, which can either be the iOS Photos Gallery picker, or the iOS Files picker. Otherwise, it will automatically use the iOS Files picker. 
 
 The iOS pickers also support selecting files from an associated iCloud account if the user has signed in on the device. Note that for a production application, you'll need to add the iCloud capability to your iOS application, and register that entitlement via the Apple Developer site for that package id. After that, update the relevant keys as shown in the demo application's `Info.plist`.
 
 ## Additional Utils
-This plugin also exports a function `getFreeMBs` which a dev can use to check free space on the current device/app's cache folder which is where picked files get copied to. This is useful when working with larger video files to ensure you have enough free space before picking/copying the video file for use in your app. 
+
+This plugin also exports a function `getFreeMBs` which a dev can use to check free space on the current device/app's cache folder which is where picked files get copied to. This is useful when working with larger video files to ensure you have enough free space before picking/copying the video file for use in your app.
+
 ## License
 
 Apache License Version 2.0
