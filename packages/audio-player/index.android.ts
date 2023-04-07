@@ -160,6 +160,7 @@ export class AudioPlayer implements IAudioPlayer {
   private _events: Observable;
   private _options: AudioPlayerOptions;
   private _audioFocusManager: AudioFocusManager | null;
+  private _readyToPlay = false;
 
   debug: boolean;
 
@@ -184,6 +185,10 @@ export class AudioPlayer implements IAudioPlayer {
 
   get android(): any {
     return this._player;
+  }
+
+  get ready(): boolean {
+    return this._readyToPlay;
   }
 
   get volume(): number {
@@ -222,24 +227,14 @@ export class AudioPlayer implements IAudioPlayer {
   }
 
   /**
-   * Initializes the player with options, will not start playing audio.
-   * @param options [AudioPlayerOptions]
+   * Prepare Audio player by preloading an audio from file or URL
+   * @function prepareAudio
+   * @param options
    */
-  public initFromFile(options: AudioPlayerOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      options.autoPlay = false;
-      this.playFromFile(options).then(resolve, reject);
-    });
-  }
-
-  public playFromFile(options: AudioPlayerOptions): Promise<any> {
+  prepareAudio(options: AudioPlayerOptions): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         this._options = options;
-        if (options.autoPlay !== false) {
-          options.autoPlay = true;
-        }
-
         const audioPath = resolveAudioFilePath(options.audioFile);
         this._player.setAudioStreamType(android.media.AudioManager.STREAM_MUSIC);
         this._player.reset();
@@ -247,12 +242,6 @@ export class AudioPlayer implements IAudioPlayer {
 
         // check if local file or remote - local then `prepare` is okay https://developer.android.com/reference/android/media/MediaPlayer.html#prepare()
         console.log('preparing for playback');
-        if (Utils.isFileOrResourcePath(audioPath)) {
-          this._player.prepare();
-        } else {
-          this._player.prepareAsync();
-        }
-
         // On Info
         if (options.infoCallback) {
           this._player.setOnInfoListener(
@@ -270,34 +259,37 @@ export class AudioPlayer implements IAudioPlayer {
           new android.media.MediaPlayer.OnPreparedListener({
             onPrepared: (mp) => {
               console.log('MediaPlayer.OnPreparedListener: audio player prepared');
+              this._readyToPlay = true;
               if (options.autoPlay) {
                 this.play();
               }
-              resolve(null);
+              resolve(true);
             },
           })
         );
+        this._player.setOnErrorListener(
+          new android.media.MediaPlayer.OnErrorListener({
+            onError: (player: any, info: number, extra: number) => {
+              console.error('error preparing media');
+              this._readyToPlay = false;
+              this._player.reset();
+              this._abandonAudioFocus();
+              reject('MediaPlayer Error: Info= ' + info + ' Extra= ' + extra);
+              return false;
+            },
+          })
+        );
+        if (Utils.isFileOrResourcePath(audioPath)) {
+          this._player.prepare();
+        } else {
+          this._player.prepareAsync();
+        }
       } catch (ex) {
+        this._readyToPlay = false;
+        this._player.reset();
         this._abandonAudioFocus();
         reject(ex);
       }
-    });
-  }
-
-  /**
-   * Initializes the player with options, will not start playing audio.
-   * @param options
-   */
-  public initFromUrl(options: AudioPlayerOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      options.autoPlay = false;
-      this.playFromUrl(options).then(resolve, reject);
-    });
-  }
-
-  public playFromUrl(options: AudioPlayerOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      resolve(this.playFromFile(options));
     });
   }
 
@@ -322,6 +314,10 @@ export class AudioPlayer implements IAudioPlayer {
   public play(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
+        if (!this.ready) {
+          reject('Audio source not ready, call prepareAudio(options) first!');
+          return false;
+        }
         console.log('player play()');
         if (this._player && !this._player.isPlaying()) {
           // request audio focus, this will setup the onAudioFocusChangeListener

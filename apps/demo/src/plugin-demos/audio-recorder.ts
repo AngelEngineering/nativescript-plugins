@@ -145,8 +145,9 @@ export class DemoModel extends DemoSharedAudioRecorder {
 
   playRecording() {
     console.log('playing audio that was last recorded');
-    this.player.initFromFile(this._playOptions);
-    this.player.play();
+    this.player.prepareAudio(this._playOptions).then(() => {
+      this.player.play();
+    });
     const playBtn: Button = Frame.topmost().getViewById('playBtn');
     playBtn.visibility = 'collapsed';
     const stopPlayBtn: Button = Frame.topmost().getViewById('stopPlayBtn');

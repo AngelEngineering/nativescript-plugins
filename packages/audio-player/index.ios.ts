@@ -1,5 +1,5 @@
 import { knownFolders, Observable, path as nsFilePath, Utils } from '@nativescript/core';
-import { IAudioPlayer } from './common';
+import { IAudioPlayer, resolveAudioFilePath } from './common';
 import { AudioPlayerOptions } from './options';
 
 declare const AVAudioPlayer;
@@ -47,8 +47,10 @@ export class AudioPlayer extends Observable implements IAudioPlayer {
 
   private _player: AVAudioPlayer;
   private _task: NSURLSessionDataTask;
+  private _data: NSData;
   private delegate: TNSPlayerDelegate;
-
+  private _options: AudioPlayerOptions;
+  private _readyToPlay = false;
   debug: boolean;
   get ios(): any {
     return this._player;
@@ -62,6 +64,10 @@ export class AudioPlayer extends Observable implements IAudioPlayer {
     if (this._player && value >= 0) {
       this._player.volume = value;
     }
+  }
+
+  get ready(): boolean {
+    return this._readyToPlay;
   }
 
   public get duration() {
@@ -80,165 +86,155 @@ export class AudioPlayer extends Observable implements IAudioPlayer {
     return true;
   }
 
-  public initFromFile(options: AudioPlayerOptions): Promise<any> {
+  public prepareAudio(options: AudioPlayerOptions): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      // init only
-      options.autoPlay = false;
-      this.playFromFile(options).then(resolve, reject);
-    });
-  }
-
-  public playFromFile(options: AudioPlayerOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      // only if not explicitly set, default to true
-      if (options.autoPlay !== false) {
-        options.autoPlay = true;
-      }
-
       try {
-        let fileName = Utils.isString(options.audioFile) ? options.audioFile.trim() : '';
-        if (fileName.indexOf('~/') === 0) {
-          fileName = nsFilePath.join(knownFolders.currentApp().path, fileName.replace('~/', ''));
-        }
+        this._options = options;
+        const audioPath = resolveAudioFilePath(options.audioFile);
 
-        this.completeCallback = options.completeCallback;
-        this.errorCallback = options.errorCallback;
-        this.infoCallback = options.infoCallback;
-
-        const audioSession = AVAudioSession.sharedInstance();
-        if (options.audioMixing) {
-          audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.MixWithOthers);
-        } else {
-          audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.DuckOthers);
-        }
-
-        const output = audioSession.currentRoute.outputs.lastObject.portType;
-
-        if (output.match(/Receiver/)) {
+        if (Utils.isFileOrResourcePath(audioPath)) {
+          //if it's a local file, prepare should be almost instant
+          console.log('playing a local audio file');
           try {
-            audioSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord);
-            audioSession.overrideOutputAudioPortError(AVAudioSessionPortOverride.Speaker);
-            audioSession.setActiveError(true);
-          } catch (err) {
-            console.error('setting audioSession catergory failed', err);
-          }
-        }
+            let fileName = Utils.isString(options.audioFile) ? options.audioFile.trim() : '';
+            if (fileName.indexOf('~/') === 0) {
+              fileName = nsFilePath.join(knownFolders.currentApp().path, fileName.replace('~/', ''));
+            }
 
-        const errorRef = new interop.Reference();
-        this._player = AVAudioPlayer.alloc().initWithContentsOfURLError(NSURL.fileURLWithPath(fileName), errorRef);
-        if (errorRef && errorRef.value) {
-          reject(errorRef.value);
-          return;
-        } else if (this._player) {
-          if (this.delegate === undefined) this.delegate = TNSPlayerDelegate.initWithOwner(this);
-          this._player.delegate = this.delegate;
-          // enableRate to change playback speed
-          this._player.enableRate = true;
+            this.completeCallback = options.completeCallback;
+            this.errorCallback = options.errorCallback;
+            this.infoCallback = options.infoCallback;
 
-          if (options.metering) {
-            this._player.meteringEnabled = true;
-          }
+            const audioSession = AVAudioSession.sharedInstance();
+            if (options.audioMixing) {
+              audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.MixWithOthers);
+            } else {
+              audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.DuckOthers);
+            }
 
-          if (options.loop) {
-            this._player.numberOfLoops = -1;
-          }
+            const output = audioSession.currentRoute.outputs.lastObject.portType;
 
-          if (options.autoPlay) {
-            this._player.play();
-          }
+            if (output.match(/Receiver/)) {
+              try {
+                audioSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord);
+                audioSession.overrideOutputAudioPortError(AVAudioSessionPortOverride.Speaker);
+                audioSession.setActiveError(true);
+              } catch (err) {
+                console.error('setting audioSession catergory failed', err);
+              }
+            }
 
-          resolve(null);
-        } else {
-          reject();
-        }
-      } catch (ex) {
-        if (this.errorCallback) {
-          this.errorCallback({ ex });
-        }
-        reject(ex);
-      }
-    });
-  }
+            const errorRef = new interop.Reference();
+            this._player = AVAudioPlayer.alloc().initWithContentsOfURLError(NSURL.fileURLWithPath(fileName), errorRef);
+            if (errorRef && errorRef.value) {
+              this._readyToPlay = false;
+              reject(errorRef.value);
+              return;
+            } else if (this._player) {
+              if (this.delegate === undefined) this.delegate = TNSPlayerDelegate.initWithOwner(this);
+              this._player.delegate = this.delegate;
+              // enableRate to change playback speed
+              this._player.enableRate = true;
 
-  public initFromUrl(options: AudioPlayerOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      // init only
-      options.autoPlay = false;
-      this.playFromUrl(options).then(resolve, reject);
-    });
-  }
+              if (options.metering) {
+                this._player.meteringEnabled = true;
+              }
 
-  public playFromUrl(options: AudioPlayerOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      // only if not explicitly set, default to true
-      if (options.autoPlay !== false) {
-        options.autoPlay = true;
-      }
+              if (options.loop) {
+                this._player.numberOfLoops = -1;
+              }
 
-      try {
-        this._task = NSURLSession.sharedSession.dataTaskWithURLCompletionHandler(NSURL.URLWithString(options.audioFile), (data, response, error) => {
-          if (error !== null) {
+              // if (options.autoPlay) {
+              //   this._player.play();
+              // }
+              this._readyToPlay = true;
+              resolve(true);
+            } else {
+              reject(false);
+            }
+          } catch (ex) {
             if (this.errorCallback) {
-              this.errorCallback({ error });
+              this.errorCallback({ ex });
             }
-
-            reject();
+            this._readyToPlay = false;
+            reject(ex);
           }
+        } else {
+          console.log('playing remote audio file from URL');
+          //for url, need to wait for urlsession to load and return
+          try {
+            this.completeCallback = options.completeCallback;
+            this.errorCallback = options.errorCallback;
+            this.infoCallback = options.infoCallback;
+            this._task = NSURLSession.sharedSession.dataTaskWithURLCompletionHandler(NSURL.URLWithString(options.audioFile), (data, response, error) => {
+              if (error !== null) {
+                if (this.errorCallback) {
+                  this.errorCallback({ error });
+                }
+                this._readyToPlay = false;
+                reject(false);
+                return false;
+              }
+              console.log('remote urlsession prepared with response', response);
+              this._data = data;
+              resolve(true);
 
-          this.completeCallback = options.completeCallback;
-          this.errorCallback = options.errorCallback;
-          this.infoCallback = options.infoCallback;
+              const audioSession = AVAudioSession.sharedInstance();
+              if (options.audioMixing) {
+                audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.MixWithOthers);
+              } else {
+                audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.DuckOthers);
+              }
+              const output = audioSession.currentRoute.outputs.lastObject.portType;
 
-          const audioSession = AVAudioSession.sharedInstance();
-          if (options.audioMixing) {
-            audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.MixWithOthers);
-          } else {
-            audioSession.setCategoryWithOptionsError(AVAudioSessionCategoryAmbient, AVAudioSessionCategoryOptions.DuckOthers);
-          }
-          const output = audioSession.currentRoute.outputs.lastObject.portType;
+              if (output.match(/Receiver/)) {
+                try {
+                  audioSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord);
+                  audioSession.overrideOutputAudioPortError(AVAudioSessionPortOverride.Speaker);
+                  audioSession.setActiveError(true);
+                } catch (err) {
+                  console.error('Setting audioSession category failed.', err);
+                }
+              }
 
-          if (output.match(/Receiver/)) {
-            try {
-              audioSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord);
-              audioSession.overrideOutputAudioPortError(AVAudioSessionPortOverride.Speaker);
-              audioSession.setActiveError(true);
-            } catch (err) {
-              console.error('Setting audioSession category failed.', err);
+              const errorRef = new interop.Reference();
+              this._player = AVAudioPlayer.alloc().initWithDataError(data, errorRef);
+              if (errorRef && errorRef.value) {
+                reject(errorRef.value);
+                return;
+              } else if (this._player) {
+                this._player.delegate = TNSPlayerDelegate.initWithOwner(this);
+
+                // enableRate to change playback speed
+                this._player.enableRate = true;
+
+                this._player.numberOfLoops = options.loop ? -1 : 0;
+
+                if (options.metering) {
+                  this._player.meteringEnabled = true;
+                }
+
+                // if (options.autoPlay) {
+                //   this._player.play();
+                // }
+
+                resolve(true);
+              } else {
+                reject();
+              }
+            });
+
+            this._task.resume();
+          } catch (ex) {
+            if (this.errorCallback) {
+              this.errorCallback({ ex });
             }
+            reject(ex);
           }
-
-          const errorRef = new interop.Reference();
-          this._player = AVAudioPlayer.alloc().initWithDataError(data, errorRef);
-          if (errorRef && errorRef.value) {
-            reject(errorRef.value);
-            return;
-          } else if (this._player) {
-            this._player.delegate = TNSPlayerDelegate.initWithOwner(this);
-
-            // enableRate to change playback speed
-            this._player.enableRate = true;
-
-            this._player.numberOfLoops = options.loop ? -1 : 0;
-
-            if (options.metering) {
-              this._player.meteringEnabled = true;
-            }
-
-            if (options.autoPlay) {
-              this._player.play();
-            }
-
-            resolve(null);
-          } else {
-            reject();
-          }
-        });
-
-        this._task.resume();
-      } catch (ex) {
-        if (this.errorCallback) {
-          this.errorCallback({ ex });
         }
+
+        // resolve(true);
+      } catch (ex) {
         reject(ex);
       }
     });
@@ -263,6 +259,10 @@ export class AudioPlayer extends Observable implements IAudioPlayer {
   public play(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
+        if (!this.ready) {
+          reject('Audio source not ready, call prepareAudio(options) first!');
+          return false;
+        }
         if (!this.isAudioPlaying()) {
           this._player.play();
         }

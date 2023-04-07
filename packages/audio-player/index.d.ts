@@ -44,6 +44,7 @@ export interface AudioPlayerOptions {
    */
   infoCallback?: Function;
 }
+
 export interface IAudioPlayer {
   readonly ios?: any;
   readonly android?: any;
@@ -63,18 +64,22 @@ export interface IAudioPlayer {
    */
   duration: number;
 
-  initFromFile(options: AudioPlayerOptions): Promise<any>;
-  /**
-   * Starts playing audio file from local app files.
-   */
-  playFromFile(options: AudioPlayerOptions): Promise<any>;
+  // initFromFile(options: AudioPlayerOptions): Promise<any>;
+  // /**
+  //  * Starts playing audio file from local app files.
+  //  */
+  // playFromFile(options: AudioPlayerOptions): Promise<any>;
 
-  initFromUrl(options: AudioPlayerOptions): Promise<any>;
+  // initFromUrl(options: AudioPlayerOptions): Promise<any>;
 
-  /**
-   * Starts playing audio file from url
-   */
-  playFromUrl(options: AudioPlayerOptions): Promise<any>;
+  // /**
+  //  * Starts playing audio file from url
+  //  */
+  // playFromUrl(options: AudioPlayerOptions): Promise<any>;
+
+  //prepares audio from file or url to be played back
+  //if there is already an audio file prepared for this instance, disposes first and re-inits
+  prepareAudio(options: AudioPlayerOptions): Promise<boolean>;
 
   /**
    * Play audio file.
@@ -163,21 +168,15 @@ export declare class AudioPlayer {
    */
   setAudioFocusManager(manager: AudioFocusManager);
 
-  initFromFile(options: AudioPlayerOptions): Promise<any>;
-
   /**
-   * Starts playing audio file from local app files.
+   * Prepare Audio player by preloading an audio from file or URL
+   * @function prepareAudio
+   * @param options
    */
-  playFromFile(options: AudioPlayerOptions): Promise<any>;
-  initFromUrl(options: AudioPlayerOptions): Promise<any>;
+  prepareAudio(options: AudioPlayerOptions): Promise<boolean>;
 
   /**
-   * Starts playing audio file from url
-   */
-  playFromUrl(options: AudioPlayerOptions): Promise<any>;
-
-  /**
-   * Play audio file.
+   * Play audio file using options set by prepareAudio
    */
   play(): Promise<boolean>;
 

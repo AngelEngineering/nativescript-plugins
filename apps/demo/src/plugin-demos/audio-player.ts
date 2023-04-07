@@ -41,41 +41,72 @@ export class DemoModel extends DemoSharedAudioPlayer {
   //Doesn't load on Android, iOS only
   playLocalCafAudio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.caf';
-    this.player.playFromFile(this._playOptions);
-
-    const file = File.fromPath(this._playOptions.audioFile);
-    console.log('playing file ', file.path, ' with size', file.size);
-    this.showInfo(file);
+    this.player.prepareAudio(this._playOptions).then((status) => {
+      if (status) {
+        this.player.play();
+        const file = File.fromPath(this._playOptions.audioFile);
+        console.log('playing file ', file.path, ' with size', file.size);
+        this.showInfo(file);
+      } else {
+        console.log('ERROR! Unable to prepare audio!');
+      }
+    });
   }
 
   playLocalM4aAudio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.m4a';
-    this.player.playFromFile(this._playOptions);
-
-    const file = File.fromPath(this._playOptions.audioFile);
-    this.showInfo(file);
+    this.player.prepareAudio(this._playOptions).then((status) => {
+      if (status) {
+        this.player.play();
+        const file = File.fromPath(this._playOptions.audioFile);
+        console.log('playing file ', file.path, ' with size', file.size);
+        this.showInfo(file);
+      } else {
+        console.log('ERROR! Unable to prepare audio!');
+      }
+    });
   }
 
   playLocalMp3Audio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.mp3';
-    this.player.playFromFile(this._playOptions);
-
-    const file = File.fromPath(this._playOptions.audioFile);
-    this.showInfo(file);
+    this.player.prepareAudio(this._playOptions).then((status) => {
+      if (status) {
+        this.player.play();
+        const file = File.fromPath(this._playOptions.audioFile);
+        console.log('playing file ', file.path, ' with size', file.size);
+        this.showInfo(file);
+      } else {
+        console.log('ERRRO! Unable to prepare audio!');
+      }
+    });
   }
 
   playLocalWavAudio() {
     this._playOptions.audioFile = knownFolders.currentApp().path + '/audio/example.wav';
-    this.player.playFromFile(this._playOptions);
-
-    const file = File.fromPath(this._playOptions.audioFile);
-    this.showInfo(file);
+    this.player.prepareAudio(this._playOptions).then((status) => {
+      if (status) {
+        this.player.play();
+        const file = File.fromPath(this._playOptions.audioFile);
+        console.log('playing file ', file.path, ' with size', file.size);
+        this.showInfo(file);
+      } else {
+        console.log('ERRRO! Unable to prepare audio!');
+      }
+    });
   }
 
   playRemoteAudio() {
     this._playOptions.audioFile = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-    this.player.playFromUrl(this._playOptions); //for iOS this must be used, for Android it just calls playFromFile
-    this.showInfo(null);
+    // await this.player.play().then(res=>{console.log("returned ",res)}).catch(err=>{console.error("error:",err)})
+    this.player.prepareAudio(this._playOptions).then((status) => {
+      if (status) {
+        this.player.play();
+        console.log('playing remote url ', this._playOptions.audioFile);
+        this.showInfo(null);
+      } else {
+        console.log('ERRRO! Unable to prepare audio!');
+      }
+    });
   }
 
   stopPlayback() {
