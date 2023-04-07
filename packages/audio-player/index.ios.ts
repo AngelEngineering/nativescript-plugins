@@ -144,9 +144,6 @@ export class AudioPlayer extends Observable implements IAudioPlayer {
                 this._player.numberOfLoops = -1;
               }
 
-              // if (options.autoPlay) {
-              //   this._player.play();
-              // }
               this._readyToPlay = true;
               resolve(true);
             } else {
@@ -213,10 +210,6 @@ export class AudioPlayer extends Observable implements IAudioPlayer {
                 if (options.metering) {
                   this._player.meteringEnabled = true;
                 }
-
-                // if (options.autoPlay) {
-                //   this._player.play();
-                // }
 
                 resolve(true);
               } else {

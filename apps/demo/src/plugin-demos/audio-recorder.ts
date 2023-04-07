@@ -64,7 +64,6 @@ export class DemoModel extends DemoSharedAudioRecorder {
   protected _playOptions: AudioPlayerOptions = {
     audioFile: '',
     loop: false,
-    autoPlay: false,
     // metering:?,
     // pitch:?,
     audioMixing: false,

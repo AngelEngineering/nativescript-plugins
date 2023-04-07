@@ -18,7 +18,6 @@ export class DemoModel extends DemoSharedAudioPlayer {
   protected _playOptions: AudioPlayerOptions = {
     audioFile: '',
     loop: false,
-    autoPlay: true, //play once loaded until logic fixed with initFromFile async waits for url prepared before allowing play()
     // metering:?,
     // pitch:?,
     audioMixing: false,

@@ -20,11 +20,6 @@ export interface AudioPlayerOptions {
   loop: boolean;
 
   /**
-   * Prevent autoplay if desired as player autoplays be default
-   */
-  autoPlay?: boolean;
-
-  /**
    * Enable metering. Off by default.
    */
   metering?: boolean;

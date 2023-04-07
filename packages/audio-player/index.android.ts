@@ -260,9 +260,6 @@ export class AudioPlayer implements IAudioPlayer {
             onPrepared: (mp) => {
               console.log('MediaPlayer.OnPreparedListener: audio player prepared');
               this._readyToPlay = true;
-              if (options.autoPlay) {
-                this.play();
-              }
               resolve(true);
             },
           })
