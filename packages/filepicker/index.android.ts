@@ -73,6 +73,7 @@ export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> 
             const item = clipData.getItemAt(i);
             if (!item) continue;
             const uriPath = getPathFromURI(item.getUri());
+            if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
             const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
             const file = getNSFile(item.getUri(), fileName);
             if (file) {
@@ -83,6 +84,7 @@ export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> 
         } else {
           const uri = e.intent.getData() as android.net.Uri;
           const uriPath = getPathFromURI(uri);
+          if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
           const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
           const file = getNSFile(uri, fileName);
           if (file) {
@@ -93,7 +95,7 @@ export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> 
         removeResultListener();
         resolve(results);
       } catch (e) {
-        console.error(e, { sentryCategory: 'showPicker' });
+        console.error(e);
         removeResultListener();
         reject(e);
       }
@@ -191,6 +193,7 @@ function getNSFile(uri, fileName) {
   //try to extract the filename and file suffix to create a temp file
   //Note: Android doesn't recognize file types without a suffix though and picker won't enable these for selecting
   let fileParts = fileName.split('.');
+  console.log('fileName', fileName);
   let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
   let filePrefix = fileSuffix.length > 1 ? fileName.slice(0, fileName.length - fileSuffix.length) : fileName;
   let outputFilePath = TempFile.getPath(filePrefix, fileSuffix);
@@ -260,7 +263,7 @@ export function getPathFromURI(uri: android.net.Uri) {
       inputStream.close();
       outputStream.close();
     } catch (e) {
-      console.error(e, { sentryCategory: 'picker:error:getDriveFilePath' });
+      console.error(e);
     }
     return file.getPath();
   };
