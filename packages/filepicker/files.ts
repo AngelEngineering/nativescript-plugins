@@ -91,7 +91,7 @@ export class AssetDownloader {
       else if (this.asset.mediaType == PHAssetMediaType.Video) {
         this.exportVideo(resolve);
       } else {
-        console.warn('Unable to convert media asset to a file', { sentryCategory: 'asset-downloader-download' });
+        console.warn('Unable to convert media asset to a file');
         resolve(null);
       }
     });
@@ -158,7 +158,7 @@ export class AssetDownloader {
             throw new Error('Asset export did not complete for unknown reasons - status: ' + status);
           }
         } catch (e) {
-          console.error(e, { sentryCategory: 'export-video' });
+          console.error(e);
         }
         resolve(null);
       });
