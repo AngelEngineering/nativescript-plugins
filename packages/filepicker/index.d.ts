@@ -9,5 +9,6 @@ export enum MediaType {
   DOCUMENT = 0x10,
   ALL = IMAGE | AUDIO | VIDEO | ARCHIVE | DOCUMENT,
 }
-export function showPicker(type: MediaType, multiple: boolean): Promise<File[]>;
+export function filePicker(type: MediaType, multiple: boolean): Promise<File[]>;
+export function galleryPicker(type: MediaType, multiple: boolean): Promise<File[]>;
 export function getFreeMBs(filepath: string): number;

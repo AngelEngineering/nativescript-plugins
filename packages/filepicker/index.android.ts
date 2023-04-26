@@ -40,8 +40,8 @@ export function getFreeMBs(filepath: string): number {
       freesize = (freeBlocks * blockSize) / (1024 * 1024);
       totalsize = (totalBlocks * blockSize) / (1024 * 1024);
     }
-    console.log('total space: MB', totalsize);
-    console.log('free space: MB', freesize);
+    // console.log('total space: MB', totalsize);
+    // console.log('free space: MB', freesize);
     return freesize;
   } catch (e) {
     console.error(e);
@@ -49,12 +49,11 @@ export function getFreeMBs(filepath: string): number {
 }
 
 /**
- * @function showPicker returns an array of files selected by user
+ * @function showPicker returns an array of public files selected by user
  * @param {MediaType} type  OR'ed from all possible MediaType's to describe types of files allowed in selection
  * @param {boolean} multiple if multiple selections are allowed
  */
-export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
-  // console.log('showPicker() type:', type);
+export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> {
   return new Promise((resolve, reject) => {
     // callback for androidActivity.showActivityForResult
     function onResult(e: AndroidActivityResultEventData): void {
@@ -74,6 +73,7 @@ export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> 
             const item = clipData.getItemAt(i);
             if (!item) continue;
             const uriPath = getPathFromURI(item.getUri());
+            if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
             const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
             const file = getNSFile(item.getUri(), fileName);
             if (file) {
@@ -84,6 +84,7 @@ export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> 
         } else {
           const uri = e.intent.getData() as android.net.Uri;
           const uriPath = getPathFromURI(uri);
+          if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
           const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
           const file = getNSFile(uri, fileName);
           if (file) {
@@ -94,7 +95,7 @@ export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> 
         removeResultListener();
         resolve(results);
       } catch (e) {
-        console.error(e, { sentryCategory: 'showPicker' });
+        console.error(e);
         removeResultListener();
         reject(e);
       }
@@ -131,32 +132,36 @@ export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> 
 }
 
 /**
+ * @function galleryPicker returns an array of Photos gallery files selected by user, same as showPicker for Android currently.
+ * @param {MediaType} type  OR'ed from all possible MediaType's to describe types of files allowed in selection
+ * @param {boolean} multiple if multiple selections are allowed
+ */
+export function galleryPicker(type: MediaType, multiple: boolean): Promise<File[]> {
+  console.error('Only supported for iOS currently, using filePicker instead!');
+  return filePicker(type, multiple);
+}
+
+/**
  * @function getMediaTypes returns an array of mime types for Android picker intent
  * @param {MediaType} types  OR'ed from all possible MediaType's to describe types of files allowed in selection
  */
 function getMediaTypes(types: MediaType) {
   let fileTypes = [];
   if (types & MediaType.AUDIO) {
-    // console.log('adding audio types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.AUDIO]);
   }
   if (types & MediaType.VIDEO) {
-    // console.log('adding video types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.VIDEO]);
   }
   if (types & MediaType.IMAGE) {
-    // console.log('adding image types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.IMAGE]);
   }
   if (types & MediaType.DOCUMENT) {
-    // console.log('adding document types');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.DOCUMENT]);
   }
   if (types & MediaType.ARCHIVE) {
-    // console.log('adding archive type');
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.ARCHIVE]);
   }
-  // console.log('final types array:', fileTypes);
   let mimeTypes = fileTypes.map((s) => android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(s)).filter((s) => !!s);
   //convert to android type syntax
   return convertToArray(mimeTypes);
@@ -188,6 +193,7 @@ function getNSFile(uri, fileName) {
   //try to extract the filename and file suffix to create a temp file
   //Note: Android doesn't recognize file types without a suffix though and picker won't enable these for selecting
   let fileParts = fileName.split('.');
+  console.log('fileName', fileName);
   let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
   let filePrefix = fileSuffix.length > 1 ? fileName.slice(0, fileName.length - fileSuffix.length) : fileName;
   let outputFilePath = TempFile.getPath(filePrefix, fileSuffix);
@@ -256,10 +262,8 @@ export function getPathFromURI(uri: android.net.Uri) {
       }
       inputStream.close();
       outputStream.close();
-      // console.log('File Path', 'Path ' + file.getPath());
-      // console.log('File Size', 'Size ' + file.length());
     } catch (e) {
-      console.error(e, { sentryCategory: 'picker:error:getDriveFilePath' });
+      console.error(e);
     }
     return file.getPath();
   };
@@ -309,10 +313,8 @@ export function getPathFromURI(uri: android.net.Uri) {
   }
   // DocumentProvider
   if ((<ProviderWithDocumentsContact>android.provider).DocumentsContract.isDocumentUri(context, uri)) {
-    // console.log('API version >19, using scoped storage');
     // ExternalStorageProvider
     if (isExternalStorageDocument(uri)) {
-      // console.log('isExternalStorageDocument()');
       const docId: string = (<ProviderWithDocumentsContact>android.provider).DocumentsContract.getDocumentId(uri);
       const split = docId.split(':');
       const type: string = split[0].toLowerCase();
@@ -332,7 +334,6 @@ export function getPathFromURI(uri: android.net.Uri) {
     }
     // DownloadsProvider
     else if (isDownloadsDocument(uri)) {
-      // console.log('isDownloadsDocument()');
       if (parseInt(Device.sdkVersion, 10) >= 23) {
         let cursor = null;
         try {
@@ -341,7 +342,6 @@ export function getPathFromURI(uri: android.net.Uri) {
             let fileName = cursor.getString(0);
             let path = android.os.Environment.getExternalStorageDirectory().toString() + '/Download/' + fileName;
             if (!android.text.TextUtils.isEmpty(path)) {
-              // console.log('isDownloadsDocument: return path ', path);
               return path;
             }
           }
@@ -384,7 +384,6 @@ export function getPathFromURI(uri: android.net.Uri) {
     }
     // MediaProvider
     else if (isMediaDocument(uri)) {
-      // console.log('isMediaDocument()');
       const docId = (<ProviderWithDocumentsContact>android.provider).DocumentsContract.getDocumentId(uri);
       const split = docId.split(':');
       const type = split[0];
@@ -410,23 +409,18 @@ export function getPathFromURI(uri: android.net.Uri) {
   }
   // MediaStore (and general)
   else if ('content' === uri.getScheme().toLowerCase()) {
-    // console.log('content()');
     if (isGooglePhotosUri(uri)) {
-      // console.log('isGooglePhotosUri()');
       return uri.getLastPathSegment();
     }
 
     if (isGoogleDriveUri(uri)) {
-      // console.log('isGoogleDriveUri()');
       return getDriveFilePath(uri, context);
     }
 
-    // console.log('using getDataColumn()');
     return getDataColumn(context, uri, null, null);
   }
   // File
   else if ('file' === uri.getScheme().toLowerCase()) {
-    // console.log('file type, using getPath()');
     return uri.getPath();
   }
 

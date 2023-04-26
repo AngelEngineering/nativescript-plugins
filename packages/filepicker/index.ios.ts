@@ -1,5 +1,5 @@
 import { MediaType } from './index.common';
-import { Application, action, ActionOptions, File } from '@nativescript/core';
+import { Application, File } from '@nativescript/core';
 import { iOSNativeHelper } from '@nativescript/core/utils';
 import { AssetDownloader, TempFile } from './files';
 
@@ -9,54 +9,30 @@ let _iosDocumentPickerController: UIDocumentPickerViewController;
 let _iosGalleryPickerController: UIImagePickerController;
 let _iosPHPickerController: any; //for iOS<14 we use UIImagePicker. ios14+ uses PHPicker
 
-export function showPicker(type: MediaType, multiple: boolean): Promise<File[]> {
-  // console.log('showPicker() ', type, multiple);
-
-  if (type == MediaType.IMAGE || type == MediaType.VIDEO || type == MediaType.IMAGE + MediaType.VIDEO) {
-    // console.log('Only selecting image/video/both, show choice dialog');
-    // present an action dialog to determine where they'd like to load from
-    const message = 'Add ' + (type == MediaType.IMAGE ? 'Images' : type == MediaType.VIDEO ? 'Videos' : 'Images and Videos') + ' from?';
-    const actionOptions: ActionOptions = {
-      message: message,
-      cancelButtonText: 'Cancel',
-      actions: ['Photos', 'Files'],
-    };
-    return action(actionOptions).then((result) => {
-      if (result == 'Photos') {
-        //NOTE: iOS 14 adds new photo gallery privacy access restrictions for UIImagePicker, and introduces
-        //     the new PHPicker component which doesn't requires perms and now supports multiple selections.
-        if (+iOSNativeHelper.MajorVersion >= 14) {
-          // console.log('iOS version>=14, using Phpicker');
-          return PHPicker(type, multiple);
-        }
-        //gallery UIImage Picker version(images and video) for ios<14
-        //NOTE: the iOS UIImagePickerController does not allow multiple selections
-        else {
-          console.warn('iOS Photos Gallery only allows single selections!');
-          return ImgPicker(type);
-        }
-      } else if (result == 'Files') {
-        //file provider picker version (doesn't need file system/gallery permissions)
-        return DocPicker(type, multiple);
-      } else return Promise.reject(null);
-    });
-  } else {
-    // console.log('Can only select these types from document picker');
-    return DocPicker(type, multiple);
+export function galleryPicker(type: MediaType, multiple: boolean): Promise<File[]> {
+  //NOTE: iOS 14+ adds new photo/video gallery privacy access restrictions for UIImagePicker, and introduces
+  //     the new PHPicker component which doesn't requires perms and supports multiple selections.
+  if (+iOSNativeHelper.MajorVersion >= 14) {
+    return PHPicker(type, multiple);
+  }
+  //gallery UIImage Picker version(images and video) for ios<14
+  //NOTE: the iOS UIImagePickerController does not allow multiple selections
+  else {
+    if (multiple) console.warn('iOS UIImagePickerController only allows single selections!');
+    return ImgPicker(type);
   }
 }
 
 export function getFreeMBs(filepath: string): number {
   //iOS devices only have a single storage partition to work with, so we can use any path to check stats
   const attributeDictionary: NSDictionary<string, any> = NSFileManager.defaultManager.attributesOfFileSystemForPathError(filepath);
-  let totalsize: number = +attributeDictionary.valueForKey(NSFileSystemSize) / (1024 * 1024);
+  // let totalsize: number = +attributeDictionary.valueForKey(NSFileSystemSize) / (1024 * 1024);
   const freesize: number = +attributeDictionary.valueForKey(NSFileSystemFreeSize) / (1024 * 1024);
   return freesize;
 }
 
 function PHPicker(type: MediaType, multiple: boolean): Promise<[File]> {
   return new Promise((resolve, reject) => {
-    // console.log('multiple?', multiple);
     const config: PHPickerConfiguration = PHPickerConfiguration.new();
     config.selectionLimit = multiple ? 0 : 1;
     config.filter = PHPickerFilter.anyFilterMatchingSubfilters(iOSNativeHelper.collections.jsArrayToNSArray(getPHTypes(type)));
@@ -73,7 +49,7 @@ function ImgPicker(type: MediaType): Promise<[File]> {
     _iosGalleryPickerController = UIImagePickerController.new();
     let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
     _iosGalleryPickerController.mediaTypes = mediaTypes;
-    //image/video editing not allowed for now as we need to process changes manually for iOS gallery picker
+    //image/video editing not allowed for now as we would need to process changes manually before returning media
     _iosGalleryPickerController.allowsEditing = false;
     _iosGalleryPickerController.allowsImageEditing = false;
 
@@ -84,7 +60,7 @@ function ImgPicker(type: MediaType): Promise<[File]> {
   });
 }
 
-function DocPicker(type: MediaType, multiple: boolean): Promise<[File]> {
+export function filePicker(type: MediaType, multiple: boolean): Promise<[File]> {
   return new Promise((resolve, reject) => {
     let mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
     _iosDocumentPickerController = UIDocumentPickerViewController.alloc().initWithDocumentTypesInMode(
@@ -109,7 +85,7 @@ function DocPicker(type: MediaType, multiple: boolean): Promise<[File]> {
 }
 // }
 
-//Document Picker delegate
+//UIDocument Picker delegate
 @NativeClass()
 class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerDelegate {
   public static ObjCProtocols = [UIDocumentPickerDelegate];
@@ -145,12 +121,9 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
   // if only single selection is allowed? sometimes, usually the next one handles all returns
   documentPickerDidPickDocumentAtURL(controller: UIDocumentPickerViewController, url: NSURL): void {
     let access = url.startAccessingSecurityScopedResource();
-    // log('access: ', access);
-    // log('>>> did pick document >>>');
     let tmppath = TempFile.getPath('asset', '.tmp');
     File.fromPath(tmppath).removeSync();
     let success = NSFileManager.defaultManager.copyItemAtPathToPathError(url.path, tmppath);
-    // log('copy success?', success);
     const file = File.fromPath(tmppath);
     // persist original file name and extension in tmp file
     const originalFilename = url.lastPathComponent;
@@ -172,23 +145,17 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
   //if multiple selections allowed:
   documentPickerDidPickDocumentsAtURLs(controller: UIDocumentPickerViewController, urls: NSArray<NSURL>): void {
     const files: File[] = [];
-    //This view can't display an UIActivityIndicatorView inside it using our usual ios spinner approach,
+    //This view can't display an UIActivityIndicatorView inside it using the usual ios spinner approach,
     //    but picker shows a small spinner on the "Open" button while processing
     //Process picker results
     for (let i = 0; i < urls.count; i++) {
       let url = urls.objectAtIndex(i); //urls[0];
       let access = url.startAccessingSecurityScopedResource();
-      // log('access: ', access);
-      // log('>>> did pick documents >>>', url.absoluteString);
       //can't access directly, need to copy first to local app directory
       let tmppath = TempFile.getPath('asset', '.tmp');
-      // log('Will save file to temp path: ', tmppath);
       File.fromPath(tmppath).removeSync();
       let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(url.path, tmppath);
-      // log('copy success?', suc);
       const file = File.fromPath(tmppath);
-      // file['originalFilename'] = url.lastPathComponent;
-      // files.push(file);
       // persist original file name and extension in tmp file
       const originalFilename = url.lastPathComponent;
       const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
@@ -209,14 +176,13 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
   }
 
   documentPickerWasCancelled(controller: UIDocumentPickerViewController): void {
-    // log('>>> did cancel document picker >>>');
     controller.dismissViewControllerAnimatedCompletion(true, null);
     this._reject(null);
     this.deRegisterFromGlobal();
   }
 }
 
-//Image Gallery Picker delegate
+//Photos Gallery (UIImage) Picker delegate
 @NativeClass()
 class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePickerControllerDelegate {
   public static ObjCProtocols = [UIImagePickerControllerDelegate];
@@ -252,24 +218,15 @@ class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePic
 
   //returns media item picked from gallery
   imagePickerControllerDidFinishPickingMediaWithInfo(picker: UIImagePickerController, info: NSDictionary<string, any>): void {
-    // log('>>> imagePickerControllerDidFinishPickingMediaWithInfo >>>');
     if (info) {
-      //This view can't display an UIActivityIndicatorView inside it using our usual ios spinner approach,
+      //This view can't display an UIActivityIndicatorView inside it using the usual ios spinner approach,
       //    but picker shows a progress indicator when preparing video media, and images return almost instantly
-
-      // let media = info.valueForKey(UIImagePickerControllerMediaURL);
-      // let image = info.valueForKey(UIImagePickerControllerOriginalImage);
-      // let image_edited = info.valueForKey(UIImagePickerControllerEditedImage);
       let asset = info.valueForKey(UIImagePickerControllerPHAsset);
-      // let type = info.valueForKey(UIImagePickerControllerMediaType);
-      // let meta = info.valueForKey(UIImagePickerControllerMediaMetadata);
-      // log('picked media info: ', media, image, image_edited, asset, type, meta);
       const downloader = new AssetDownloader(asset);
       downloader.download().then((res) => {
         this._resolve([res]); //returns a NS file object although filename will be of form assset???.tmp, but has originalFilename attached
       });
     } else {
-      // log('>>> nothing returned from picker >>>');
       this._reject();
     }
     if (!!picker && !!picker.presentingViewController) picker.presentingViewController.dismissViewControllerAnimatedCompletion(true, null);
@@ -278,18 +235,13 @@ class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePic
 
   //this should never be called unless we enable editing for ios gallery selections
   imagePickerControllerDidFinishPickingImageEditingInfo(picker: UIImagePickerController, image: UIImage, editingInfo: NSDictionary<string, any>) {
-    console.warn('WARNING: image picker editing feature has not yet been fully implemented!', {
-      sentryCategory: 'picker:warn',
-    });
-    // log('>>> imagePickerControllerDidFinishPickingImageEditingInfo >>>');
+    console.warn('WARNING: image picker editing feature has not yet been fully implemented!');
     if (!!picker && !!picker.presentingViewController) picker.presentingViewController.dismissViewControllerAnimatedCompletion(true, null);
-    // log('>>> image >>>', image, editingInfo);
     this._reject();
     this.deRegisterFromGlobal();
   }
 
   imagePickerControllerDidCancel(picker: UIImagePickerController): void {
-    // log('>>> imagePickerControllerDidCancel >>>');
     if (!!picker && !!picker.presentingViewController) picker.presentingViewController.dismissViewControllerAnimatedCompletion(true, null);
     this._reject();
     this.deRegisterFromGlobal();
@@ -328,10 +280,9 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
     if (!this._owner) return null;
     return this._owner.get();
   }
+
   //returns media items picked from gallery
   pickerDidFinishPicking(picker: PHPickerViewController, results: NSArray<PHPickerResult>): void {
-    // log('>>> imagePickerControllerDidFinishPickingMediaWithInfo >>>');
-
     let files: File[] = [];
     let waitCount = results.count;
     let errorCount = 0;
@@ -349,31 +300,20 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
       currentView.addSubview(loaderView);
       indicator.startAnimating();
 
-      //process picker results
+      //process picker results, but warn user if a livePhoto is selected as those are not yet supported
       for (let i = 0; i < results.count; i++) {
         let pickerresult: PHPickerResult = results.objectAtIndex(i);
-        // log(pickerresult.itemProvider);
-        // log('image?', pickerresult.itemProvider.hasItemConformingToTypeIdentifier(kUTTypeImage));
-        // log('movie?', pickerresult.itemProvider.hasItemConformingToTypeIdentifier(kUTTypeMovie));
         let typeIdentifier = pickerresult.itemProvider.registeredTypeIdentifiers.firstObject;
-        // log('type:', typeIdentifier);
         if (typeIdentifier == 'com.apple.private.auto-loop-gif') {
-          // log('User trying to pick a livePhoto, not yet supported');
           livePhotoFound = true;
-          //attempting this triggers the permissions dialog with the selective access option, which is not handled yet
-          // let phasset = PHAsset.fetchAssetsWithLocalIdentifiersOptions([pickerresult.assetIdentifier],null)
         }
         pickerresult.itemProvider.loadFileRepresentationForTypeIdentifierCompletionHandler(typeIdentifier, (result: NSURL, err: NSError) => {
           if (result) {
-            // log(result);
             //copy this to somewhere app has access to
             let tmppath = TempFile.getPath('asset', '.tmp');
-            // log('Will save file to temp path: ', tmppath);
             File.fromPath(tmppath).removeSync();
             let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(result.path, tmppath);
-            // log('copy success?', suc);
             const file = File.fromPath(tmppath);
-            // file['originalFilename'] = result.lastPathComponent;
             // persist original file name and extension in tmp file
             const originalFilename = result.lastPathComponent;
             const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
@@ -385,11 +325,10 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
             file['originalFilename'] = originalFilename;
             // update name so uploaded file will have the same name as the original file
             file.renameSync(originalFilename);
-            // log('added file', file);
             files.push(file);
           }
           if (err) {
-            console.error(err.description, { sentryCategory: 'picker:error:pick:' + i });
+            console.error(err.description);
             errorCount++;
           }
           waitCount--;
@@ -401,16 +340,14 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
           setTimeout(() => waitForComplete(delegate), 500);
         } else {
           if (!!picker && !!picker.presentingViewController) picker.presentingViewController.dismissViewControllerAnimatedCompletion(true, null);
-          // console.log('done preparing results, resolving files array', files);
           delegate._resolve(files);
           delegate.deRegisterFromGlobal();
 
-          if (errorCount > 0) console.warn(livePhotoFound ? 'Live Photos are not currently supported' : 'Unable to add {count, plural, one {{count} selection}} other {{count} selections}} from your device'.replace('{count, plural, one {{count} selection}} other {{count} selections}}', '' + errorCount));
+          if (errorCount > 0) console.warn(livePhotoFound ? 'Live Photos are not currently supported' : `Unable to select ${errorCount}? selections from your device`);
         }
       }
       waitForComplete(this);
     } else {
-      // log('>>> nothing returned from picker >>>');
       this._reject();
       this.deRegisterFromGlobal();
     }
@@ -420,22 +357,12 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
 // used to configure media types for PHPicker
 function getPHTypes(type: MediaType): Array<PHPickerFilter> {
   let fileTypes = [];
-  // if (type & MediaType.AUDIO) {
-  //   log('phpicker does not support audio type');
-  // }
   if (type & MediaType.VIDEO) {
-    // log('adding video types');
     fileTypes = fileTypes.concat(PHPickerFilter.videosFilter);
   }
   if (type & MediaType.IMAGE) {
-    // log('adding image types');
     fileTypes = fileTypes.concat(PHPickerFilter.imagesFilter);
   }
-  // if (type & MediaType.DOCUMENT) {
-  //   log('phpicker does not support document type');
-  // }
-  // log('final types array:', fileTypes);
-  // fileTypes = fileTypes.concat(PHPickerFilter.livePhotosFilter);
   //Note: currently livePhotos are included if either Image or Video types are allowed, although we don't handle them yet
   return fileTypes;
 }
@@ -444,26 +371,20 @@ function getPHTypes(type: MediaType): Array<PHPickerFilter> {
 function getMediaTypes(type: MediaType): Array<string> {
   let fileTypes = [];
   if (type & MediaType.AUDIO) {
-    // log('adding audio type');
     fileTypes = fileTypes.concat(MediaFileTypes[MediaType.AUDIO]);
   }
   if (type & MediaType.VIDEO) {
-    // log('adding video type');
     fileTypes = fileTypes.concat(MediaFileTypes[MediaType.VIDEO]);
   }
   if (type & MediaType.IMAGE) {
-    // log('adding image type');
     fileTypes = fileTypes.concat(MediaFileTypes[MediaType.IMAGE]);
   }
   if (type & MediaType.DOCUMENT) {
-    // log('adding document type');
     fileTypes = fileTypes.concat(MediaFileTypes[MediaType.DOCUMENT]);
   }
   if (type & MediaType.ARCHIVE) {
-    // log('adding archive type');
     fileTypes = fileTypes.concat(MediaFileTypes[MediaType.ARCHIVE]);
   }
-  // log('final type array:', fileTypes);
   return fileTypes;
 }
 
