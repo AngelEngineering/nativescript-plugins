@@ -67,11 +67,14 @@ export class Downloader extends DownloaderCommon {
           public URLSessionTaskDidCompleteWithError(_session: NSURLSession, task: NSURLSessionTask, error: NSError) {
             this.handle.closeAndReturnError();
             if (error) {
+              //   console.log('URLSessionTaskDidCompleteWithError', error);
               emit(DownloaderCommon.DOWNLOAD_ERROR, { error });
               reject(error.localizedDescription);
             } else {
+              //   console.log('URLSessionTaskDidCompleteWithError', task?.response);
               const statusCode = (task?.response as NSHTTPURLResponse)?.statusCode;
               if (statusCode < 200 || statusCode >= 400) {
+                emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error! Server status code:' + statusCode });
                 return reject('Server responded with status code ' + statusCode);
               }
               emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: file.path });

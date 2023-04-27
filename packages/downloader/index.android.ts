@@ -54,13 +54,14 @@ export class Downloader extends DownloaderCommon {
         // console.log(`Downloading via downloadManager with refId: ${refId}`);
         const progressInterval = setInterval(() => {
           const status = getDownloadStatus(this.downloadManager, refId);
-          // console.log(`Download status: ${JSON.stringify(status)}`);
+          //   console.log(`Download status: ${JSON.stringify(status)}`);
           if (status.state === DownloadState.RUNNING) {
             if (!started) {
               started = true;
+              //   console.log(`Download started`);
               emit(DownloaderCommon.DOWNLOAD_STARTED, { contentLength: status.bytesTotal });
             } else {
-              // console.log('Downloading with status:', JSON.stringify(status));
+              //   console.log('Downloading with status:', JSON.stringify(status));
               emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: status.bytesTotal > 0 ? status.bytesDownloaded / status.bytesTotal : 0 });
             }
           } else if (status.state === DownloadState.FAILED) {
@@ -69,12 +70,13 @@ export class Downloader extends DownloaderCommon {
             emit(DownloaderCommon.DOWNLOAD_ERROR, { error: status.reason });
           } else if (status.state === DownloadState.SUCCESFUL) {
             // console.log(`Download SUCCESS!`);
+            emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: 1 });
             clearInterval(progressInterval);
             const file = File.fromPath(downloadPath);
             emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: downloadPath });
             resolve(file);
           }
-        }, 1000);
+        }, 250);
       } catch (err) {
         console.error(`An unhandled error occurred download.android: ${err?.filename}, line: ${err?.lineno} :`);
         emit(DownloaderCommon.DOWNLOAD_ERROR, { error: err?.message });

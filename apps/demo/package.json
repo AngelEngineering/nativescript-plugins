@@ -4,12 +4,14 @@
   "license": "SEE LICENSE IN LICENSE",
   "repository": "https://github.com/AngelEngineering/nativescript-plugins",
   "dependencies": {
+    "@angelengineering/downloader": "file:../../packages/downloader",
     "@angelengineering/filepicker": "file:../../packages/filepicker",
     "@angelengineering/flashlight": "file:../../packages/flashlight",
     "@nativescript-community/perms": "^2.2.25",
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
     "@nstudio/nativescript-checkbox": "^2.0.5",
-    "@angelengineering/downloader": "file:../../packages/downloader"
+    "@nstudio/nativescript-loading-indicator": "4.1.2",
+    "@valor/nativescript-feedback": "2.0.2"
   },
   "devDependencies": {
     "@nativescript/android": "~8.4.0",

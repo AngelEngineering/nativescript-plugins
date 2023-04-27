@@ -1,5 +1,5 @@
 import { DownloaderCommon } from './common';
-import { EventData } from '@nativescript/core/data/observable';
+import { EventData, File } from '@nativescript/core';
 
 export declare class Downloader extends DownloaderCommon {
   download(options: DownloadOptions): Promise<File>;
