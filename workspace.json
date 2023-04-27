@@ -3,7 +3,8 @@
   "projects": {
     "demo": "apps/demo",
     "flashlight": "packages/flashlight",
-    "filepicker": "packages/filepicker"
+    "filepicker": "packages/filepicker",
+    "downloader": "packages/downloader"
   },
   "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }

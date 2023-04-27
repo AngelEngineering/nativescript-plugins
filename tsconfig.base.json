@@ -23,7 +23,8 @@
       "@angelengineering/*": ["packages/*"],
       "@angelengineering/flashlight": ["packages/flashlight/index.d.ts"],
       "@demo/shared": ["tools/demo/index.ts"],
-      "@angelengineering/filepicker": ["packages/filepicker/index.d.ts"]
+      "@angelengineering/filepicker": ["packages/filepicker/index.d.ts"],
+      "@angelengineering/downloader": ["packages/downloader/index.d.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
