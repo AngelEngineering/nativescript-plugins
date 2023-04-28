@@ -1,5 +1,5 @@
 import { MediaType } from './index.common';
-import { Application, File } from '@nativescript/core';
+import { Application, File, ImageAsset, ImageSource } from '@nativescript/core';
 import { iOSNativeHelper } from '@nativescript/core/utils';
 import { AssetDownloader, TempFile } from './files';
 
@@ -286,7 +286,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
     let files: File[] = [];
     let waitCount = results.count;
     let errorCount = 0;
-    let livePhotoFound = false;
+
     if (results) {
       //show activity indicator while processing selections
       let currentView = picker.view;
@@ -304,35 +304,79 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
       for (let i = 0; i < results.count; i++) {
         let pickerresult: PHPickerResult = results.objectAtIndex(i);
         let typeIdentifier = pickerresult.itemProvider.registeredTypeIdentifiers.firstObject;
-        if (typeIdentifier == 'com.apple.private.auto-loop-gif') {
-          livePhotoFound = true;
-        }
-        pickerresult.itemProvider.loadFileRepresentationForTypeIdentifierCompletionHandler(typeIdentifier, (result: NSURL, err: NSError) => {
-          if (result) {
-            //copy this to somewhere app has access to
-            let tmppath = TempFile.getPath('asset', '.tmp');
-            File.fromPath(tmppath).removeSync();
-            let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(result.path, tmppath);
-            const file = File.fromPath(tmppath);
-            // persist original file name and extension in tmp file
-            const originalFilename = result.lastPathComponent;
-            const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
-            if (File.exists(newPath)) {
-              // remove file if it exists
-              File.fromPath(newPath).removeSync();
+        //special handling for Live Photo Bundles of an heic and a mov file (if user selects loop in their Gallery app, then these will become animated gifs)
+        if (typeIdentifier == 'com.apple.live-photo-bundle') {
+          pickerresult.itemProvider.loadObjectOfClassCompletionHandler(PHLivePhoto.class(), (livePhoto, err) => {
+            if (err) {
+              console.error(err.description);
+              errorCount++;
+              waitCount--;
+            } else {
+              let resources = PHAssetResource.assetResourcesForLivePhoto(livePhoto as PHLivePhoto);
+              let photo = resources.firstObject;
+              let originalFilename = photo.originalFilename;
+              let imageData = NSMutableData.alloc().init();
+              const options = PHAssetResourceRequestOptions.alloc().init();
+              PHAssetResourceManager.defaultManager().requestDataForAssetResourceOptionsDataReceivedHandlerCompletionHandler(
+                photo,
+                options,
+                (data: NSData) => {
+                  imageData.appendData(data);
+                },
+                (err: NSError) => {
+                  if (err) {
+                    console.error(err.description);
+                    waitCount--;
+                    errorCount++;
+                  } else {
+                    let image = new UIImage({ data: imageData, scale: 1 });
+                    let imageAsset: ImageAsset = new ImageAsset(image);
+                    let tmppath = TempFile.getPath('asset', '.tmp');
+                    File.fromPath(tmppath).removeSync();
+                    ImageSource.fromAsset(imageAsset).then((source) => {
+                      source.saveToFile(tmppath, 'jpeg', 0.95);
+                      const file = File.fromPath(tmppath);
+                      const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
+                      if (File.exists(newPath)) {
+                        File.fromPath(newPath).removeSync();
+                      }
+                      file.renameSync(originalFilename);
+                      files.push(file);
+                      waitCount--;
+                    });
+                  }
+                }
+              );
             }
-            // add originalFilename property
-            file['originalFilename'] = originalFilename;
-            // update name so uploaded file will have the same name as the original file
-            file.renameSync(originalFilename);
-            files.push(file);
-          }
-          if (err) {
-            console.error(err.description);
-            errorCount++;
-          }
-          waitCount--;
-        });
+          });
+        } else {
+          pickerresult.itemProvider.loadFileRepresentationForTypeIdentifierCompletionHandler(typeIdentifier, (result: NSURL, err: NSError) => {
+            if (result) {
+              //copy this to somewhere app has access to
+              let tmppath = TempFile.getPath('asset', '.tmp');
+              File.fromPath(tmppath).removeSync();
+              let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(result.path, tmppath);
+              const file = File.fromPath(tmppath);
+              // persist original file name and extension in tmp file
+              const originalFilename = result.lastPathComponent;
+              const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
+              if (File.exists(newPath)) {
+                // remove file if it exists
+                File.fromPath(newPath).removeSync();
+              }
+              // add originalFilename property
+              file['originalFilename'] = originalFilename;
+              // update name so uploaded file will have the same name as the original file
+              file.renameSync(originalFilename);
+              files.push(file);
+            }
+            if (err) {
+              console.error(err.description);
+              errorCount++;
+            }
+            waitCount--;
+          });
+        }
       }
       // eslint-disable-next-line no-inner-declarations
       function waitForComplete(delegate) {
@@ -343,7 +387,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
           delegate._resolve(files);
           delegate.deRegisterFromGlobal();
 
-          if (errorCount > 0) console.warn(livePhotoFound ? 'Live Photos are not currently supported' : `Unable to select ${errorCount}? selections from your device`);
+          if (errorCount > 0) console.warn(`Unable to select ${errorCount}? selections from your device`);
         }
       }
       waitForComplete(this);
@@ -363,7 +407,6 @@ function getPHTypes(type: MediaType): Array<PHPickerFilter> {
   if (type & MediaType.IMAGE) {
     fileTypes = fileTypes.concat(PHPickerFilter.imagesFilter);
   }
-  //Note: currently livePhotos are included if either Image or Video types are allowed, although we don't handle them yet
   return fileTypes;
 }
 
@@ -388,14 +431,14 @@ function getMediaTypes(type: MediaType): Array<string> {
   return fileTypes;
 }
 
-// iOS File types for document picker
+// iOS File types for file picker
 //https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html
 //https://escapetech.eu/manuals/qdrop/uti.html
 //node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreServices.d.ts
 const MediaFileTypes: { [index: string]: string[] } = {
-  [MediaType.AUDIO]: [kUTTypeMP3, kUTTypeMPEG4Audio, kUTTypeAudio, kUTTypeAudioInterchangeFileFormat, kUTTypeAppleProtectedMPEG4Audio, kUTTypeMIDIAudio, kUTTypeWaveformAudio, 'public.aifc-audio', 'public.aiff-audio', 'com.microsoft.waveform-​audio', 'com.microsoft.windows-​media-wma', 'public.audio', 'public.ulaw-audio', 'com.apple.coreaudio-​format', kUTTypeLivePhoto],
-  [MediaType.IMAGE]: [kUTTypeImage, kUTTypeBMP, kUTTypeGIF, kUTTypeJPEG, kUTTypeJPEG2000, kUTTypePNG, kUTTypeQuickTimeImage, kUTTypeRawImage, kUTTypeScalableVectorGraphics, kUTTypeTIFF, 'public.image', 'public.camera-raw-image', kUTTypePICT, kUTTypeAppleICNS, kUTTypeICO],
-  [MediaType.VIDEO]: [kUTTypeVideo, kUTTypeMovie, kUTTypeAudiovisualContent, kUTTypeAVIMovie, kUTTypeAppleProtectedMPEG4Video, kUTTypeMPEG, kUTTypeMPEG2TransportStream, kUTTypeMPEG2Video, kUTTypeMPEG4, kUTTypeQuickTimeMovie, 'public.movie', 'public.audiovisual-content', 'public.avi', 'public.3gpp', 'public.3gpp2', kUTTypeLivePhoto],
+  [MediaType.AUDIO]: [kUTTypeMP3, kUTTypeMPEG4Audio, kUTTypeAudio, kUTTypeAudioInterchangeFileFormat, kUTTypeAppleProtectedMPEG4Audio, kUTTypeMIDIAudio, kUTTypeWaveformAudio, 'public.aifc-audio', 'public.aiff-audio', 'com.microsoft.waveform-​audio', 'com.microsoft.windows-​media-wma', 'public.audio', 'public.ulaw-audio', 'com.apple.coreaudio-​format'],
+  [MediaType.IMAGE]: [kUTTypeImage, kUTTypeBMP, kUTTypeGIF, kUTTypeJPEG, kUTTypeJPEG2000, kUTTypePNG, kUTTypeQuickTimeImage, kUTTypeRawImage, kUTTypeScalableVectorGraphics, kUTTypeTIFF, 'public.image', 'public.camera-raw-image', kUTTypePICT, kUTTypeAppleICNS, kUTTypeICO, kUTTypeLivePhoto, 'com.apple.private.auto-loop-gif'],
+  [MediaType.VIDEO]: [kUTTypeVideo, kUTTypeMovie, kUTTypeAudiovisualContent, kUTTypeAVIMovie, kUTTypeAppleProtectedMPEG4Video, kUTTypeMPEG, kUTTypeMPEG2TransportStream, kUTTypeMPEG2Video, kUTTypeMPEG4, kUTTypeQuickTimeMovie, 'public.movie', 'public.audiovisual-content', 'public.avi', 'public.3gpp', 'public.3gpp2'],
   [MediaType.DOCUMENT]: [kUTTypePDF, kUTTypeText, kUTTypePlainText, kUTTypeUTF8PlainText, kUTTypeUTF16ExternalPlainText, kUTTypeUTF16PlainText, kUTTypeUTF8TabSeparatedText, kUTTypePresentation, kUTTypeRTF, kUTTypeRTFD, kUTTypeSpreadsheet, kUTTypeHTML, kUTTypeXML, kUTTypeSourceCode, 'com.microsoft.word.doc', 'com.microsoft.word.docx', 'org.openxmlformats.wordprocessingml.document', 'com.microsoft.powerpoint.ppt', 'com.microsoft.powerpoint.pptx', 'org.openxmlformats.presentationml.presentation', 'public.rtf', 'com.adobe.postscript', 'com.adobe.encapsulated-postscript', 'public.presentation', 'public.text', kUTTypeCommaSeparatedText, kUTTypeDelimitedText, kUTTypeElectronicPublication, kUTTypeFlatRTFD, kUTTypeScript, kUTTypeShellScript],
   [MediaType.ARCHIVE]: [kUTTypeArchive, kUTTypeBzip2Archive, kUTTypeGNUZipArchive, 'com.sun.java-archive', 'org.gnu.gnu-tar-archive', 'public.tar-archive', 'org.gnu.gnu-zip-archive', 'org.gnu.gnu-zip-tar-archive', 'com.apple.binhex-archive', 'com.apple.macbinary-​archive', 'public.cpio-archive', 'com.pkware.zip-archive', kUTTypeWebArchive, kUTTypeZipArchive],
 };
