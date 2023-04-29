@@ -58,7 +58,7 @@ Be sure to have permissions add the following lines in AndroidManifest.xml if ta
 </manifest>
 ```
 
-For API 32+, you'll also need to add the following to the Android Manifest as well as request additional permissions:
+For API 33+, you'll also need to add the following to the Android Manifest as well as request additional permissions:
 
 ```
 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
@@ -66,7 +66,7 @@ For API 32+, you'll also need to add the following to the Android Manifest as we
 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 ```
 
-Before launching the picker on apps targeting API 32+, you'll need to request the following permissions to allow picker access to all file types:
+Before launching the picker on API 33+, you'll need to request the following permissions to allow picker access to all file types:
 
 ```
 request('photo')

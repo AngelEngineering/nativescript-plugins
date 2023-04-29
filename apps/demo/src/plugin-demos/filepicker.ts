@@ -85,7 +85,8 @@ export class DemoModel extends DemoSharedFilepicker {
     const checkBox: CheckBox = Frame.topmost().getViewById('demoCheckbox');
     try {
       let canPick = true;
-      if (isAndroid && +Device.sdkVersion > 31) {
+      //API33+ needs new perms
+      if (isAndroid && +Device.sdkVersion > 32) {
         const result = await checkMultiple({ photo: {}, audio: {}, video: {} });
         if (result['photo'] != 'authorized') {
           console.log('No photo permission, requesting...');
@@ -109,9 +110,17 @@ export class DemoModel extends DemoSharedFilepicker {
           });
         }
         console.log('canPick?:', canPick);
+      } else if (isAndroid) {
+        //just request external_storage perms otherwise
+        const result = await checkPermission('storage');
+        if (result['storage'] != 'authorized') console.log('No storage permission, requesting...');
+        await request('storage').then((result) => {
+          console.log('Request result', result);
+          if (result['android.permission.READ_EXTERNAL_STORAGE'] != 'authorized') canPick = false;
+        });
       }
       if (canPick) pickedFiles = await filePicker(MediaType.ALL, checkBox.checked);
-      else alert('Need permissions before picking! Try again or update in app privacy settings!');
+      else return alert('Need permissions before picking! Try again or update in app privacy settings first');
     } catch (err) {
       if (err) alert(err?.message);
     } finally {
