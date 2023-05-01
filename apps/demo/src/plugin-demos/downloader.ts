@@ -9,17 +9,21 @@ import { TempFile } from '@angelengineering/downloader/files';
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
   page.bindingContext = new DemoModel();
+  TempFile.cleanup();
 }
+
 enum ToastStatus {
   normal = 'normal-toast',
   success = 'success-toast',
   warning = 'warning-toast',
   error = 'error-toast',
 }
+
 enum ToastPosition {
   'BOTTOM' = 'bottom',
   'TOP' = 'top',
 }
+
 const feedback = new Feedback();
 const testUri = 'https://static.wikia.nocookie.net/nickelodeon/images/2/27/STIMPYS_TINY_BRAIN.jpg/revision/latest';
 const badUri = 'https://static.wikia.nocookie.net/nomediatest.png';

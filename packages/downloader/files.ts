@@ -15,8 +15,22 @@ function getPathList(): string[] {
   }
   return pathList;
 }
+
 function setPathList(pathList: string[]): void {
   appSettings.setString(PATH_LIST_KEY, JSON.stringify(pathList));
+}
+export function generateId(): string {
+  if (global.isIOS) {
+    return NSUUID.UUID().UUIDString;
+  }
+  if (global.isAndroid) {
+    return java.util.UUID.randomUUID().toString();
+  }
+  return 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 export class TempFile {

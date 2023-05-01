@@ -19,6 +19,13 @@ export interface DownloadOptions {
   url: string;
   request?: RequestOptions;
   destinationFilename?: string;
+  destinationPath?: string;
+  destinationSpecial?: DownloadDestination;
+}
+
+export enum DownloadDestination {
+  picker = 'show-picker', //present user with UI to choose destination directory
+  gallery = 'photos-gallery', //iOS only, ignored on Android
 }
 
 export interface ResponseData {

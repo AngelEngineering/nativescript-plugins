@@ -1,5 +1,6 @@
-import { DownloaderCommon, DownloadOptions } from './common';
-import { Application, File, path, Utils } from '@nativescript/core';
+import { DownloaderCommon, DownloadOptions, DownloadDestination } from './common';
+import { File, knownFolders, path, Utils } from '@nativescript/core';
+import { generateId } from './files';
 
 export class Downloader extends DownloaderCommon {
   public download(options: DownloadOptions): Promise<File> {
@@ -7,21 +8,36 @@ export class Downloader extends DownloaderCommon {
       const emit = (event: string, data: any) => {
         this.notify({ eventName: event, object: this, data });
       };
-      const androidContext = getAndroidContext();
+      //   const androidContext = getAndroidContext();
 
-      let { url, request, destinationFilename } = options;
+      let { url, request, destinationFilename, destinationPath, destinationSpecial } = options;
       try {
-        let androidDownloadsPath = androidContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS).toString();
-        let downloadPath = path.join(androidDownloadsPath, destinationFilename);
-        //check if a file with same name already exists. if it was created by another app/install, can't use it here
-        if (File.exists(downloadPath)) {
-          let fileParts = downloadPath.split('.');
-          let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
-          let tempFileName = 'dl-' + Date.now().toString() + fileSuffix;
-          downloadPath = path.join(androidDownloadsPath, tempFileName);
-          console.warn('file already exists in Download/ named: ', destinationFilename, 'using new filename ', downloadPath);
+        let outputpath = '';
+        if (destinationPath && destinationFilename) {
+          outputpath = path.join(destinationPath, destinationFilename);
+        } else if (!destinationPath && destinationFilename) {
+          outputpath = path.join(knownFolders.documents().path, destinationFilename);
+        } else if (destinationPath && !destinationFilename) {
+          outputpath = path.join(destinationPath, `${generateId()}`);
+        } else {
+          outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
         }
-        const localUri = android.net.Uri.fromFile(new java.io.File(downloadPath));
+
+        // let androidDownloadsPath = androidContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS).toString();
+
+        // let downloadPath = path.join(androidDownloadsPath, destinationFilename);
+        //check if a file with same name already exists. if it was created by another app/install, can't use it here
+        if (File.exists(outputpath)) {
+          let origpath = outputpath;
+          let fileParts = outputpath.split('.');
+          let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
+          let tempFileName = 'dl-' + generateId() + fileSuffix;
+          outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
+          destinationFilename = tempFileName;
+          //   downloadPath = path.join(androidDownloadsPath, tempFileName);
+          console.warn('file already exists at path: ', origpath, '\n  Using new path: ', outputpath);
+        }
+        const localUri = android.net.Uri.fromFile(new java.io.File(outputpath));
         // console.log(`URL to download:${url}`);
         // console.log(`Destination: ${localUri.getPath()}`);
         const req = new android.app.DownloadManager.Request(android.net.Uri.parse(url));
@@ -31,13 +47,13 @@ export class Downloader extends DownloaderCommon {
         //Disabling this notification will also require the following permission in AndroidManifest and explanation why:
         //   android.permission.DOWNLOAD_WITHOUT_NOTIFICATION
 
-        const fileName = downloadPath.split('/')[downloadPath.split('/').length - 1];
+        // const fileName = outputpath.split('/')[outputpath.split('/').length - 1];
         //on API 31 sim, this causes filename to be set to title?
         // req.setTitle(Text.str.status_downloading + ' ' + fileName);
         // req.setDescription('');
 
-        req.setDescription(fileName);
-        req.setTitle(fileName);
+        req.setDescription(destinationFilename);
+        req.setTitle(destinationFilename);
 
         const { method, headers } = request || {};
         if (headers)
@@ -72,8 +88,11 @@ export class Downloader extends DownloaderCommon {
             // console.log(`Download SUCCESS!`);
             emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: 1 });
             clearInterval(progressInterval);
-            const file = File.fromPath(downloadPath);
-            emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: downloadPath });
+            const file = File.fromPath(outputpath);
+            emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
+            if (destinationSpecial == DownloadDestination.picker) {
+              //ask user where to add a copy to
+            }
             resolve(file);
           }
         }, 250);

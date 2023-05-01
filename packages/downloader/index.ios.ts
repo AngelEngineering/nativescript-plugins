@@ -1,5 +1,6 @@
 import { DownloaderCommon, DownloadOptions } from './common';
 import { File, path, knownFolders } from '@nativescript/core';
+import { generateId } from './files';
 
 const currentDevice = UIDevice.currentDevice;
 const device = currentDevice.userInterfaceIdiom === UIUserInterfaceIdiom.Phone ? 'Phone' : 'Pad';
@@ -11,16 +12,38 @@ const sessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration;
 const queue = NSOperationQueue.mainQueue;
 
 export class Downloader extends DownloaderCommon {
-  public download(opts: DownloadOptions): Promise<File> {
+  public download(options: DownloadOptions): Promise<File> {
     return new Promise<File>((resolve, reject) => {
       const emit = (event: string, data: any) => {
         this.notify({ eventName: event, object: this, data });
       };
-      const { url, request, destinationFilename } = opts;
-      const documentsDir = knownFolders.documents().path;
+      let { url, request, destinationFilename, destinationPath, destinationSpecial } = options;
 
-      let downloadPath = path.join(documentsDir, destinationFilename);
-      let file = File.fromPath(downloadPath);
+      let outputpath = '';
+      if (destinationPath && destinationFilename) {
+        outputpath = path.join(destinationPath, destinationFilename);
+      } else if (!destinationPath && destinationFilename) {
+        outputpath = path.join(knownFolders.documents().path, destinationFilename);
+      } else if (destinationPath && !destinationFilename) {
+        outputpath = path.join(destinationPath, `${generateId()}`);
+      } else {
+        outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
+      }
+      //   const documentsDir = knownFolders.documents().path;
+      //   let downloadPath = path.join(documentsDir, destinationFilename);
+
+      if (File.exists(outputpath)) {
+        let origpath = outputpath;
+        let fileParts = outputpath.split('.');
+        let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
+        let tempFileName = 'dl-' + generateId() + fileSuffix;
+        outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
+        destinationFilename = tempFileName;
+        //   downloadPath = path.join(androidDownloadsPath, tempFileName);
+        console.warn('file already exists at path: ', origpath, '\n  Using new path: ', outputpath);
+      }
+
+      let file = File.fromPath(outputpath);
 
       try {
         file.writeTextSync('', (e) => {
