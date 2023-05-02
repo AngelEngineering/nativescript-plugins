@@ -1,7 +1,7 @@
 // import { Observable, EventData, Page } from '@nativescript/core';
 import { EventData, Page, File, Frame, StackLayout, GridLayout, Color, Label, Image, alert, isAndroid, Device, isIOS } from '@nativescript/core';
 import { DemoSharedDownloader } from '@demo/shared';
-import { Downloader, DownloadOptions, MessageData } from '@angelengineering/downloader';
+import { DownloadDestination, Downloader, DownloadOptions, MessageData } from '@angelengineering/downloader';
 import { LoadingIndicator, Mode, OptionsCommon } from '@nstudio/nativescript-loading-indicator';
 import { Feedback, FeedbackType, FeedbackPosition } from '@valor/nativescript-feedback';
 import { TempFile } from '@angelengineering/downloader/files';
@@ -29,22 +29,39 @@ const testUri = 'https://static.wikia.nocookie.net/nickelodeon/images/2/27/STIMP
 const badUri = 'https://static.wikia.nocookie.net/nomediatest.png';
 const movieUri = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4';
 const largeMovieUri = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
+import { Result, checkMultiple, check as checkPermission, request, request as requestPermission } from '@nativescript-community/perms';
 
 export class DemoModel extends DemoSharedDownloader {
   downloadValid() {
-    this.downloadFile(testUri);
+    this.downloadFile({ url: testUri, destinationFilename: 'ren.jpg', destinationSpecial: DownloadDestination.picker });
+
+    // checkPermission('storage').then(async (permres: Result) => {
+    //   console.log('storage perm?', permres);
+    //   // if (permres[0] == 'undetermined' || permres[0] == 'authorized') {
+    //     await requestPermission('storage').then(async (result) => {
+    //       console.log('requested perm?', result);
+    //       if (result['android.permission.WRITE_EXTERNAL_STORAGE'] == 'authorized') {
+    //         try {
+    //           this.downloadFile(testUri);
+    //         } catch (err) {
+    //           if (err) alert(err?.message);
+    //         }
+    //       } else alert("No permission for files, can't download files");
+    //     });
+    //   // } else alert("No permission for files, can't download. Grant this permission in app settings first and then try again");
+    // });
   }
   downloadValidMovie() {
-    this.downloadFile(movieUri);
+    this.downloadFile({ url: movieUri, destinationFilename: 'movie.mp4', destinationSpecial: DownloadDestination.picker });
   }
   downloadLargeValidMovie() {
-    this.downloadFile(largeMovieUri);
+    this.downloadFile({ url: largeMovieUri, destinationFilename: 'bigmovie.mp4' });
   }
   downloadInvalid() {
-    this.downloadFile(badUri);
+    this.downloadFile({ url: badUri, destinationFilename: 'invalid.png' });
   }
 
-  downloadFile(testurl): void {
+  downloadFile(dlopts: DownloadOptions): void {
     let options: OptionsCommon = {
       message: 'Downloading...',
       progress: 0.0,
@@ -64,12 +81,6 @@ export class DemoModel extends DemoSharedDownloader {
     indicator.show(options);
     const dp = new Downloader();
 
-    // let fileParts = testurl.split('/');
-    // let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
-    // let destinationFilename = fileParts[fileParts.length - 1];
-    // let filePrefix = fileSuffix.length > 1 ? destinationFilename.slice(0, destinationFilename.length - fileSuffix.length) : destinationFilename;
-    let outputFilePath = TempFile.getPath('DL', '.tmp');
-
     dp.on(Downloader.DOWNLOAD_STARTED, (payload: MessageData) => {
       // console.log('started', payload?.data?.contentLength);
     });
@@ -79,7 +90,7 @@ export class DemoModel extends DemoSharedDownloader {
       indicator.show(options);
     });
     dp.on(Downloader.DOWNLOAD_COMPLETE, (payload: MessageData) => {
-      // console.log('finished', payload?.data?.filepath);
+      console.log('finished', payload?.data?.filepath);
     });
     dp.on(Downloader.DOWNLOAD_ERROR, (payload: MessageData) => {
       console.log('ERROR!', payload?.data);
@@ -88,19 +99,15 @@ export class DemoModel extends DemoSharedDownloader {
       this.handleFiles(null);
     });
 
-    // let that = this;
-    dp.download({ url: testurl, destinationFilename: outputFilePath }).then((file: File) => {
+    dp.download(dlopts).then((file: File) => {
+      if (!file) {
+        return console.error('Failed to download file!');
+      }
       console.log('Finished downloading file ', file.path);
       indicator.hide();
       this.toast('File downloaded!', ToastStatus.success);
       this.handleFiles(file);
     });
-    // .catch((error) => {
-    //   indicator.hide();
-    //   console.error('Download Error', error);
-    //   this.toast('Download FAILED!!!', ToastStatus.error);
-    //   this.handleFiles(null);
-    // });
   }
 
   toast(message: string, status: ToastStatus, position: ToastPosition = ToastPosition.TOP, title?: string) {

@@ -1,6 +1,7 @@
-import { DownloaderCommon, DownloadOptions } from './common';
+import { DownloaderCommon, DownloadOptions, DownloadDestination } from './common';
 import { File, path, knownFolders } from '@nativescript/core';
 import { generateId } from './files';
+export { DownloadDestination };
 
 const currentDevice = UIDevice.currentDevice;
 const device = currentDevice.userInterfaceIdiom === UIUserInterfaceIdiom.Phone ? 'Phone' : 'Pad';
@@ -20,15 +21,14 @@ export class Downloader extends DownloaderCommon {
       let { url, request, destinationFilename, destinationPath, destinationSpecial } = options;
 
       let outputpath = '';
-      if (destinationPath && destinationFilename) {
-        outputpath = path.join(destinationPath, destinationFilename);
+      if (destinationPath) {
+        outputpath = destinationPath;
       } else if (!destinationPath && destinationFilename) {
         outputpath = path.join(knownFolders.documents().path, destinationFilename);
-      } else if (destinationPath && !destinationFilename) {
-        outputpath = path.join(destinationPath, `${generateId()}`);
       } else {
         outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
       }
+      console.log('outputpath', outputpath);
       //   const documentsDir = knownFolders.documents().path;
       //   let downloadPath = path.join(documentsDir, destinationFilename);
 

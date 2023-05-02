@@ -34,9 +34,9 @@ export function generateId(): string {
 }
 
 export class TempFile {
-  // return the absolute path to a temporary file, also registering it to
-  //  be deleted later (e.g. when the app closes)
-  public static getPath(prefix: string, suffix: string): string {
+  // return the absolute path to a temporary file and create it, also registering it to
+  //  be deleted later (e.g. when the app closes or user calls cleanup() )
+  public static getFile(prefix: string, suffix: string): string {
     let path: string = null;
     if (platform.isAndroid) {
       const context: android.content.Context = application.android.context;
@@ -50,7 +50,28 @@ export class TempFile {
       path = knownFolders.temp().getFile(prefix + name + suffix).path;
     }
     TempFile.deletePathLater(path);
-    console.log('TempFile returning path', path);
+    // console.log('TempFile returning path for created file', path);
+    return path;
+  }
+
+  //return path to a valid temporary file which can be created/used by user, but doesn't leave it created
+  public static getPath(prefix: string, suffix: string): string {
+    let path: string = null;
+    if (platform.isAndroid) {
+      const context: android.content.Context = application.android.context;
+      //The system will automatically delete files in the cache directory as disk space is needed elsewhere on the device.
+      //We'll attempt to get an external sd card path first if one is available
+      const dir = context.getExternalCacheDir() || context.getCacheDir();
+      const file = java.io.File.createTempFile(prefix, suffix, dir);
+      path = file.getAbsolutePath();
+      file.delete();
+    } else if (platform.isIOS) {
+      const name: string = NSUUID.UUID().UUIDString;
+      const tempfile = knownFolders.temp().getFile(prefix + name + suffix);
+      path = tempfile.path;
+      tempfile.remove();
+    }
+    // console.log('TempFile returning path', path);
     return path;
   }
 
