@@ -33,8 +33,21 @@ import { Result, checkMultiple, check as checkPermission, request, request as re
 
 export class DemoModel extends DemoSharedDownloader {
   downloadValid() {
-    this.downloadFile({ url: testUri, destinationFilename: 'ren.jpg', destinationSpecial: DownloadDestination.picker });
-
+    // this.downloadFile({ url: testUri, destinationFilename: 'ren.jpg', destinationSpecial: DownloadDestination.picker });
+    checkPermission('storage').then(async (permres: Result) => {
+      console.log('storage perm?', permres);
+      await requestPermission('storage').then(async (result) => {
+        console.log('requested perm?', result);
+        if ((isAndroid && result['android.permission.WRITE_EXTERNAL_STORAGE'] == 'authorized') || (isIOS && result[0] == 'authorized' && result[1])) {
+          try {
+            this.downloadFile({ url: testUri, destinationFilename: 'ren.jpg', destinationSpecial: isAndroid ? DownloadDestination.picker : DownloadDestination.gallery });
+          } catch (err) {
+            if (err) alert(err?.message);
+          }
+        } else alert("No permission for files, can't download files");
+      });
+      // } else alert("No permission for files, can't download. Grant this permission in app settings first and then try again");
+    });
     // checkPermission('storage').then(async (permres: Result) => {
     //   console.log('storage perm?', permres);
     //   // if (permres[0] == 'undetermined' || permres[0] == 'authorized') {
@@ -52,7 +65,22 @@ export class DemoModel extends DemoSharedDownloader {
     // });
   }
   downloadValidMovie() {
-    this.downloadFile({ url: movieUri, destinationFilename: 'movie.mp4', destinationSpecial: DownloadDestination.picker });
+    // this.downloadFile({ url: movieUri, destinationFilename: 'movie.mp4', destinationSpecial: DownloadDestination.gallery });
+    checkPermission('storage').then(async (permres: Result) => {
+      console.log('storage perm?', permres);
+      // if (permres[0] == 'undetermined' || permres[0] == 'authorized') {
+      await requestPermission('storage').then(async (result) => {
+        console.log('requested perm?', result);
+        if ((isAndroid && result['android.permission.WRITE_EXTERNAL_STORAGE'] == 'authorized') || (isIOS && result[0] == 'authorized' && result[1])) {
+          try {
+            this.downloadFile({ url: movieUri, destinationFilename: 'movie.mp4', destinationSpecial: DownloadDestination.gallery });
+          } catch (err) {
+            if (err) alert(err?.message);
+          }
+        } else alert("No permission for files, can't download files");
+      });
+      // } else alert("No permission for files, can't download. Grant this permission in app settings first and then try again");
+    });
   }
   downloadLargeValidMovie() {
     this.downloadFile({ url: largeMovieUri, destinationFilename: 'bigmovie.mp4' });

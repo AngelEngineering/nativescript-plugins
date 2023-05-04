@@ -29,8 +29,6 @@ export class Downloader extends DownloaderCommon {
         outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
       }
       console.log('outputpath', outputpath);
-      //   const documentsDir = knownFolders.documents().path;
-      //   let downloadPath = path.join(documentsDir, destinationFilename);
 
       if (File.exists(outputpath)) {
         let origpath = outputpath;
@@ -39,7 +37,6 @@ export class Downloader extends DownloaderCommon {
         let tempFileName = 'dl-' + generateId() + fileSuffix;
         outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
         destinationFilename = tempFileName;
-        //   downloadPath = path.join(androidDownloadsPath, tempFileName);
         console.warn('file already exists at path: ', origpath, '\n  Using new path: ', outputpath);
       }
 
@@ -101,6 +98,34 @@ export class Downloader extends DownloaderCommon {
                 return reject('Server responded with status code ' + statusCode);
               }
               emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: file.path });
+              //Special handling if user requests a copy be saved to Photos Gallery
+              if (destinationSpecial == DownloadDestination.gallery) {
+                console.log('User wants a copy in Photos Gallery');
+                let iosurl = NSURL.URLWithString(file.path);
+                let fileParts = file.path.split('.');
+                let fileSuffix = fileParts.length > 1 ? fileParts[fileParts.length - 1] : null;
+                console.log('fileSuffix', fileSuffix);
+                let isImage = ['jpg', 'jpeg', 'jpe', 'jp2', 'jpg2', 'pjpeg', 'pjp', 'kjp2', 'j2k', 'jpf', 'jpx', 'jpm', 'mj2', 'ico', 'png', 'svg', 'svgz', 'gif', 'tif', 'tiff', 'psd', 'ai', 'eps', 'ps', 'raw', 'webp', 'wbmp', 'heif', 'heic', 'ief', 'indd', 'ind', 'indt', 'jif', 'jfif', 'jfi', 'arw', 'cr2', 'crw', 'k25', 'bmp', 'dib', 'odg', 'cur', 'ief', 'pcx', 'odi', 'art', 'jng', 'nef', 'orf', 'avif'].includes(fileSuffix);
+                let isVideo = ['3gp', '3gpp', '3g2', '3gpp2', 'asf', 'avi', 'fli', 'flv', 'f4v', 'swf', 'mkv', 'mov', 'mpeg', 'mpe', 'mp4', 'mpv', 'm4p', 'ts', 'm1v', 'm2v', 'm4v', 'mts', 'ogg', 'ogv', 'qt', 'rm', 'vob', 'wmv', 'webm', 'avhcd'].includes(fileSuffix);
+                PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
+                  () => {
+                    if (isVideo) {
+                      console.log('file has an video extension, saving to gallery as video');
+                      PHAssetChangeRequest.creationRequestForAssetFromVideoAtFileURL(iosurl);
+                    } else if (isImage) {
+                      console.log('file has a image extension, saving to gallery as image');
+                      PHAssetChangeRequest.creationRequestForAssetFromImageAtFileURL(iosurl);
+                    } else console.log('neither a video or image, not saving to gallery');
+                  },
+                  (success, err) => {
+                    if (success) {
+                      console.log('success');
+                    } else {
+                      console.log('failed');
+                    }
+                  }
+                );
+              }
               resolve(file);
             }
           }
