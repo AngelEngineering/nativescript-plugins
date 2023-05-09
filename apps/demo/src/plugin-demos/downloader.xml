@@ -6,10 +6,15 @@
   <StackLayout class="p-20">
     <ScrollView class="h-full">
       <StackLayout>
-        <Button text="Download valid jpeg url" tap="{{ downloadValid }}" class="btn btn-primary"/>
-        <Button text="Download invalid url" tap="{{ downloadInvalid }}" class="btn btn-primary"/>
-        <Button text="Download valid 1 MB mp4 url" tap="{{ downloadValidMovie }}" class="btn btn-primary"/>
-        <Button text="Download valid 150 MB mp4 url" tap="{{ downloadLargeValidMovie }}" class="btn btn-primary"/>
+        <Label text="The downloader plugin will default to placing files in the app documents directory for iOS (and visible to other apps if your app is configured as a doc provider) or the app temp/cache directory for Android, where dev can use/copy/etc." color="black" textWrap="true"/>
+        <Label text="It has a special destination option which will also copy the file to a directory of user's choosing for Android" color="black" textWrap="true"/>
+        <Label text="Or add a copy to the iOS Photos Gallery if the file has an image or video extension (requires user permission first)" color="black" textWrap="true"/>
+        <Button text="DL jpeg" tap="{{ downloadValid }}" class="btn btn-primary"/>
+        <Button text="DL jpeg destination" tap="{{ downloadValidDest }}" class="btn btn-primary"/>
+        <Button text="DL invalid url" tap="{{ downloadInvalid }}" class="btn btn-primary"/>
+        <Button text="DL 1MB mp4" tap="{{ downloadValidMovie }}" class="btn btn-primary"/>
+        <Button text="DL 1MB mp4 destination" tap="{{ downloadValidMovieDest }}" class="btn btn-primary"/>
+        <Button text="DL 150MB mp4" tap="{{ downloadLargeValidMovie }}" class="btn btn-primary"/>
         <Label text="Downloaded file:" color="black" textWrap="true"/>
         <StackLayout id="downloadedFiles"/>
       </StackLayout>

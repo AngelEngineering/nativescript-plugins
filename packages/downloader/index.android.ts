@@ -10,54 +10,69 @@ export class Downloader extends DownloaderCommon {
   public download(options: DownloadOptions): Promise<File> {
     return new Promise<File>((resolve, reject) => {
       let { url, request, destinationFilename, destinationPath, destinationSpecial } = options;
-
-      console.log('destinationFilename', destinationFilename);
-      console.log('destinationPath', destinationPath);
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      //   const that = this;
+      const handleResult = (options: DownloadOptions, resolve, reject) => {
+        this.downloadFile(options, resolve, reject);
+      };
+      function onResult(e: AndroidActivityResultEventData): void {
+        if (e.requestCode != DOWNLOADER_CODE) return;
+        if (e.resultCode == android.app.Activity.RESULT_CANCELED) {
+          removeResultListener();
+          reject(new Error('Canceled'));
+          return;
+        }
+        if (e.resultCode != android.app.Activity.RESULT_OK) {
+          removeResultListener();
+          reject(new Error('ERROR: FilePicker - ' + e.resultCode));
+          return;
+        }
+        //find out which directory user selected
+        const uri = e.intent.getData() as android.net.Uri;
+        const uriPath = getPathFromURI(uri);
+        if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
+        const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
+        console.log('user selected uri', uri);
+        console.log(' uriPath', uriPath);
+        console.log(' fileName', fileName);
+        let realpath = getPathFromURI(uri);
+        options.destinationFilename = destinationFilename = fileName;
+        options.destinationPath = realpath;
+        const file = new java.io.File(realpath);
+        file.delete();
+        removeResultListener();
+        handleResult(options, resolve, reject);
+      }
+      function removeResultListener(): void {
+        AndroidApplication.off(AndroidApplication.activityResultEvent, onResult);
+      }
 
       if (destinationSpecial == DownloadDestination.picker) {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const that = this;
-        function onResult(e: AndroidActivityResultEventData): void {
-          if (e.requestCode != DOWNLOADER_CODE) return;
-          if (e.resultCode == android.app.Activity.RESULT_CANCELED) return;
-          if (e.resultCode != android.app.Activity.RESULT_OK) {
-            removeResultListener();
-            reject(new Error('ERROR: FilePicker - ' + e.resultCode));
-            return;
-          }
-          //find out which directory user selected
-          const uri = e.intent.getData() as android.net.Uri;
-          const uriPath = getPathFromURI(uri);
-          if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
-          const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
-          console.log('user selected uri', uri);
-          console.log(' uriPath', uriPath);
-          console.log(' fileName', fileName);
-          let realpath = getPathFromURI(uri);
-          options.destinationFilename = destinationFilename = fileName;
-          options.destinationPath = realpath;
-          that.downloadFile(options, resolve, reject);
+        try {
+          console.log('user wants to save at a directory of their choice');
+
+          // add the results listener to the android app
+          AndroidApplication.on(AndroidApplication.activityResultEvent, onResult);
+
+          //ask user where to add a copy to
+          const Intent = android.content.Intent;
+          const intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+          intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+          intent.putExtra(Intent.EXTRA_TITLE, destinationFilename);
+          intent.setType('*/*');
+
+          getActivity().startActivityForResult(intent, DOWNLOADER_CODE);
+        } catch (err) {
+          console.error('Error getting user destination directory!');
+          removeResultListener();
+          reject(null);
         }
-        function removeResultListener(): void {
-          AndroidApplication.off(AndroidApplication.activityResultEvent, onResult);
-        }
-
-        // add the results listener to the android app
-        AndroidApplication.on(AndroidApplication.activityResultEvent, onResult);
-
-        //ask user where to add a copy to
-        const Intent = android.content.Intent;
-        const intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
-        intent.putExtra(Intent.EXTRA_TITLE, destinationFilename);
-        intent.setType('*/*');
-
-        getActivity().startActivityForResult(intent, DOWNLOADER_CODE);
-      } else this.downloadFile(options, resolve, reject);
+      } else handleResult(options, resolve, reject);
     });
   }
 
   private downloadFile(options: DownloadOptions, resolve, reject) {
+    console.log('downloadFile() ', options);
     const emit = (event: string, data: any) => {
       this.notify({ eventName: event, object: this, data });
     };
@@ -65,31 +80,43 @@ export class Downloader extends DownloaderCommon {
     console.log('destinationFilename', destinationFilename);
     console.log('destinationPath', destinationPath);
 
+    //ndroid DownloadManager needs to use externalDownloadsDir or externalCachesDir
+    const context: android.content.Context = getAndroidContext();
+    const dldir = (context.getExternalCacheDir() || context.getCacheDir()).getAbsolutePath();
+
     try {
       let outputpath = '';
       if (destinationPath) {
-        outputpath = destinationPath;
+        outputpath = destinationPath; //advanced use only
       } else if (!destinationPath && destinationFilename) {
-        outputpath = path.join(knownFolders.documents().path, destinationFilename);
+        outputpath = path.join(dldir, destinationFilename);
       } else {
-        destinationFilename = generateId(); //we don't have a filename, so let's set a random one
-        outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
+        // destinationFilename = generateId(); //we don't have a filename, so let's set a random one
+        outputpath = path.join(dldir, 'DL' + Math.random() * 10000000);
       }
       console.log('outputpath', outputpath);
 
-      // let androidDownloadsPath = androidContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS).toString();
-      // let downloadPath = path.join(androidDownloadsPath, destinationFilename);
-
       //check if a file with same name already exists. if it was created by another app/install, can't access, rename, delete, etc.
       if (File.exists(outputpath)) {
-        let origpath = outputpath;
-        let fileParts = outputpath.split('.');
-        let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
-        let tempFileName = 'dl-' + generateId() + fileSuffix;
-        outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
+        console.warn('file already exists at path: ', outputpath);
+        let fileParts = outputpath.split('/');
+        let fileName = fileParts[fileParts.length - 1];
+        // console.log('fileName', fileName);
+        let filePrefix = fileName.split('.', 2).length > 0 ? fileName.split('.', 2)[0] : null;
+        // console.log('filePrefix', fileName);
+        let fileSuffix = fileName.split('.', 2).length > 0 ? '.' + fileName.split('.', 2)[1] : null;
+        // console.log('fileSuffix', fileSuffix);
+        // let tempFileName = 'dl-' + generateId() + fileSuffix;
+        let tempFileName;
+        for (let i = 1; i < 999999999; i++) {
+          tempFileName = filePrefix + '-' + i + fileSuffix;
+          outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
+          //   console.log('checking outputpath ', outputpath);
+          if (!File.exists(outputpath)) break;
+        }
+        console.log('using new file name ', tempFileName);
         destinationFilename = tempFileName;
-        //   downloadPath = path.join(androidDownloadsPath, tempFileName);
-        console.warn('file already exists at path: ', origpath, '\n  Using new path: ', outputpath);
+        console.warn('Using new path: ', outputpath);
       }
       const localUri = android.net.Uri.fromFile(new java.io.File(outputpath));
       // console.log(`URL to download:${url}`);
@@ -128,33 +155,32 @@ export class Downloader extends DownloaderCommon {
 
       const refId = this.downloadManager.enqueue(req);
       let started = false;
-      // console.log('Request refId: ' + refId);
-      // console.log(`Downloading via downloadManager with refId: ${refId}`);
+      console.log('Request refId: ' + refId);
+      console.log(`Downloading via downloadManager with refId: ${refId}`);
       const progressInterval = setInterval(() => {
         const status = getDownloadStatus(this.downloadManager, refId);
-        //   console.log(`Download status: ${JSON.stringify(status)}`);
+        // console.log(`Download status: ${JSON.stringify(status)}`);
         if (status.state === DownloadState.RUNNING) {
           if (!started) {
             started = true;
-            //   console.log(`Download started`);
+            // console.log(`Download started`);
             emit(DownloaderCommon.DOWNLOAD_STARTED, { contentLength: status.bytesTotal });
           } else {
-            //   console.log('Downloading with status:', JSON.stringify(status));
+            // console.log('Downloading with status:', JSON.stringify(status));
             emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: status.bytesTotal > 0 ? status.bytesDownloaded / status.bytesTotal : 0 });
           }
         } else if (status.state === DownloadState.FAILED) {
-          // console.log(`Download FAILED! reason=${status.reason}`);
+          //   console.log(`Download FAILED! reason=${status.reason}`);
           clearInterval(progressInterval);
           emit(DownloaderCommon.DOWNLOAD_ERROR, { error: status.reason });
         } else if (status.state === DownloadState.SUCCESFUL) {
-          // console.log(`Download SUCCESS!`);
+          //   console.log(`Download SUCCESS!`);
           emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: 1 });
           clearInterval(progressInterval);
           const file = File.fromPath(outputpath);
           emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
-
           resolve(file);
-        }
+        } //else pending status of 1
       }, 250);
     } catch (err) {
       console.error(`An unhandled error occurred download.android: ${err?.filename}, line: ${err?.lineno} :`);

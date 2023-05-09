@@ -1,12 +1,9 @@
-import * as platform from '@nativescript/core/platform';
-import * as application from '@nativescript/core/application';
-import * as appSettings from '@nativescript/core/application-settings';
-import { File, knownFolders } from '@nativescript/core';
+import { File, Utils, knownFolders, ApplicationSettings, isAndroid, isIOS } from '@nativescript/core';
 
 const PATH_LIST_KEY = 'TempFile::deletePathLater';
 
 function getPathList(): string[] {
-  const pathListJSON: string = appSettings.getString(PATH_LIST_KEY, '[]');
+  const pathListJSON: string = ApplicationSettings.getString(PATH_LIST_KEY, '[]');
   let pathList: string[] = [];
   try {
     pathList = JSON.parse(pathListJSON);
@@ -17,8 +14,9 @@ function getPathList(): string[] {
 }
 
 function setPathList(pathList: string[]): void {
-  appSettings.setString(PATH_LIST_KEY, JSON.stringify(pathList));
+  ApplicationSettings.setString(PATH_LIST_KEY, JSON.stringify(pathList));
 }
+
 export function generateId(): string {
   if (global.isIOS) {
     return NSUUID.UUID().UUIDString;
@@ -38,14 +36,14 @@ export class TempFile {
   //  be deleted later (e.g. when the app closes or user calls cleanup() )
   public static getFile(prefix: string, suffix: string): string {
     let path: string = null;
-    if (platform.isAndroid) {
-      const context: android.content.Context = application.android.context;
+    if (isAndroid) {
+      const context: android.content.Context = this.getAndroidContext();
       //The system will automatically delete files in the cache directory as disk space is needed elsewhere on the device.
       // we'll attempt to get an external sd card first if one is available
       const dir = context.getExternalCacheDir() || context.getCacheDir();
       const file = java.io.File.createTempFile(prefix, suffix, dir);
       path = file.getAbsolutePath();
-    } else if (platform.isIOS) {
+    } else if (isIOS) {
       const name: string = NSUUID.UUID().UUIDString;
       path = knownFolders.temp().getFile(prefix + name + suffix).path;
     }
@@ -57,15 +55,15 @@ export class TempFile {
   //return path to a valid temporary file which can be created/used by user, but doesn't leave it created
   public static getPath(prefix: string, suffix: string): string {
     let path: string = null;
-    if (platform.isAndroid) {
-      const context: android.content.Context = application.android.context;
+    if (isAndroid) {
+      const context: android.content.Context = this.getAndroidContext();
       //The system will automatically delete files in the cache directory as disk space is needed elsewhere on the device.
       //We'll attempt to get an external sd card path first if one is available
       const dir = context.getExternalCacheDir() || context.getCacheDir();
       const file = java.io.File.createTempFile(prefix, suffix, dir);
       path = file.getAbsolutePath();
       file.delete();
-    } else if (platform.isIOS) {
+    } else if (isIOS) {
       const name: string = NSUUID.UUID().UUIDString;
       const tempfile = knownFolders.temp().getFile(prefix + name + suffix);
       path = tempfile.path;
@@ -83,7 +81,7 @@ export class TempFile {
     // NOTE: this only deletes the file on VM exit, which does not cover all
     //  app exit scenarios: https://developer.android.com/reference/java/io/File.html#deleteOnExit()
     // So, we will call cleanup() on app init as well
-    if (platform.isAndroid) {
+    if (isAndroid) {
       const file = new java.io.File(path);
       file.deleteOnExit();
     }
@@ -109,4 +107,10 @@ export class TempFile {
     }
     setPathList([]);
   }
+
+  // This method is safer than Application.getApplicationContext()
+  private static getAndroidContext = (): android.app.Application => {
+    const ctx = java.lang.Class.forName('android.app.AppGlobals').getMethod('getInitialApplication', null).invoke(null, null) || java.lang.Class.forName('android.app.ActivityThread').getMethod('currentApplication', null).invoke(null, null);
+    return ctx || Utils.android.getApplicationContext();
+  };
 }

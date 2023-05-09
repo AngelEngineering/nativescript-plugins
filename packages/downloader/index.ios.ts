@@ -26,18 +26,31 @@ export class Downloader extends DownloaderCommon {
       } else if (!destinationPath && destinationFilename) {
         outputpath = path.join(knownFolders.documents().path, destinationFilename);
       } else {
-        outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
+        // outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
+        outputpath = path.join(knownFolders.documents().path, 'DL' + Math.random() * 10000000);
       }
       console.log('outputpath', outputpath);
 
       if (File.exists(outputpath)) {
-        let origpath = outputpath;
-        let fileParts = outputpath.split('.');
-        let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
-        let tempFileName = 'dl-' + generateId() + fileSuffix;
-        outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
+        console.warn('file already exists at path: ', outputpath);
+        let fileParts = outputpath.split('/');
+        let fileName = fileParts[fileParts.length - 1];
+        // console.log('fileName', fileName);
+        let filePrefix = fileName.split('.', 2).length > 0 ? fileName.split('.', 2)[0] : null;
+        // console.log('filePrefix', fileName);
+        let fileSuffix = fileName.split('.', 2).length > 0 ? '.' + fileName.split('.', 2)[1] : null;
+        // console.log('fileSuffix', fileSuffix);
+        // let tempFileName = 'dl-' + generateId() + fileSuffix;
+        let tempFileName;
+        for (let i = 1; i < 999999999; i++) {
+          tempFileName = filePrefix + '-' + i + fileSuffix;
+          outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
+          //   console.log('checking outputpath ', outputpath);
+          if (!File.exists(outputpath)) break;
+        }
+        console.log('using new file name ', tempFileName);
         destinationFilename = tempFileName;
-        console.warn('file already exists at path: ', origpath, '\n  Using new path: ', outputpath);
+        console.warn('Using new path: ', outputpath);
       }
 
       let file = File.fromPath(outputpath);
