@@ -36,6 +36,7 @@ export class DownloaderCommon extends Observable {
     throw new Error('"download" has not been implemented');
   }
   public static DOWNLOAD_STARTED = 'download-started';
+  public static DOWNLOAD_PAUSED = 'download-paused'; //only on Android for now
   public static DOWNLOAD_PROGRESS = 'download-progress';
   public static DOWNLOAD_COMPLETE = 'download-complete';
   public static DOWNLOAD_ERROR = 'download-error';

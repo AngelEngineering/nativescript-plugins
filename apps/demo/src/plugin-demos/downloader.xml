@@ -13,11 +13,11 @@
         <Button text="DL jpeg destination picker" tap="{{ downloadValidDest }}" class="btn btn-primary"/>
         <Button text="DL jpeg dest Downloads" tap="{{ downloadValidDestDL }}" class="btn btn-primary"/>
         <Button text="DL invalid image url" tap="{{ downloadInvalid }}" class="btn btn-primary"/>
-        <Button text="DL invalid movie url" tap="{{ downloadInvalidMovie }}" class="btn btn-primary"/>
-        <Button text="DL 10MB mp4" tap="{{ downloadValidMovie }}" class="btn btn-primary"/>
-        <Button text="DL 10MB mp4 destination" tap="{{ downloadValidMovieDest }}" class="btn btn-primary"/>
-        <Button text="DL 10MB mp4 Downloads" tap="{{ downloadValidMovieDestDL }}" class="btn btn-primary"/>
-        <Button text="DL 150MB mp4" tap="{{ downloadLargeValidMovie }}" class="btn btn-primary"/>
+        <Button text="DL 1.5mb movie url" tap="{{ downloadSmallMovie }}" class="btn btn-primary"/>
+        <Button text="DL 10mb mp4" tap="{{ downloadValidMovie }}" class="btn btn-primary"/>
+        <Button text="DL 10mb mp4 destination" tap="{{ downloadValidMovieDest }}" class="btn btn-primary"/>
+        <Button text="DL 10mb mp4 Downloads" tap="{{ downloadValidMovieDestDL }}" class="btn btn-primary"/>
+        <Button text="DL 150mb mp4" tap="{{ downloadLargeValidMovie }}" class="btn btn-primary"/>
         <Label text="Downloaded file:" color="black" textWrap="true"/>
         <StackLayout id="downloadedFiles"/>
       </StackLayout>

@@ -10,14 +10,9 @@ export class Downloader extends DownloaderCommon {
   public download(options: DownloadOptions): Promise<File> {
     return new Promise<File>((resolve, reject) => {
       let { url, request, destinationFilename, destinationPath, destinationSpecial, notification } = options;
-
-      console.log('downloadFile() ', options);
       const emit = (event: string, data: any) => {
         this.notify({ eventName: event, object: this, data });
       };
-      // let { url, request, destinationFilename, destinationPath, destinationSpecial } = options;
-      console.log('destinationFilename', destinationFilename);
-      console.log('destinationPath', destinationPath);
 
       //Android DownloadManager needs to use externalDownloadsDir or externalCachesDir
       const context: android.content.Context = getAndroidContext();
@@ -30,59 +25,42 @@ export class Downloader extends DownloaderCommon {
         } else if (!destinationPath && destinationFilename) {
           outputpath = path.join(dldir, destinationFilename);
         } else {
-          // destinationFilename = generateId(); //we don't have a filename, so let's set a random one
           //First see if we can get a filename from the url with an extension
           let urlParts = url.split('/');
           let urlName = urlParts[urlParts.length - 1];
-          console.log('urlName', urlName);
           if (urlName.includes('.')) {
-            console.log('have a dot in last string from url after final/', urlName);
             outputpath = path.join(dldir, urlName);
-          } else outputpath = path.join(dldir, 'DL' + Math.round(Math.random() * 10000000));
+          } //if not, generate a random filename
+          else outputpath = path.join(dldir, 'DL' + Math.round(Math.random() * 10000000));
         }
-        console.log('outputpath', outputpath);
         let fileParts, fileName, filePrefix, fileSuffix: string;
         fileParts = outputpath.split('/');
         fileName = fileParts[fileParts.length - 1];
-        // console.log('fileName', fileName);
         filePrefix = fileName.split('.', 2).length > 0 ? fileName.split('.', 2)[0] : null;
-        // console.log('filePrefix', fileName);
         fileSuffix = fileName.split('.', 2).length > 0 ? '.' + fileName.split('.', 2)[1] : null;
 
         //check if a file with same name already exists. if it was created by another app/install, can't access, rename, delete, etc.
         if (File.exists(outputpath)) {
-          console.warn('file already exists at path: ', outputpath);
-          // console.log('fileSuffix', fileSuffix);
-          // let tempFileName = 'dl-' + generateId() + fileSuffix;
+          // console.warn('file already exists at path: ', outputpath);
           let tempFileName;
           for (let i = 1; i < 999999999; i++) {
             tempFileName = filePrefix + '-' + i + fileSuffix;
             outputpath = outputpath.replace(/\/[^/]+$/, `/${tempFileName}`);
-            //   console.log('checking outputpath ', outputpath);
             if (!File.exists(outputpath)) break;
           }
-          console.log('using new file name ', tempFileName);
           destinationFilename = tempFileName;
-          console.warn('Using new path: ', outputpath);
         }
         const localUri = android.net.Uri.fromFile(new java.io.File(outputpath));
-        // console.log(`URL to download:${url}`);
-        // console.log(`Destination: ${localUri.getPath()}`);
-
         const req = new android.app.DownloadManager.Request(android.net.Uri.parse(url));
 
-        //Note: by default, the Android Download Manager will show a notification
+        //Note: by default, the Android Download Manager will show a system notification
         //   https://developer.android.com/reference/android/app/DownloadManager.Request#VISIBILITY_VISIBLE
-        //   android.permission.DOWNLOAD_WITHOUT_NOTIFICATION
         //   Disabling this notification will also require the following permission in AndroidManifest and explanation why:
+        //       android.permission.DOWNLOAD_WITHOUT_NOTIFICATION
         req.setNotificationVisibility(notification ? 1 : 2);
 
         // req.allowScanningByMediaScanner();//deprecated, files saved outside app directory will be scanned automatically
 
-        // const fileName = outputpath.split('/')[outputpath.split('/').length - 1];
-        //on API 31 sim, this causes filename to be set to title?
-        // req.setTitle(Text.str.status_downloading + ' ' + fileName);
-        // req.setDescription('');
         //if we don't set the title, the server may provide a valid filename, or it may provide the url with whatever querystring it has
         req.setDescription(destinationFilename);
         req.setTitle(destinationFilename);
@@ -90,38 +68,28 @@ export class Downloader extends DownloaderCommon {
         const { method, headers } = request || {};
         if (headers)
           for (let headerName in headers) {
-            // console.log(`Adding header ${headerName}=${request.extraHeaders[headerName]}`);
             req.addRequestHeader(headerName, headers[headerName]);
           }
         //Note: uncomment to only allow downloads over wifi
         // req.setAllowedOverMetered(false);
-
         req.setDestinationUri(localUri);
-        //the following doesn't seem to work
-        // req.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, destinationFilename)
-
         const refId = this.downloadManager.enqueue(req);
         let started = false;
-        console.log('Request refId: ' + refId);
-        console.log(`Downloading via downloadManager with refId: ${refId}`);
         const progressInterval = setInterval(() => {
           const status = getDownloadStatus(this.downloadManager, refId);
-          // console.log(`Download status: ${JSON.stringify(status)}`);
           if (status.state === DownloadState.RUNNING) {
             if (!started) {
               started = true;
-              // console.log(`Download started`);
               emit(DownloaderCommon.DOWNLOAD_STARTED, { contentLength: status.bytesTotal });
             } else {
-              // console.log('Downloading with status:', JSON.stringify(status));
               emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: status.bytesTotal > 0 ? status.bytesDownloaded / status.bytesTotal : 0 });
             }
+          } else if (status.state === DownloadState.PAUSED) {
+            emit(DownloaderCommon.DOWNLOAD_PAUSED, { error: status.reason });
           } else if (status.state === DownloadState.FAILED) {
-            //   console.log(`Download FAILED! reason=${status.reason}`);
             clearInterval(progressInterval);
             emit(DownloaderCommon.DOWNLOAD_ERROR, { error: status.reason });
           } else if (status.state === DownloadState.SUCCESFUL) {
-            //   console.log(`Download SUCCESS!`);
             emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: 1 });
             clearInterval(progressInterval);
 
@@ -155,61 +123,24 @@ export class Downloader extends DownloaderCommon {
                   console.log('file not Deleted :' + uri.getPath());
                 }
               }
-              // options.destinationFilename = destinationFilename = fileName;
-              // options.destinationPath = realpath;
-
-              //copy the file from temp directory to user selected directory
-              // // check if a file with same name exists first, and modify filename so there's no conflict
-              // if (File.exists(realpath)) {
-              //   console.warn('file already exists at path: ', realpath);
-              //   let fileParts = realpath.split('/');
-              //   let fileName = fileParts[fileParts.length - 1];
-              //   // console.log('fileName', fileName);
-              //   let filePrefix = fileName.split('.', 2).length > 0 ? fileName.split('.', 2)[0] : null;
-              //   // console.log('filePrefix', fileName);
-              //   let fileSuffix = fileName.split('.', 2).length > 0 ? '.' + fileName.split('.', 2)[1] : null;
-              //   // console.log('fileSuffix', fileSuffix);
-              //   // let tempFileName = 'dl-' + generateId() + fileSuffix;
-              //   let tempFileName;
-              //   for (let i = 1; i < 999999999; i++) {
-              //     tempFileName = filePrefix + '-' + i + fileSuffix;
-              //     realpath = realpath.replace(/\/[^/]+$/, `/${tempFileName}`);
-              //     //   console.log('checking outputpath ', outputpath);
-              //     if (!File.exists(realpath)) break;
-              //   }
-              //   console.log('using new file name ', tempFileName);
-              //   destinationFilename = tempFileName;
-              //   console.warn('Using new path: ', realpath);
-              // }
-
-              //safe to copy the file to user selected path with unique filename
-              console.log('Copying file from ', outputpath, ' to ', realpath);
 
               try {
                 let inputStream = new java.io.FileInputStream(outputpath);
                 let outputStream = context.getContentResolver().openOutputStream(uri);
-                // new java.io.FileOutputStream(realpath);
                 let read = 0;
                 let maxBufferSize = 1 * 1024 * 1024;
                 let bytesAvailable = inputStream.available();
-
-                //int bufferSize = 1024;
                 let bufferSize = Math.min(bytesAvailable, maxBufferSize);
-
                 let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
                 while ((read = inputStream.read(buffers)) != -1) {
                   outputStream.write(buffers, 0, read);
                 }
                 inputStream.close();
                 outputStream.close();
-                // console.log('File Path', 'Path ' + file.getPath());
-                // console.log('File Size', 'Size ' + file.length());
               } catch (e) {
                 console.error(e);
                 throw new Error('Error copying file to user selected directory!' + e.message);
               }
-              // const file = new java.io.File(realpath);
-              // file.delete();
               removeResultListener();
               handleResult(resolve, reject);
             }
@@ -219,7 +150,6 @@ export class Downloader extends DownloaderCommon {
             }
 
             const handleResult = (resolve, reject) => {
-              // this.downloadFile(options, resolve, reject);
               const file = File.fromPath(outputpath);
               emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
               resolve(file);
@@ -227,20 +157,14 @@ export class Downloader extends DownloaderCommon {
 
             if (destinationSpecial == DownloadDestination.picker) {
               try {
-                console.log('user wants to save a copy at a directory of their choice');
-
                 // add the results listener to the android app
                 AndroidApplication.on(AndroidApplication.activityResultEvent, onResult);
-
                 //ask user where to add a copy to
                 const Intent = android.content.Intent;
                 const intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                //ACTION_OPEN_DOCUMENT
-                //ACTION_CREATE_DOCUMENT
                 intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
                 intent.putExtra(Intent.EXTRA_TITLE, destinationFilename);
                 intent.setType('*/*');
-
                 getActivity().startActivityForResult(intent, DOWNLOADER_CODE);
               } catch (err) {
                 console.error('Error getting user destination directory!');
@@ -251,85 +175,48 @@ export class Downloader extends DownloaderCommon {
               const file = File.fromPath(outputpath);
               emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
               if (destinationSpecial == DownloadDestination.downloads) {
-                console.log('saving a copy to downloads');
-                let extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(url);
-                console.log('extension from URL: ', extension);
-                console.log('fileSuffix', fileSuffix);
                 if (fileSuffix.includes('.')) fileSuffix = fileSuffix.replace('.', '');
-                console.log('file extension from split output path:', fileSuffix);
-                let type = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                console.log('mime type from url', type);
-                let typepath = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileSuffix);
-                console.log('mime type from output path', typepath);
-                // android.content.ContentResolver
                 function getMimeType(uri) {
                   let mimeType = null;
                   if (android.content.ContentResolver.SCHEME_CONTENT == uri.getScheme()) {
                     mimeType = context.getContentResolver().getType(uri);
                   } else {
-                    let fileExtension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                    const fileExtension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString());
                     mimeType = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
                   }
                   return mimeType;
                 }
-                let other = getMimeType(localUri);
-                console.log('other approach', other);
+                const mimetype = getMimeType(localUri);
                 //save the file to Downloads now that we have a mime type
                 if (+Device.sdkVersion > 28) {
-                  console.log('API 29+ using MediaStore');
                   //use MediaStore
                   const values = new android.content.ContentValues();
                   values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName);
-                  values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, other);
-                  // if (+Device.sdkVersion > 28)
+                  values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimetype);
                   values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS);
                   const uri = context.getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                  // let fos =
                   let inputStream = new java.io.FileInputStream(outputpath);
                   let outputStream = context.getContentResolver().openOutputStream(uri);
-                  // new java.io.FileOutputStream(realpath);
                   let read = 0;
                   let maxBufferSize = 1 * 1024 * 1024;
                   let bytesAvailable = inputStream.available();
-
-                  //int bufferSize = 1024;
                   let bufferSize = Math.min(bytesAvailable, maxBufferSize);
-
                   let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
                   while ((read = inputStream.read(buffers)) != -1) {
                     outputStream.write(buffers, 0, read);
-                    console.log('writing output stream');
                   }
                   inputStream.close();
                   outputStream.close();
-                  // fos.write();
-
-                  console.log('saved to downloads and returned', uri.getPath());
-                  // Uri imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-                  // fos = resolver.openOutputStream(Objects.requireNonNull(imageUri));
-                  // if (+Device.sdkVersion >= 29) {
-                  // values.put(
-                  //   android.provider.MediaStore.MediaColumns.RELATIVE_PATH,
-                  //   android.os.Environment.DIRECTORY_DCIM
-                  // );
-                  // values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, '1');
-                  // values.put((android as any).provider.MediaStore.Images.Media.DATE_TAKEN, currentTimeMillis);
                 } else {
-                  console.log('API <31 using directory ref');
                   // use old approach, but requires permissions
                   let androidDownloadsPath = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS).toString();
                   let downloadPath = path.join(androidDownloadsPath, fileName);
                   let inputStream = new java.io.FileInputStream(outputpath);
                   let outputStream = new java.io.FileOutputStream(downloadPath);
-                  // new java.io.FileOutputStream(realpath);
-                  console.log('Downloading to path', downloadPath);
                   let read = 0;
                   let maxBufferSize = 1 * 1024 * 1024;
                   let bytesAvailable = inputStream.available();
-
-                  //int bufferSize = 1024;
                   let bufferSize = Math.min(bytesAvailable, maxBufferSize);
-
                   let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
                   while ((read = inputStream.read(buffers)) != -1) {
                     outputStream.write(buffers, 0, read);
@@ -340,7 +227,7 @@ export class Downloader extends DownloaderCommon {
               }
               resolve(file);
             }
-          } //else pending status of 1
+          }
         }, 500);
       } catch (err) {
         console.error(`An unhandled error occurred download.android: ${err?.filename}, line: ${err?.lineno} :`);

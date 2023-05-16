@@ -30,7 +30,7 @@ const imageUri = 'https://www.gstatic.com/webp/gallery3/1.sm.png';
 const badUri = 'https://static.wikia.nocookie.net/nomediatest.png';
 const movieUri = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'; //10mb
 const largeMovieUri = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'; //100mb
-const badMovieUrl = 'https://download.samplelib.com/mp4/sample-5s.mp4';
+const smallMovieUrl = 'https://download.samplelib.com/mp4/sample-5s.mp4';
 
 export class DemoModel extends DemoSharedDownloader {
   async downloadValid() {
@@ -111,8 +111,9 @@ export class DemoModel extends DemoSharedDownloader {
   downloadInvalid() {
     this.downloadFile({ url: badUri });
   }
-  downloadInvalidMovie() {
-    this.downloadFile({ url: badMovieUrl });
+
+  downloadSmallMovie() {
+    this.downloadFile({ url: smallMovieUrl });
   }
 
   downloadFile(dlopts: DownloadOptions): void {
@@ -138,6 +139,10 @@ export class DemoModel extends DemoSharedDownloader {
 
     dp.on(Downloader.DOWNLOAD_STARTED, (payload: MessageData) => {
       console.log('started', payload?.data?.contentLength);
+    });
+    dp.on(Downloader.DOWNLOAD_PAUSED, (payload: MessageData) => {
+      //this can happen if stalled for a while on Android
+      console.log('paused', payload?.data);
     });
     dp.on(Downloader.DOWNLOAD_PROGRESS, (payload: MessageData) => {
       console.log(' >>>>>  ', payload?.data?.progress, payload?.data?.url, payload?.data?.destinationFilename);
