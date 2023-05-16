@@ -10,10 +10,13 @@
         <Label text="It has a special destination option which will also copy the file to a directory of user's choosing for Android" color="black" textWrap="true"/>
         <Label text="Or add a copy to the iOS Photos Gallery if the file has an image or video extension (requires user permission first)" color="black" textWrap="true"/>
         <Button text="DL jpeg" tap="{{ downloadValid }}" class="btn btn-primary"/>
-        <Button text="DL jpeg destination" tap="{{ downloadValidDest }}" class="btn btn-primary"/>
-        <Button text="DL invalid url" tap="{{ downloadInvalid }}" class="btn btn-primary"/>
-        <Button text="DL 1MB mp4" tap="{{ downloadValidMovie }}" class="btn btn-primary"/>
-        <Button text="DL 1MB mp4 destination" tap="{{ downloadValidMovieDest }}" class="btn btn-primary"/>
+        <Button text="DL jpeg destination picker" tap="{{ downloadValidDest }}" class="btn btn-primary"/>
+        <Button text="DL jpeg dest Downloads" tap="{{ downloadValidDestDL }}" class="btn btn-primary"/>
+        <Button text="DL invalid image url" tap="{{ downloadInvalid }}" class="btn btn-primary"/>
+        <Button text="DL invalid movie url" tap="{{ downloadInvalidMovie }}" class="btn btn-primary"/>
+        <Button text="DL 10MB mp4" tap="{{ downloadValidMovie }}" class="btn btn-primary"/>
+        <Button text="DL 10MB mp4 destination" tap="{{ downloadValidMovieDest }}" class="btn btn-primary"/>
+        <Button text="DL 10MB mp4 Downloads" tap="{{ downloadValidMovieDestDL }}" class="btn btn-primary"/>
         <Button text="DL 150MB mp4" tap="{{ downloadLargeValidMovie }}" class="btn btn-primary"/>
         <Label text="Downloaded file:" color="black" textWrap="true"/>
         <StackLayout id="downloadedFiles"/>

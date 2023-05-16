@@ -5,6 +5,7 @@ import { DownloadDestination, Downloader, DownloadOptions, MessageData } from '@
 import { LoadingIndicator, Mode, OptionsCommon } from '@nstudio/nativescript-loading-indicator';
 import { Feedback, FeedbackType, FeedbackPosition } from '@valor/nativescript-feedback';
 import { TempFile } from '@angelengineering/downloader/files';
+import { Result, checkMultiple, check as checkPermission, request, request as requestPermission } from '@nativescript-community/perms';
 
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
@@ -27,17 +28,17 @@ enum ToastPosition {
 const feedback = new Feedback();
 const imageUri = 'https://www.gstatic.com/webp/gallery3/1.sm.png';
 const badUri = 'https://static.wikia.nocookie.net/nomediatest.png';
-const movieUri = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4';
-const largeMovieUri = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
-import { Result, checkMultiple, check as checkPermission, request, request as requestPermission } from '@nativescript-community/perms';
+const movieUri = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'; //10mb
+const largeMovieUri = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'; //100mb
+const badMovieUrl = 'https://download.samplelib.com/mp4/sample-5s.mp4';
 
 export class DemoModel extends DemoSharedDownloader {
   async downloadValid() {
     //iOS doesn't need permission to download to application cache directory
-    //Androia can also download to applications external cache directory without permissions
+    //Android can also download to applications external cache directory without permissions
     //   but, if we want to download to Downloads, either user selects the destination directory first, or plugin needs to use SAF storage approach
     try {
-      this.downloadFile({ url: imageUri, destinationFilename: 'ren.jpg' });
+      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png' });
     } catch (err) {
       if (err) alert(err?.message);
     }
@@ -47,7 +48,7 @@ export class DemoModel extends DemoSharedDownloader {
   downloadValidDest() {
     //Android can do this if we let user select the destination directory which grants permission, otherwise need SAF storage approach to save to default Downloads directory
     if (isAndroid) {
-      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: isAndroid ? DownloadDestination.picker : DownloadDestination.gallery });
+      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.picker });
     }
     //iOS needs permission to save to photos gallery
     else if (isIOS)
@@ -65,15 +66,20 @@ export class DemoModel extends DemoSharedDownloader {
         });
       });
   }
+  downloadValidDestDL() {
+    if (isAndroid) {
+      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.downloads, notification: true });
+    } else if (isIOS) alert('Downloads Directory not available on iOS, use gallery destination');
+  }
 
   downloadValidMovie() {
-    this.downloadFile({ url: movieUri, destinationFilename: 'movie.mp4' });
+    this.downloadFile({ url: movieUri });
   }
 
   downloadValidMovieDest() {
     //Android can do this if we let user select the destination directory which grants permission, otherwise need SAF storage approach to save to default Downloads directory
     if (isAndroid) {
-      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: isAndroid ? DownloadDestination.picker : DownloadDestination.gallery });
+      this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.picker });
     }
     //iOS needs permission to save to photos gallery
     else if (isIOS)
@@ -83,7 +89,7 @@ export class DemoModel extends DemoSharedDownloader {
           console.log('requested perm?', result);
           if ((isAndroid && result['android.permission.WRITE_EXTERNAL_STORAGE'] == 'authorized') || (isIOS && result[0] == 'authorized' && result[1])) {
             try {
-              this.downloadFile({ url: movieUri, destinationFilename: 'movie.mp4', destinationSpecial: isAndroid ? DownloadDestination.picker : DownloadDestination.gallery });
+              this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.gallery });
             } catch (err) {
               if (err) alert(err?.message);
             }
@@ -92,12 +98,21 @@ export class DemoModel extends DemoSharedDownloader {
       });
   }
 
+  downloadValidMovieDestDL() {
+    if (isAndroid) {
+      this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.downloads, notification: true });
+    } else if (isIOS) alert('Downloads Directory not available on iOS, use gallery destination');
+  }
+
   downloadLargeValidMovie() {
-    this.downloadFile({ url: largeMovieUri, destinationFilename: 'bigmovie.mp4' });
+    this.downloadFile({ url: largeMovieUri });
   }
 
   downloadInvalid() {
-    this.downloadFile({ url: badUri, destinationFilename: 'invalid.png' });
+    this.downloadFile({ url: badUri });
+  }
+  downloadInvalidMovie() {
+    this.downloadFile({ url: badMovieUrl });
   }
 
   downloadFile(dlopts: DownloadOptions): void {
@@ -114,6 +129,7 @@ export class DemoModel extends DemoSharedDownloader {
       android: {
         cancelable: false,
       },
+      ios: {},
     };
     const indicator = new LoadingIndicator();
 

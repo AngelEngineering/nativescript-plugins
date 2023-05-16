@@ -3,6 +3,7 @@ import { File, Observable, EventData } from '@nativescript/core';
 export const enum DownloadDestination {
   picker = 'show-picker', //present user with UI to choose destination directory
   gallery = 'photos-gallery', //iOS only, ignored on Android
+  downloads = 'downloads-directory', //Android only, uses SAF
 }
 
 export interface RequestOptions {
@@ -16,6 +17,7 @@ export interface DownloadOptions {
   destinationPath?: string; //must be a valid path for a new file (existing directory and valid filename)
   destinationFilename?: string; //must be a string like XXXX[].YYYYYY] without any path preceding
   destinationSpecial?: DownloadDestination;
+  notification?: boolean; //Android-only. Show system notification for download success/failure. defaults to false
 }
 
 export interface ResponseData {

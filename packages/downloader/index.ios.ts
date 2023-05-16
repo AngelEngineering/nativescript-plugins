@@ -27,7 +27,14 @@ export class Downloader extends DownloaderCommon {
         outputpath = path.join(knownFolders.documents().path, destinationFilename);
       } else {
         // outputpath = path.join(knownFolders.documents().path, `${generateId()}`);
-        outputpath = path.join(knownFolders.documents().path, 'DL' + Math.random() * 10000000);
+        // outputpath = path.join(knownFolders.documents().path, 'DL' + Math.random() * 10000000);
+        let urlParts = url.split('/');
+        let urlName = urlParts[urlParts.length - 1];
+        console.log('urlName', urlName);
+        if (urlName.includes('.')) {
+          console.log('have a dot in last string from url after final/', urlName);
+          outputpath = path.join(knownFolders.documents().path, urlName);
+        } else outputpath = path.join(knownFolders.documents().path, 'DL' + Math.round(Math.random() * 10000000));
       }
       console.log('outputpath', outputpath);
 
