@@ -57,6 +57,13 @@ module.exports = {
           description: '@angelengineering/filepicker: Build',
         },
       },
+      // @angelengineering/downloader
+      downloader: {
+        build: {
+          script: 'nx run downloader:build.all',
+          description: '@angelengineering/downloader: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -74,6 +81,10 @@ module.exports = {
       filepicker: {
         script: 'nx run filepicker:focus',
         description: 'Focus on @angelengineering/filepicker',
+      },
+      downloader: {
+        script: 'nx run downloader:focus',
+        description: 'Focus on @angelengineering/downloader',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',
