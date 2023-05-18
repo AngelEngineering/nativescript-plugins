@@ -55,8 +55,7 @@
 			<true/>
 		</dict>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Requires access to photo library.</string>
-		
+		<string>Requires access to photo library to load and save media.</string>
 		<key>NSUbiquitousContainers</key>
 		<dict>
 			<key>iCloud.org.nativescript.plugindemo</key>

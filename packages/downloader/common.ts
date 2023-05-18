@@ -3,7 +3,7 @@ import { File, Observable, EventData } from '@nativescript/core';
 export const enum DownloadDestination {
   picker = 'show-picker', //present user with UI to choose destination directory
   gallery = 'photos-gallery', //iOS only, ignored on Android
-  downloads = 'downloads-directory', //Android only, uses SAF
+  downloads = 'downloads-directory', //Android only, uses legacy DIRECTORY_DOWNLOADS, or MediaStore for 29+
 }
 
 export interface RequestOptions {

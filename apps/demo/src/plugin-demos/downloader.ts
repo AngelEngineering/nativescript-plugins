@@ -4,13 +4,11 @@ import { DemoSharedDownloader } from '@demo/shared';
 import { DownloadDestination, Downloader, DownloadOptions, MessageData } from '@angelengineering/downloader';
 import { LoadingIndicator, Mode, OptionsCommon } from '@nstudio/nativescript-loading-indicator';
 import { Feedback, FeedbackType, FeedbackPosition } from '@valor/nativescript-feedback';
-import { TempFile } from '@angelengineering/downloader/files';
 import { Result, checkMultiple, check as checkPermission, request, request as requestPermission } from '@nativescript-community/perms';
 
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
   page.bindingContext = new DemoModel();
-  TempFile.cleanup();
 }
 
 enum ToastStatus {
@@ -36,7 +34,6 @@ export class DemoModel extends DemoSharedDownloader {
   async downloadValid() {
     //iOS doesn't need permission to download to application cache directory
     //Android can also download to applications external cache directory without permissions
-    //   but, if we want to download to Downloads, either user selects the destination directory first, or plugin needs to use SAF storage approach
     try {
       this.downloadFile({ url: imageUri, destinationFilename: 'rose.png' });
     } catch (err) {
@@ -47,47 +44,59 @@ export class DemoModel extends DemoSharedDownloader {
 
   downloadValidDest() {
     //Android can do this if we let user select the destination directory which grants permission, otherwise need SAF storage approach to save to default Downloads directory
-    if (isAndroid) {
-      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.picker });
+    //iOS also will grant permission since user is involved in selecting destination
+    if (isIOS && +Device.osVersion < 13) {
+      alert('Picker destination only available on iOS 13+ ');
+      return;
     }
-    //iOS needs permission to save to photos gallery
-    else if (isIOS)
-      checkPermission('storage').then(async (permres: Result) => {
+    this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.picker });
+  }
+
+  downloadValidDestDL() {
+    //As long as permissions are in Manifest for API <29 no permission needed for legacy approach
+    //newer APIs use MediaStore which also doesn't need any additional permissions
+    if (isAndroid) {
+      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.downloads, notification: true });
+    } else if (isIOS) {
+      //iOS needs user permission before saving a copy to Photos Gallery
+      checkPermission('photo').then(async (permres: Result) => {
         console.log('storage perm?', permres);
-        await requestPermission('storage').then(async (result) => {
+        await requestPermission('photo').then(async (result) => {
           console.log('requested perm?', result);
-          if ((isAndroid && result['android.permission.WRITE_EXTERNAL_STORAGE'] == 'authorized') || (isIOS && result[0] == 'authorized' && result[1])) {
+          if (result[0] == 'authorized' && result[1]) {
             try {
-              this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: isAndroid ? DownloadDestination.picker : DownloadDestination.gallery });
+              this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.gallery });
             } catch (err) {
               if (err) alert(err?.message);
             }
           } else alert("No permission for files, can't download files");
         });
       });
-  }
-  downloadValidDestDL() {
-    if (isAndroid) {
-      this.downloadFile({ url: imageUri, destinationFilename: 'rose.png', destinationSpecial: DownloadDestination.downloads, notification: true });
-    } else if (isIOS) alert('Downloads Directory not available on iOS, use gallery destination');
+    }
   }
 
   downloadValidMovie() {
+    //iOS doesn't need permission to download to application cache directory
+    //Android can also download to applications external cache directory without permissions
     this.downloadFile({ url: movieUri });
   }
 
   downloadValidMovieDest() {
     //Android can do this if we let user select the destination directory which grants permission, otherwise need SAF storage approach to save to default Downloads directory
+    //iOS also will grant permission since user is involved in selecting destination
+    this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.picker });
+  }
+
+  downloadValidMovieDestDL() {
     if (isAndroid) {
-      this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.picker });
-    }
-    //iOS needs permission to save to photos gallery
-    else if (isIOS)
-      checkPermission('storage').then(async (permres: Result) => {
+      this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.downloads, notification: true });
+    } else if (isIOS)
+      //iOS needs user permission before saving a copy to Photos Gallery
+      checkPermission('photo').then(async (permres: Result) => {
         console.log('storage perm?', permres);
-        await requestPermission('storage').then(async (result) => {
+        await requestPermission('photo').then(async (result) => {
           console.log('requested perm?', result);
-          if ((isAndroid && result['android.permission.WRITE_EXTERNAL_STORAGE'] == 'authorized') || (isIOS && result[0] == 'authorized' && result[1])) {
+          if (isIOS && result[0] == 'authorized' && result[1]) {
             try {
               this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.gallery });
             } catch (err) {
@@ -98,21 +107,21 @@ export class DemoModel extends DemoSharedDownloader {
       });
   }
 
-  downloadValidMovieDestDL() {
-    if (isAndroid) {
-      this.downloadFile({ url: movieUri, destinationSpecial: DownloadDestination.downloads, notification: true });
-    } else if (isIOS) alert('Downloads Directory not available on iOS, use gallery destination');
-  }
-
   downloadLargeValidMovie() {
+    //iOS doesn't need permission to download to application cache directory
+    //Android can also download to applications external cache directory without permissions
     this.downloadFile({ url: largeMovieUri });
   }
 
   downloadInvalid() {
+    //iOS doesn't need permission to download to application cache directory
+    //Android can also download to applications external cache directory without permissions
     this.downloadFile({ url: badUri });
   }
 
   downloadSmallMovie() {
+    //iOS doesn't need permission to download to application cache directory
+    //Android can also download to applications external cache directory without permissions
     this.downloadFile({ url: smallMovieUrl });
   }
 
@@ -155,31 +164,23 @@ export class DemoModel extends DemoSharedDownloader {
     });
 
     dp.on(Downloader.DOWNLOAD_ERROR, (payload: MessageData) => {
-      console.log('ERROR!', payload?.data);
+      console.log(payload?.data.error);
       indicator.hide();
-      this.toast('Download FAILED!!!', ToastStatus.error);
+      this.toast('Download FAILED! error: ' + payload?.data.error, ToastStatus.error);
       this.handleFiles(null);
     });
 
-    dp.download(dlopts)
-      .then((file: File) => {
-        if (!file) {
-          indicator.hide();
-          this.toast('No file resolved!', ToastStatus.error);
-          return console.error('Failed to download file!');
-        }
-        console.log('Finished downloading file ', file.path);
+    dp.download(dlopts).then((file: File) => {
+      if (!file) {
         indicator.hide();
-        this.toast('File downloaded!', ToastStatus.success);
-        this.handleFiles(file);
-      })
-      .catch((err) => {
-        console.error('caught an error', err);
-        indicator.hide();
-        if (err.message == 'Canceled') {
-          this.toast('User canceled', ToastStatus.normal);
-        } else this.toast('Error! msg:' + err.message, ToastStatus.error);
-      });
+        this.toast('No file resolved!', ToastStatus.error);
+        return console.error('Failed to download file!');
+      }
+      console.log('Finished downloading file ', file.path);
+      indicator.hide();
+      this.toast('File downloaded!', ToastStatus.success);
+      this.handleFiles(file);
+    });
   }
 
   toast(message: string, status: ToastStatus, position: ToastPosition = ToastPosition.TOP, title?: string) {

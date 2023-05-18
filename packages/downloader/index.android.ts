@@ -1,7 +1,6 @@
 /* eslint-disable no-inner-declarations */
 import { DownloaderCommon, DownloadOptions, DownloadDestination } from './common';
-import { Application, File, knownFolders, path, Utils, AndroidApplication, AndroidActivityResultEventData, Device } from '@nativescript/core';
-import { generateId } from './files';
+import { Application, File, path, Utils, AndroidApplication, AndroidActivityResultEventData, Device } from '@nativescript/core';
 export { DownloadDestination };
 
 const DOWNLOADER_CODE = 26041;
@@ -41,7 +40,6 @@ export class Downloader extends DownloaderCommon {
 
         //check if a file with same name already exists. if it was created by another app/install, can't access, rename, delete, etc.
         if (File.exists(outputpath)) {
-          // console.warn('file already exists at path: ', outputpath);
           let tempFileName;
           for (let i = 1; i < 999999999; i++) {
             tempFileName = filePrefix + '-' + i + fileSuffix;
@@ -89,38 +87,38 @@ export class Downloader extends DownloaderCommon {
           } else if (status.state === DownloadState.FAILED) {
             clearInterval(progressInterval);
             emit(DownloaderCommon.DOWNLOAD_ERROR, { error: status.reason });
+            reject();
           } else if (status.state === DownloadState.SUCCESFUL) {
             emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress: 1 });
             clearInterval(progressInterval);
 
+            //handler to make a copy after user selects a directory
             function onResult(e: AndroidActivityResultEventData): void {
               if (e.requestCode != DOWNLOADER_CODE) return;
               if (e.resultCode == android.app.Activity.RESULT_CANCELED) {
                 removeResultListener();
-                reject(new Error('Canceled'));
                 return;
               }
               if (e.resultCode != android.app.Activity.RESULT_OK) {
                 removeResultListener();
-                reject(new Error('ERROR: FilePicker - ' + e.resultCode));
                 return;
               }
               //find out which directory user selected
               //Note: The picker will automatically append a string so that the filename will be unique and saveable
               const uri = e.intent.getData() as android.net.Uri;
               const uriPath = getPathFromURI(uri);
-              if (uriPath == null) throw new Error('Unable to resolve SAF URI, did you request permissions?');
-              const fileName = uriPath.split('/')[uriPath.split('/').length - 1];
-              console.log('user selected uri', uri);
-              console.log(' uriPath', uriPath);
-              console.log(' fileName', fileName);
-              const realpath = getPathFromURI(uri);
+              if (uriPath == null) {
+                console.error('Unable to resolve SAF URI, did you request permissions?');
+                emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'SAF url not resolved, unable to save copy to directory. Did you request permission?' });
+                return;
+              }
+
               const fdelete = new java.io.File(uri.getPath());
               if (fdelete.exists()) {
                 if (fdelete.delete()) {
-                  console.log('file Deleted :' + uri.getPath());
+                  // console.log('file Deleted :' + uri.getPath());
                 } else {
-                  console.log('file not Deleted :' + uri.getPath());
+                  // console.log('file not Deleted :' + uri.getPath());
                 }
               }
 
@@ -139,22 +137,16 @@ export class Downloader extends DownloaderCommon {
                 outputStream.close();
               } catch (e) {
                 console.error(e);
-                throw new Error('Error copying file to user selected directory!' + e.message);
+                emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'unable to save copy to directory' });
               }
               removeResultListener();
-              handleResult(resolve, reject);
             }
 
             function removeResultListener(): void {
               AndroidApplication.off(AndroidApplication.activityResultEvent, onResult);
             }
 
-            const handleResult = (resolve, reject) => {
-              const file = File.fromPath(outputpath);
-              emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
-              resolve(file);
-            };
-
+            //add a copy to directory of user's choice using a picker
             if (destinationSpecial == DownloadDestination.picker) {
               try {
                 // add the results listener to the android app
@@ -167,72 +159,73 @@ export class Downloader extends DownloaderCommon {
                 intent.setType('*/*');
                 getActivity().startActivityForResult(intent, DOWNLOADER_CODE);
               } catch (err) {
-                console.error('Error getting user destination directory!');
+                console.error('Error getting user destination directory, not copying');
                 removeResultListener();
-                reject(null);
               }
-            } else {
-              const file = File.fromPath(outputpath);
-              emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
-              if (destinationSpecial == DownloadDestination.downloads) {
-                if (fileSuffix.includes('.')) fileSuffix = fileSuffix.replace('.', '');
-                function getMimeType(uri) {
-                  let mimeType = null;
-                  if (android.content.ContentResolver.SCHEME_CONTENT == uri.getScheme()) {
-                    mimeType = context.getContentResolver().getType(uri);
-                  } else {
-                    const fileExtension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                    mimeType = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
-                  }
-                  return mimeType;
-                }
-                const mimetype = getMimeType(localUri);
-                //save the file to Downloads now that we have a mime type
-                if (+Device.sdkVersion > 28) {
-                  //use MediaStore
-                  const values = new android.content.ContentValues();
-                  values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName);
-                  values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimetype);
-                  values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS);
-                  const uri = context.getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-                  let inputStream = new java.io.FileInputStream(outputpath);
-                  let outputStream = context.getContentResolver().openOutputStream(uri);
-                  let read = 0;
-                  let maxBufferSize = 1 * 1024 * 1024;
-                  let bytesAvailable = inputStream.available();
-                  let bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                  let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
-                  while ((read = inputStream.read(buffers)) != -1) {
-                    outputStream.write(buffers, 0, read);
-                  }
-                  inputStream.close();
-                  outputStream.close();
-                } else {
-                  // use old approach, but requires permissions
-                  let androidDownloadsPath = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS).toString();
-                  let downloadPath = path.join(androidDownloadsPath, fileName);
-                  let inputStream = new java.io.FileInputStream(outputpath);
-                  let outputStream = new java.io.FileOutputStream(downloadPath);
-                  let read = 0;
-                  let maxBufferSize = 1 * 1024 * 1024;
-                  let bytesAvailable = inputStream.available();
-                  let bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                  let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
-                  while ((read = inputStream.read(buffers)) != -1) {
-                    outputStream.write(buffers, 0, read);
-                  }
-                  inputStream.close();
-                  outputStream.close();
-                }
-              }
-              resolve(file);
             }
+
+            //add a copy to the Android Download directory
+            if (destinationSpecial == DownloadDestination.downloads) {
+              if (fileSuffix.includes('.')) fileSuffix = fileSuffix.replace('.', '');
+              function getMimeType(uri) {
+                let mimeType = null;
+                if (android.content.ContentResolver.SCHEME_CONTENT == uri.getScheme()) {
+                  mimeType = context.getContentResolver().getType(uri);
+                } else {
+                  const fileExtension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                  mimeType = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
+                }
+                return mimeType;
+              }
+              const mimetype = getMimeType(localUri);
+              //save the file to Downloads now that we have a mime type
+              if (+Device.sdkVersion > 28) {
+                //use MediaStore
+                const values = new android.content.ContentValues();
+                values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimetype);
+                values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS);
+                const uri = context.getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                let inputStream = new java.io.FileInputStream(outputpath);
+                let outputStream = context.getContentResolver().openOutputStream(uri);
+                let read = 0;
+                let maxBufferSize = 1 * 1024 * 1024;
+                let bytesAvailable = inputStream.available();
+                let bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
+                while ((read = inputStream.read(buffers)) != -1) {
+                  outputStream.write(buffers, 0, read);
+                }
+                inputStream.close();
+                outputStream.close();
+              } else {
+                // use old approach, but requires permissions
+                let androidDownloadsPath = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS).toString();
+                let downloadPath = path.join(androidDownloadsPath, fileName);
+                let inputStream = new java.io.FileInputStream(outputpath);
+                let outputStream = new java.io.FileOutputStream(downloadPath);
+                let read = 0;
+                let maxBufferSize = 1 * 1024 * 1024;
+                let bytesAvailable = inputStream.available();
+                let bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
+                while ((read = inputStream.read(buffers)) != -1) {
+                  outputStream.write(buffers, 0, read);
+                }
+                inputStream.close();
+                outputStream.close();
+              }
+            }
+            //return the user-accessible downloaded file path to user
+            const downloadedFile = File.fromPath(outputpath);
+            emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
+            resolve(downloadedFile);
           }
         }, 500);
       } catch (err) {
         console.error(`An unhandled error occurred download.android: ${err?.filename}, line: ${err?.lineno} :`);
         emit(DownloaderCommon.DOWNLOAD_ERROR, { error: err?.message });
-        reject(err?.message);
+        reject();
       }
     });
   }
