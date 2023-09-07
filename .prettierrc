@@ -1,6 +1,13 @@
 {
   "useTabs": false,
-  "printWidth": 800,
+  "printWidth": 200,
   "tabWidth": 2,
-  "singleQuote": true
+  "singleQuote": true,
+  "semi": true,
+  "quoteProps": "preserve",
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "parser": "babel-ts",
+  "endOfLine": "lf"
 }
