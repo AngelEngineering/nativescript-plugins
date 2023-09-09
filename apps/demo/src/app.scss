@@ -1,2 +1,46 @@
 @import 'nativescript-theme-core/scss/light';
 @import 'nativescript-theme-core/scss/index';
+
+Page {
+    background-color: #0a1120;
+  }
+  
+  ActionBar {
+    background-color: #0e1729;
+    color: #fff;
+  }
+  
+  Label {
+    color: #91a5b7;
+  
+    &.divider {
+      height: 1;
+      width: 100%;
+      background-color: #91a5b7;
+      margin: 10 0;
+    }
+  
+    &.h2 {
+      color: #fff;
+      font-weight: 600;
+      font-size: 16;
+    }
+  }
+  
+  Button {
+    border-radius: 5;
+    font-weight: 600;
+    background-color: #1e293c;
+    color: #fff;
+    padding: 20;
+    margin: 10 0;
+  }
+  
+  .button {
+    border-radius: 5;
+    font-weight: 600;
+    background-color: #1e293c;
+    color: #fff;
+    margin: 10 0;
+  }
+  

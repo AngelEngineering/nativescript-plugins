@@ -1,14 +1,13 @@
 /* eslint-disable no-inner-declarations */
-import { DownloaderCommon, DownloadOptions, DownloadDestination } from './common';
+import { DownloaderCommon, DownloadOptions } from './common';
 import { Application, File, path, Utils, AndroidApplication, AndroidActivityResultEventData, Device } from '@nativescript/core';
-export { DownloadDestination };
 
 const DOWNLOADER_CODE = 26041;
 
 export class Downloader extends DownloaderCommon {
   public download(options: DownloadOptions): Promise<File> {
     return new Promise<File>((resolve, reject) => {
-      let { url, request, destinationFilename, destinationPath, destinationSpecial, notification } = options;
+      let { url, request, destinationFilename, destinationPath, copyPicker, copyDownloads, notification } = options;
       const emit = (event: string, data: any) => {
         this.notify({ eventName: event, object: this, data });
       };
@@ -55,9 +54,7 @@ export class Downloader extends DownloaderCommon {
         //   https://developer.android.com/reference/android/app/DownloadManager.Request#VISIBILITY_VISIBLE
         //   Disabling this notification will also require the following permission in AndroidManifest and explanation why:
         //       android.permission.DOWNLOAD_WITHOUT_NOTIFICATION
-        req.setNotificationVisibility(notification ? 1 : 2);
-
-        // req.allowScanningByMediaScanner();//deprecated, files saved outside app directory will be scanned automatically
+        req.setNotificationVisibility(notification ? android.app.DownloadManager.Request.VISIBILITY_VISIBLE : android.app.DownloadManager.Request.VISIBILITY_HIDDEN);
 
         //if we don't set the title, the server may provide a valid filename, or it may provide the url with whatever querystring it has
         req.setDescription(destinationFilename);
@@ -118,7 +115,7 @@ export class Downloader extends DownloaderCommon {
                 if (fdelete.delete()) {
                   // console.log('file Deleted :' + uri.getPath());
                 } else {
-                  // console.log('file not Deleted :' + uri.getPath());
+                  // console.warn('file not Deleted :' + uri.getPath());
                 }
               }
 
@@ -147,7 +144,7 @@ export class Downloader extends DownloaderCommon {
             }
 
             //add a copy to directory of user's choice using a picker
-            if (destinationSpecial == DownloadDestination.picker) {
+            if (copyPicker) {
               try {
                 // add the results listener to the android app
                 AndroidApplication.on(AndroidApplication.activityResultEvent, onResult);
@@ -165,7 +162,7 @@ export class Downloader extends DownloaderCommon {
             }
 
             //add a copy to the Android Download directory
-            if (destinationSpecial == DownloadDestination.downloads) {
+            if (copyDownloads) {
               if (fileSuffix.includes('.')) fileSuffix = fileSuffix.replace('.', '');
               function getMimeType(uri) {
                 let mimeType = null;
@@ -216,6 +213,7 @@ export class Downloader extends DownloaderCommon {
                 outputStream.close();
               }
             }
+
             //return the user-accessible downloaded file path to user
             const downloadedFile = File.fromPath(outputpath);
             emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: outputpath });
@@ -326,7 +324,9 @@ function getReason(cursor: android.database.Cursor): string {
 
 // This method is safer than Application.getApplicationContext()
 const getAndroidContext = (): android.app.Application => {
-  const ctx = java.lang.Class.forName('android.app.AppGlobals').getMethod('getInitialApplication', null).invoke(null, null) || java.lang.Class.forName('android.app.ActivityThread').getMethod('currentApplication', null).invoke(null, null);
+  const ctx =
+    java.lang.Class.forName('android.app.AppGlobals').getMethod('getInitialApplication', null).invoke(null, null) ||
+    java.lang.Class.forName('android.app.ActivityThread').getMethod('currentApplication', null).invoke(null, null);
   return ctx || Utils.android.getApplicationContext();
 };
 
@@ -334,7 +334,7 @@ function getActivity(): android.app.Activity {
   return Application.android.foregroundActivity || Application.android.startActivity;
 }
 
-// Not sure why DocumentsContact is not defined in Android types yet?
+// Not sure why DocumentsContact is not defined in NS Android types yet?
 type ProviderWithDocumentsContact = typeof android.provider & {
   DocumentsContract: any;
 };

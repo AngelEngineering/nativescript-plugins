@@ -1,6 +1,6 @@
-import { DownloaderCommon, DownloadOptions, DownloadDestination } from './common';
+import { DownloaderCommon, DownloadOptions } from './common';
 import { File, path, knownFolders, Application, Device } from '@nativescript/core';
-export { DownloadDestination };
+import { iOSNativeHelper } from '@nativescript/core/utils';
 
 const currentDevice = UIDevice.currentDevice;
 const device = currentDevice.userInterfaceIdiom === UIUserInterfaceIdiom.Phone ? 'Phone' : 'Pad';
@@ -17,7 +17,7 @@ export class Downloader extends DownloaderCommon {
       const emit = (event: string, data: any) => {
         this.notify({ eventName: event, object: this, data });
       };
-      let { url, request, destinationFilename, destinationPath, destinationSpecial } = options;
+      let { url, request, destinationFilename, destinationPath, copyPicker, copyGallery } = options;
 
       let outputpath = '';
       if (destinationPath) {
@@ -48,7 +48,7 @@ export class Downloader extends DownloaderCommon {
       let downloadedFile = File.fromPath(outputpath);
 
       try {
-        downloadedFile.writeTextSync('', (e) => {
+        downloadedFile.writeTextSync('', e => {
           console.error('Error opening outputfile path', outputpath);
           throw e;
         });
@@ -71,30 +71,47 @@ export class Downloader extends DownloaderCommon {
           private contentLength: number;
           private handle: NSFileHandle;
 
-          public URLSessionDataTaskDidReceiveResponseCompletionHandler(_session: NSURLSession, _dataTask: NSURLSessionDataTask, response: NSURLResponse, completionHandler: (p1: NSURLSessionResponseDisposition) => void) {
+          public URLSessionDataTaskDidReceiveResponseCompletionHandler(
+            _session: NSURLSession,
+            _dataTask: NSURLSessionDataTask,
+            response: NSURLResponse,
+            completionHandler: (p1: NSURLSessionResponseDisposition) => void
+          ) {
             completionHandler(NSURLSessionResponseDisposition.Allow);
             this.handle = NSFileHandle.fileHandleForWritingAtPath(downloadedFile.path);
-            this.handle.truncateAtOffsetError(0);
+            if (iOSNativeHelper.MajorVersion > 12) this.handle.truncateAtOffsetError(0); //only on iOS13+
+            else this.handle.truncateFileAtOffset(0);
             this.contentLength = response.expectedContentLength;
             emit(DownloaderCommon.DOWNLOAD_STARTED, { contentLength: this.contentLength });
           }
 
           public URLSessionDataTaskDidReceiveData(_session: NSURLSession, _dataTask: NSURLSessionDataTask, data: NSData) {
             try {
-              const written = new interop.Reference(0);
-              if (!this.handle.seekToEndReturningOffsetError(written)) {
-                emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error seeking end of file' });
-                return reject();
-                // throw new Error('Error seeking end of file');
-              }
-              if (!this.handle.writeDataError(data)) {
-                // throw new Error('Error writing data');
-                emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error writing data' });
-                return reject();
-              }
-              if (this.contentLength > 0) {
-                const progress = written.value / this.contentLength;
-                emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress, url, destinationFilename });
+              if (iOSNativeHelper.MajorVersion > 12) {
+                const written = new interop.Reference(0);
+                if (!this.handle.seekToEndReturningOffsetError(written)) {
+                  emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error seeking end of file' });
+                  return reject();
+                }
+                if (!this.handle.writeDataError(data)) {
+                  emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error writing data' });
+                  return reject();
+                }
+                if (this.contentLength > 0) {
+                  const progress = written.value / this.contentLength;
+                  emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress, url, destinationFilename });
+                }
+              } else {
+                try {
+                  this.handle.writeData(data); //this may throw an NSFileHandleOperationException
+                } catch (err) {
+                  emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error writing data' });
+                  return reject();
+                }
+                if (this.contentLength > 0) {
+                  const progress = this.handle.offsetInFile / this.contentLength;
+                  emit(DownloaderCommon.DOWNLOAD_PROGRESS, { progress, url, destinationFilename });
+                }
               }
             } catch (err) {
               emit(DownloaderCommon.DOWNLOAD_ERROR, { error: err.message });
@@ -103,7 +120,10 @@ export class Downloader extends DownloaderCommon {
           }
 
           public URLSessionTaskDidCompleteWithError(_session: NSURLSession, task: NSURLSessionTask, error: NSError) {
-            this.handle.closeAndReturnError();
+            if (this.handle) {
+              if (iOSNativeHelper.MajorVersion > 12) this.handle.closeAndReturnError();
+              else this.handle.closeFile();
+            }
             if (error) {
               console.error('URLSessionTaskDidCompleteWithError error with description:');
               console.error(error.localizedDescription);
@@ -117,33 +137,117 @@ export class Downloader extends DownloaderCommon {
               }
               emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: downloadedFile.path });
               //Special handling if user requests a copy be saved to Photos Gallery
-              if (destinationSpecial == DownloadDestination.gallery) {
+              if (copyGallery) {
                 let iosurl = NSURL.URLWithString(downloadedFile.path);
                 let fileParts = downloadedFile.path.split('.');
                 let fileSuffix = fileParts.length > 1 ? fileParts[fileParts.length - 1] : null;
-                let isImage = ['jpg', 'jpeg', 'jpe', 'jp2', 'jpg2', 'pjpeg', 'pjp', 'kjp2', 'j2k', 'jpf', 'jpx', 'jpm', 'mj2', 'ico', 'png', 'svg', 'svgz', 'gif', 'tif', 'tiff', 'psd', 'ai', 'eps', 'ps', 'raw', 'webp', 'wbmp', 'heif', 'heic', 'ief', 'indd', 'ind', 'indt', 'jif', 'jfif', 'jfi', 'arw', 'cr2', 'crw', 'k25', 'bmp', 'dib', 'odg', 'cur', 'ief', 'pcx', 'odi', 'art', 'jng', 'nef', 'orf', 'avif'].includes(fileSuffix);
-                let isVideo = ['3gp', '3gpp', '3g2', '3gpp2', 'asf', 'avi', 'fli', 'flv', 'f4v', 'swf', 'mkv', 'mov', 'mpeg', 'mpe', 'mp4', 'mpv', 'm4p', 'ts', 'm1v', 'm2v', 'm4v', 'mts', 'ogg', 'ogv', 'qt', 'rm', 'vob', 'wmv', 'webm', 'avhcd'].includes(fileSuffix);
+                let isImage = [
+                  'jpg',
+                  'jpeg',
+                  'jpe',
+                  'jp2',
+                  'jpg2',
+                  'pjpeg',
+                  'pjp',
+                  'kjp2',
+                  'j2k',
+                  'jpf',
+                  'jpx',
+                  'jpm',
+                  'mj2',
+                  'ico',
+                  'png',
+                  'svg',
+                  'svgz',
+                  'gif',
+                  'tif',
+                  'tiff',
+                  'psd',
+                  'ai',
+                  'eps',
+                  'ps',
+                  'raw',
+                  'webp',
+                  'wbmp',
+                  'heif',
+                  'heic',
+                  'ief',
+                  'indd',
+                  'ind',
+                  'indt',
+                  'jif',
+                  'jfif',
+                  'jfi',
+                  'arw',
+                  'cr2',
+                  'crw',
+                  'k25',
+                  'bmp',
+                  'dib',
+                  'odg',
+                  'cur',
+                  'ief',
+                  'pcx',
+                  'odi',
+                  'art',
+                  'jng',
+                  'nef',
+                  'orf',
+                  'avif',
+                ].includes(fileSuffix);
+                let isVideo = [
+                  '3gp',
+                  '3gpp',
+                  '3g2',
+                  '3gpp2',
+                  'asf',
+                  'avi',
+                  'fli',
+                  'flv',
+                  'f4v',
+                  'swf',
+                  'mkv',
+                  'mov',
+                  'mpeg',
+                  'mpe',
+                  'mp4',
+                  'mpv',
+                  'm4p',
+                  'ts',
+                  'm1v',
+                  'm2v',
+                  'm4v',
+                  'mts',
+                  'ogg',
+                  'ogv',
+                  'qt',
+                  'rm',
+                  'vob',
+                  'wmv',
+                  'webm',
+                  'avhcd',
+                ].includes(fileSuffix);
                 PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
                   () => {
                     if (isVideo) {
                       PHAssetChangeRequest.creationRequestForAssetFromVideoAtFileURL(iosurl);
                     } else if (isImage) {
                       PHAssetChangeRequest.creationRequestForAssetFromImageAtFileURL(iosurl);
-                    }
-                    // else console.log('neither a video or image, not saving to gallery');
+                    } else console.warn('not a recognized video or image file extension, not saving to gallery');
                   },
                   (success, err) => {
                     if (success) {
                       // console.log('success');
                     } else {
-                      // console.log('failed');
+                      console.warn('Unable to copy into Photos gallery', err);
                     }
                     resolve(downloadedFile);
                   }
                 );
-              } else if (destinationSpecial == DownloadDestination.picker) {
-                if (+Device.osVersion < 13) {
-                  console.error('Destination Picker only available on iOS 13+ ');
+              }
+              if (copyPicker) {
+                if (iOSNativeHelper.MajorVersion < 14) {
+                  console.error('Destination Picker only available on iOS 14+ ');
                   resolve(downloadedFile);
                 } else {
                   //Dev wants a copy made somewhere else, show them a picker to select a folder
@@ -207,7 +311,7 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
     return this._owner.get();
   }
 
-  //this shouldn't be called, but we'll have the same handler code just in case
+  //for a directory picker, this should never be called, but we'll include the code anyway
   documentPickerDidPickDocumentAtURL(controller: UIDocumentPickerViewController, url: NSURL): void {
     const access = url.startAccessingSecurityScopedResource();
     let copypath = url.path + '/' + this._downloadFilename;
@@ -223,7 +327,7 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
         if (!NSFileManager.defaultManager.fileExistsAtPath(copypath)) break;
       }
     }
-    const suc = NSFileManager.defaultManager.copyItemAtPathToPathError(this._downloadPath, copypath);
+    NSFileManager.defaultManager.copyItemAtPathToPathError(this._downloadPath, copypath);
     if (access) url.stopAccessingSecurityScopedResource();
     const downloadedFile = File.fromPath(this._downloadPath);
     this._resolve(downloadedFile);
@@ -231,12 +335,8 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
     this.deRegisterFromGlobal();
   }
 
-  //if multiple selections allowed:
   documentPickerDidPickDocumentsAtURLs(controller: UIDocumentPickerViewController, urls: NSArray<NSURL>): void {
-    const files: File[] = [];
-    //This view can't display an UIActivityIndicatorView inside it using the usual ios spinner approach,
-    //    but picker shows a small spinner on the "Open" button while processing
-    //Process picker results
+    //we should only get one folder, but will loop through just in case and just return the first one as destination
     for (let i = 0; i < urls.count; i++) {
       const url = urls.objectAtIndex(i); //urls[0];
       const access = url.startAccessingSecurityScopedResource();
@@ -246,7 +346,6 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
         const fileName = fileParts[fileParts.length - 1];
         const filePrefix = fileName.split('.', 2).length > 0 ? fileName.split('.', 2)[0] : null;
         const fileSuffix = fileName.split('.', 2).length > 0 ? '.' + fileName.split('.', 2)[1] : null;
-        // let tempFileName = 'dl-' + generateId() + fileSuffix;
         let tempFileName;
         for (let i = 1; i < 999999999; i++) {
           tempFileName = filePrefix + '-' + i + fileSuffix;
@@ -254,7 +353,7 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
           if (!NSFileManager.defaultManager.fileExistsAtPath(copypath)) break;
         }
       }
-      const suc = NSFileManager.defaultManager.copyItemAtPathToPathError(this._downloadPath, copypath);
+      NSFileManager.defaultManager.copyItemAtPathToPathError(this._downloadPath, copypath);
       if (access) url.stopAccessingSecurityScopedResource();
       const downloadedFile = File.fromPath(this._downloadPath);
       this._resolve(downloadedFile);
@@ -266,5 +365,8 @@ class UIDocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerD
   documentPickerWasCancelled(controller: UIDocumentPickerViewController): void {
     controller.dismissViewControllerAnimatedCompletion(true, null);
     this.deRegisterFromGlobal();
+    //user canceled the extra copy, just resolve the downloaded file
+    const downloadedFile = File.fromPath(this._downloadPath);
+    this._resolve(downloadedFile);
   }
 }

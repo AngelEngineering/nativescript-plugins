@@ -1,5 +1,5 @@
 import { MediaType } from './index.common';
-import { AndroidApplication, AndroidActivityResultEventData, Application, Device, File } from '@nativescript/core';
+import { AndroidApplication, AndroidActivityResultEventData, Application, Device, File, Utils } from '@nativescript/core';
 import { TempFile } from './files';
 import { getNativeApplication } from '@nativescript/core/application';
 
@@ -162,7 +162,7 @@ function getMediaTypes(types: MediaType) {
   if (types & MediaType.ARCHIVE) {
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.ARCHIVE]);
   }
-  let mimeTypes = fileTypes.map((s) => android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(s)).filter((s) => !!s);
+  let mimeTypes = fileTypes.map(s => android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(s)).filter(s => !!s);
   //convert to android type syntax
   return convertToArray(mimeTypes);
 }
@@ -216,6 +216,37 @@ function getActivity(): android.app.Activity {
   return Application.android.foregroundActivity || Application.android.startActivity;
 }
 
+// This method is safer than Application.getApplicationContext()
+const getAndroidContext = (): android.app.Application => {
+  const ctx =
+    java.lang.Class.forName('android.app.AppGlobals').getMethod('getInitialApplication', null).invoke(null, null) ||
+    java.lang.Class.forName('android.app.ActivityThread').getMethod('currentApplication', null).invoke(null, null);
+  return ctx || Utils.android.getApplicationContext();
+};
+
+function copyFileFromUri(uri, newpath) {
+  try {
+    const context: android.content.Context = getAndroidContext();
+    let inputStream = context.getContentResolver().openInputStream(uri);
+
+    let outputStream = new java.io.FileOutputStream(newpath);
+    let read = 0;
+    let maxBufferSize = 1 * 1024 * 1024;
+    let bytesAvailable = inputStream.available();
+    let bufferSize = Math.min(bytesAvailable, maxBufferSize);
+    let buffers = java.lang.reflect.Array.newInstance(java.lang.Byte.class.getField('TYPE').get(null), bufferSize);
+    while ((read = inputStream.read(buffers)) != -1) {
+      outputStream.write(buffers, 0, read);
+    }
+    inputStream.close();
+    outputStream.close();
+  } catch (err) {
+    console.error('Error copying file!', err);
+    return false;
+  }
+  return true;
+}
+
 //Android file mime types reference
 //https://developer.android.com/reference/androidx/media3/common/MimeTypes
 //https://android.googlesource.com/platform/external/mime-support/+/9817b71a54a2ee8b691c1dfa937c0f9b16b3473c/mime.types
@@ -223,10 +254,185 @@ function getActivity(): android.app.Activity {
 //http://androidxref.com/4.4.4_r1/xref/frameworks/base/media/java/android/media/MediaFile.java#174
 //http://androidxref.com/4.4.4_r1/xref/libcore/luni/src/main/java/libcore/net/MimeUtils.java
 const MediaFileTypeExts: { [index: string]: string[] } = {
-  [MediaType.AUDIO]: ['wav', 'wave', 'mp2', 'g723', 'mp3', 'm4a', 'mpa', 'mpga', 'mpega', 'aac', 'aif', 'aifc', 'aiff', 'wma', 'wax', 'oga', 'flac', 'alac', 'pcm', 'au', 'gsm', 'ra', 'rm', 'ram', 'tta', 'webm', 'weba', 'mid', 'midi', 'ac3', 'mpu', '3ga', 'm4p', 'amr', 'amb', 'mka', 'awb', 'snd', 'sd2'],
-  [MediaType.IMAGE]: ['jpg', 'jpeg', 'jpe', 'jp2', 'jpg2', 'pjpeg', 'pjp', 'kjp2', 'j2k', 'jpf', 'jpx', 'jpm', 'mj2', 'ico', 'png', 'svg', 'svgz', 'gif', 'tif', 'tiff', 'psd', 'ai', 'eps', 'ps', 'raw', 'webp', 'wbmp', 'heif', 'heic', 'ief', 'indd', 'ind', 'indt', 'jif', 'jfif', 'jfi', 'arw', 'cr2', 'crw', 'k25', 'bmp', 'dib', 'odg', 'cur', 'ief', 'pcx', 'odi', 'art', 'jng', 'nef', 'orf', 'avif'],
-  [MediaType.VIDEO]: ['3gp', '3gpp', '3g2', '3gpp2', 'asf', 'avi', 'fli', 'flv', 'f4v', 'swf', 'mkv', 'mov', 'mpeg', 'mpe', 'mp4', 'mpv', 'm4p', 'ts', 'm1v', 'm2v', 'm4v', 'mts', 'ogg', 'ogv', 'qt', 'rm', 'vob', 'wmv', 'webm', 'avhcd'],
-  [MediaType.DOCUMENT]: ['doc', 'docx', 'dot', 'dotx', 'pdf', 'pot', 'potx', 'pps', 'ppsx', 'ppt', 'pptx', 'rtf', 'wpd', 'xlb', 'xls', 'xlsx', 'xlt', 'xltx', 'odp', 'ods', 'odt', 'txt', 'htm', 'html', 'shtml', 'xhtml', 'md', 'latex', 'ics', 'icz', 'csv', 'css', 'asc', 'text', 'diff', 'rtx', 'tsv', 'xml', 'xsd', 'epub', 'mobi', 'azw', 'wpd', 'wp5', 'vcf', 'vcard', 'abw', 'js', 'json', 'php'],
+  [MediaType.AUDIO]: [
+    'wav',
+    'wave',
+    'mp2',
+    'g723',
+    'mp3',
+    'm4a',
+    'mpa',
+    'mpga',
+    'mpega',
+    'aac',
+    'aif',
+    'aifc',
+    'aiff',
+    'wma',
+    'wax',
+    'oga',
+    'flac',
+    'alac',
+    'pcm',
+    'au',
+    'gsm',
+    'ra',
+    'rm',
+    'ram',
+    'tta',
+    'webm',
+    'weba',
+    'mid',
+    'midi',
+    'ac3',
+    'mpu',
+    '3ga',
+    'm4p',
+    'amr',
+    'amb',
+    'mka',
+    'awb',
+    'snd',
+    'sd2',
+  ],
+  [MediaType.IMAGE]: [
+    'jpg',
+    'jpeg',
+    'jpe',
+    'jp2',
+    'jpg2',
+    'pjpeg',
+    'pjp',
+    'kjp2',
+    'j2k',
+    'jpf',
+    'jpx',
+    'jpm',
+    'mj2',
+    'ico',
+    'png',
+    'svg',
+    'svgz',
+    'gif',
+    'tif',
+    'tiff',
+    'psd',
+    'ai',
+    'eps',
+    'ps',
+    'raw',
+    'webp',
+    'wbmp',
+    'heif',
+    'heic',
+    'ief',
+    'indd',
+    'ind',
+    'indt',
+    'jif',
+    'jfif',
+    'jfi',
+    'arw',
+    'cr2',
+    'crw',
+    'k25',
+    'bmp',
+    'dib',
+    'odg',
+    'cur',
+    'ief',
+    'pcx',
+    'odi',
+    'art',
+    'jng',
+    'nef',
+    'orf',
+    'avif',
+  ],
+  [MediaType.VIDEO]: [
+    '3gp',
+    '3gpp',
+    '3g2',
+    '3gpp2',
+    'asf',
+    'avi',
+    'fli',
+    'flv',
+    'f4v',
+    'swf',
+    'mkv',
+    'mov',
+    'mpeg',
+    'mpe',
+    'mp4',
+    'mpv',
+    'm4p',
+    'ts',
+    'm1v',
+    'm2v',
+    'm4v',
+    'mts',
+    'ogg',
+    'ogv',
+    'qt',
+    'rm',
+    'vob',
+    'wmv',
+    'webm',
+    'avhcd',
+  ],
+  [MediaType.DOCUMENT]: [
+    'doc',
+    'docx',
+    'dot',
+    'dotx',
+    'pdf',
+    'pot',
+    'potx',
+    'pps',
+    'ppsx',
+    'ppt',
+    'pptx',
+    'rtf',
+    'wpd',
+    'xlb',
+    'xls',
+    'xlsx',
+    'xlt',
+    'xltx',
+    'odp',
+    'ods',
+    'odt',
+    'txt',
+    'htm',
+    'html',
+    'shtml',
+    'xhtml',
+    'md',
+    'latex',
+    'ics',
+    'icz',
+    'csv',
+    'css',
+    'asc',
+    'text',
+    'diff',
+    'rtx',
+    'tsv',
+    'xml',
+    'xsd',
+    'epub',
+    'mobi',
+    'azw',
+    'wpd',
+    'wp5',
+    'vcf',
+    'vcard',
+    'abw',
+    'js',
+    'json',
+    'php',
+  ],
   [MediaType.ARCHIVE]: ['zip', 'zipx', 'rar', 'gtar', 'iso', 'taz', 'gz', 'tar', 'tgz', 'jar', '7z', '7zip', 'dmg', 'lzh', 'lzx', 'lha', 'wz', 'arc', 'bz', 'bz2', 'pkg', 'ipa', 'rpm', 'pz', 'z'],
 };
 
@@ -426,7 +632,3 @@ export function getPathFromURI(uri: android.net.Uri) {
 
   return null;
 }
-
-declare let org: any;
-
-export const copyFileFromUri = (uri: any, outputFileName: string): boolean => org.angelengineering.plugins.filepicker.DeviceImportUtils.copyFileFromUri(Application.android.foregroundActivity, uri, outputFileName);
