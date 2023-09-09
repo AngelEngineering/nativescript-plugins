@@ -1,0 +1,73 @@
+{
+  "name": "sleepcontrol",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/sleepcontrol",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "dist/packages/sleepcontrol",
+        "tsConfig": "packages/sleepcontrol/tsconfig.json",
+        "packageJson": "packages/sleepcontrol/package.json",
+        "main": "packages/sleepcontrol/index.d.ts",
+        "assets": [
+          "packages/sleepcontrol/*.md",
+          "packages/sleepcontrol/index.d.ts",
+          "LICENSE",
+          {
+            "glob": "**/*",
+            "input": "packages/sleepcontrol/platforms/",
+            "output": "./platforms/"
+          }
+        ],
+        "dependsOn": [
+          {
+            "target": "build.all",
+            "projects": "dependencies"
+          }
+        ]
+      }
+    },
+    "build.all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node tools/scripts/build-finish.ts sleepcontrol"
+        ],
+        "parallel": false
+      },
+      "outputs": [
+        "dist/packages/sleepcontrol"
+      ],
+      "dependsOn": [
+        {
+          "target": "build.all",
+          "projects": "dependencies"
+        },
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ]
+    },
+    "focus": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx g @nativescript/plugin-tools:focus-packages sleepcontrol"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/sleepcontrol/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

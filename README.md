@@ -3,6 +3,7 @@
 - [@angelengineering/downloader](packages/downloader/README.md)
 - [@angelengineering/filepicker](packages/filepicker/README.md)
 - [@angelengineering/flashlight](packages/flashlight/README.md)
+- [@angelengineering/sleepcontrol](packages/sleepcontrol/README.md)
 
 # How to use?
 

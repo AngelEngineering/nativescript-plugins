@@ -78,6 +78,13 @@ module.exports = {
           description: '@angelengineering/audio-recorder: Build',
         },
       },
+      // @angelengineering/sleepcontrol
+      'sleepcontrol': {
+        build: {
+          script: 'nx run sleepcontrol:build.all',
+          description: '@angelengineering/sleepcontrol: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -107,6 +114,10 @@ module.exports = {
       'audio-recorder': {
         script: 'nx run audio-recorder:focus',
         description: 'Focus on @angelengineering/audio-recorder',
+      },
+      'sleepcontrol': {
+        script: 'nx run sleepcontrol:focus',
+        description: 'Focus on @angelengineering/sleepcontrol',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',

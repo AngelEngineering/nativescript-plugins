@@ -13,7 +13,8 @@
     "@nstudio/nativescript-loading-indicator": "4.2.0",
     "@valor/nativescript-feedback": "2.0.2",
     "@angelengineering/audio-player": "file:../../packages/audio-player",
-    "@angelengineering/audio-recorder": "file:../../packages/audio-recorder"
+    "@angelengineering/audio-recorder": "file:../../packages/audio-recorder",
+    "@angelengineering/sleepcontrol": "file:../../packages/sleepcontrol"
   },
   "devDependencies": {
     "@nativescript/android": "8.5.2",
