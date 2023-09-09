@@ -1,0 +1,73 @@
+{
+  "name": "audio-player",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/audio-player",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "dist/packages/audio-player",
+        "tsConfig": "packages/audio-player/tsconfig.json",
+        "packageJson": "packages/audio-player/package.json",
+        "main": "packages/audio-player/index.d.ts",
+        "assets": [
+          "packages/audio-player/*.md",
+          "packages/audio-player/index.d.ts",
+          "LICENSE",
+          {
+            "glob": "**/*",
+            "input": "packages/audio-player/platforms/",
+            "output": "./platforms/"
+          }
+        ],
+        "dependsOn": [
+          {
+            "target": "build.all",
+            "projects": "dependencies"
+          }
+        ]
+      }
+    },
+    "build.all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node tools/scripts/build-finish.ts audio-player"
+        ],
+        "parallel": false
+      },
+      "outputs": [
+        "dist/packages/audio-player"
+      ],
+      "dependsOn": [
+        {
+          "target": "build.all",
+          "projects": "dependencies"
+        },
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ]
+    },
+    "focus": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx g @nativescript/plugin-tools:focus-packages audio-player"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/audio-player/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

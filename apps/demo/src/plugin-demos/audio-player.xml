@@ -1,0 +1,19 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo">
+  <Page.actionBar>
+    <ActionBar title="audio-player" icon="" class="action-bar"/>
+  </Page.actionBar>
+  <StackLayout class="p-20">
+    <ScrollView class="h-full">
+      <StackLayout>
+        <Button text="Play local M4A audiofile " tap="{{ playLocalM4aAudio }}" class="btn btn-primary"/>
+        <Button text="Play local MP3 audiofile " tap="{{ playLocalMp3Audio }}" class="btn btn-primary"/>
+        <Button text="Play local WAV audiofile " tap="{{ playLocalWavAudio }}" class="btn btn-primary"/>
+        <Button text="(iOS-only) Play local CAF audiofile " tap="{{ playLocalCafAudio }}" class="btn btn-primary"/>
+        <Button text="Play remote MP3 audiofile " tap="{{ playRemoteAudio }}" class="btn btn-primary"/>
+        <Button text="Stop playing" tap="{{ stopPlayback }}" id="stopPlayBtn" class="btn btn-primary" />
+        <Label text="Currently playing audio file info:" id="outputLabel" visibility="collapsed"/>
+        <StackLayout id="outputStack" visibility="collapsed"/>
+      </StackLayout>
+    </ScrollView>
+  </StackLayout>
+</Page>

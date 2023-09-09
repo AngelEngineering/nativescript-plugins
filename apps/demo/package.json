@@ -11,7 +11,8 @@
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
     "@nstudio/nativescript-checkbox": "2.0.5",
     "@nstudio/nativescript-loading-indicator": "4.2.0",
-    "@valor/nativescript-feedback": "2.0.2"
+    "@valor/nativescript-feedback": "2.0.2",
+    "@angelengineering/audio-player": "file:../../packages/audio-player"
   },
   "devDependencies": {
     "@nativescript/android": "8.5.2",

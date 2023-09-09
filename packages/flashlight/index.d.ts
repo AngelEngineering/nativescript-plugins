@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { FlashlightCommon } from './common';
 
 export declare class FlashlightImpl extends FlashlightCommon {
