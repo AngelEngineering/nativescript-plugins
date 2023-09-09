@@ -1,4 +1,5 @@
 - [@angelengineering/audio-player](packages/audio-player/README.md)
+- [@angelengineering/audio-recorder](packages/audio-recorder/README.md)
 - [@angelengineering/downloader](packages/downloader/README.md)
 - [@angelengineering/filepicker](packages/filepicker/README.md)
 - [@angelengineering/flashlight](packages/flashlight/README.md)

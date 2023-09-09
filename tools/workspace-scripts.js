@@ -71,6 +71,13 @@ module.exports = {
           description: '@angelengineering/audio-player: Build',
         },
       },
+      // @angelengineering/audio-recorder
+      'audio-recorder': {
+        build: {
+          script: 'nx run audio-recorder:build.all',
+          description: '@angelengineering/audio-recorder: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -96,6 +103,10 @@ module.exports = {
       'audio-player': {
         script: 'nx run audio-player:focus',
         description: 'Focus on @angelengineering/audio-player',
+      },
+      'audio-recorder': {
+        script: 'nx run audio-recorder:focus',
+        description: 'Focus on @angelengineering/audio-recorder',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',
