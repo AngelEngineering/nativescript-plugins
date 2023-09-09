@@ -64,6 +64,13 @@ module.exports = {
           description: '@angelengineering/downloader: Build',
         },
       },
+      // @angelengineering/audio-player
+      'audio-player': {
+        build: {
+          script: 'nx run audio-player:build.all',
+          description: '@angelengineering/audio-player: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -85,6 +92,10 @@ module.exports = {
       downloader: {
         script: 'nx run downloader:focus',
         description: 'Focus on @angelengineering/downloader',
+      },
+      'audio-player': {
+        script: 'nx run audio-player:focus',
+        description: 'Focus on @angelengineering/audio-player',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',
