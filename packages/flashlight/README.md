@@ -28,7 +28,8 @@ import { Flashlight } from '@angelengineering/flashlight';
 _TypeScript_
 
 ```
-Flashlight.isAvailable(); //boolean
+Flashlight.isOn; //boolean
+Flashlight.isAvailable; //boolean
 Flashlight.toggle(); //boolean
 Flashlight.enable(); //boolean
 Flashlight.disable(); //boolean
