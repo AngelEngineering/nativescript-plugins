@@ -1,0 +1,73 @@
+{
+  "name": "audio-recorder",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/audio-recorder",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "outputPath": "dist/packages/audio-recorder",
+        "tsConfig": "packages/audio-recorder/tsconfig.json",
+        "packageJson": "packages/audio-recorder/package.json",
+        "main": "packages/audio-recorder/index.d.ts",
+        "assets": [
+          "packages/audio-recorder/*.md",
+          "packages/audio-recorder/index.d.ts",
+          "LICENSE",
+          {
+            "glob": "**/*",
+            "input": "packages/audio-recorder/platforms/",
+            "output": "./platforms/"
+          }
+        ],
+        "dependsOn": [
+          {
+            "target": "build.all",
+            "projects": "dependencies"
+          }
+        ]
+      }
+    },
+    "build.all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node tools/scripts/build-finish.ts audio-recorder"
+        ],
+        "parallel": false
+      },
+      "outputs": [
+        "dist/packages/audio-recorder"
+      ],
+      "dependsOn": [
+        {
+          "target": "build.all",
+          "projects": "dependencies"
+        },
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ]
+    },
+    "focus": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx g @nativescript/plugin-tools:focus-packages audio-recorder"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/audio-recorder/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

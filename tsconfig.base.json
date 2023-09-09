@@ -40,6 +40,9 @@
       ],
       "@angelengineering/audio-player": [
         "packages/audio-player/index.d.ts"
+      ],
+      "@angelengineering/audio-recorder": [
+        "packages/audio-recorder/index.d.ts"
       ]
     }
   },
