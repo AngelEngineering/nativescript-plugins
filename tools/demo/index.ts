@@ -4,3 +4,4 @@ export * from './audio-recorder';
 export * from './downloader';
 export * from './filepicker';
 export * from './flashlight';
+export * from './sleepcontrol';

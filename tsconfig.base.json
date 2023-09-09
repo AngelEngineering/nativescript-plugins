@@ -43,6 +43,9 @@
       ],
       "@angelengineering/audio-recorder": [
         "packages/audio-recorder/index.d.ts"
+      ],
+      "@angelengineering/sleepcontrol": [
+        "packages/sleepcontrol/index.d.ts"
       ]
     }
   },

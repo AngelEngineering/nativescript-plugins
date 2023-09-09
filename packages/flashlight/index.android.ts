@@ -84,6 +84,7 @@ export class FlashlightImpl extends FlashlightCommon {
       this._isOn = true;
     } catch (err) {
       console.error(err);
+      this._isOn = false;
       throw new Error('Failed to enable flashlight');
     }
     return this._isOn;
