@@ -1,16 +1,13 @@
-# @angelengineering/nativescript-audio-recorder
+# @angelengineering/audio-recorder
 
 # Nativescript audio recorder ![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png) ![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)
 
-[![npm](https://img.shields.io/npm/v/@angelengineering/nativescript-audio-recorder?style=flat-square)](https://www.npmjs.com/package/@angelengineering/nativescript-audio-recorder)
+[![npm](https://img.shields.io/npm/v/@angelengineering/audio-recorder?style=flat-square)](https://www.npmjs.com/package/@angelengineering/audio-recorder)
 
 
 This plugin provides an audio recorder for Android and iOS that supports recording of audio from a device microphone input and saved to an  MP4/AAC audio file. It also provides a function to merge multiple audio recordings together. 
 
 ## Contents
-
-- [NativeScript Audio Recorder](#nativescript-audio-recorder)
-  - [Contents](#contents)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Android Specifics](#android-specifics)
@@ -23,23 +20,23 @@ This plugin provides an audio recorder for Android and iOS that supports recordi
 ## Installation
 
 ```bash
-npm install @angelengineering/nativescript-audio-recorder --save
+npm install @angelengineering/audio-recorder --save
 ```
 
 OR 
 
 ```bash
-ns plugin add @angelengineering/nativescript-audio-recorder
+ns plugin add @angelengineering/audio-recorder
 ```
 
 ## Usage
 
-The best way to understand how to use the plugin is to study the demo app included in this repo. You can see how the plugin is used in a TypeScript application by looking at `apps/demo/src/plugin-demos/nativescript-audio-recorder.ts`.
+The best way to understand how to use the plugin is to study the demo app included in this repo. You can see how the plugin is used in a TypeScript application by looking at `apps/demo/src/plugin-demos/audio-recorder.ts`.
 
 
 1. Import the plugin.
 ```javascript
-import { AudioRecorder, AudioRecorderOptions } from '@angelengineering/nativescript-audio-recorder';
+import { AudioRecorder, AudioRecorderOptions } from '@angelengineering/audio-recorder';
 ```
 
 2. Record an audio file.
