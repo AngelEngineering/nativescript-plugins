@@ -1,6 +1,6 @@
 {
   "name": "@angelengineering/flashlight",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "Nativescript flashlight control",
   "main": "index",
   "typings": "index.d.ts",
