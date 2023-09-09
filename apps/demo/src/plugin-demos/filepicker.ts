@@ -24,7 +24,10 @@ export class DemoModel extends DemoSharedFilepicker {
     try {
       pickedFiles = await filePicker(MediaType.IMAGE, false);
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -35,7 +38,10 @@ export class DemoModel extends DemoSharedFilepicker {
     try {
       pickedFiles = await filePicker(MediaType.IMAGE, true);
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -55,7 +61,10 @@ export class DemoModel extends DemoSharedFilepicker {
         pickedFiles = await filePicker(MediaType.VIDEO, false);
       } else alert('Low free space on device, picking not allowed');
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -67,7 +76,10 @@ export class DemoModel extends DemoSharedFilepicker {
     try {
       pickedFiles = await filePicker(MediaType.AUDIO, false);
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -79,7 +91,10 @@ export class DemoModel extends DemoSharedFilepicker {
     try {
       pickedFiles = await filePicker(MediaType.ARCHIVE, false);
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -127,7 +142,10 @@ export class DemoModel extends DemoSharedFilepicker {
       if (canPick) pickedFiles = await filePicker(MediaType.ALL, false);
       else return alert('Need permissions before picking! Try again or update in app privacy settings first');
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -175,7 +193,10 @@ export class DemoModel extends DemoSharedFilepicker {
       if (canPick) pickedFiles = await filePicker(MediaType.ALL, true);
       else return alert('Need permissions before picking! Try again or update in app privacy settings first');
     } catch (err) {
-      if (err) alert(err?.message);
+      if (err) {
+        console.error(err);
+        alert(err?.message);
+      }
     } finally {
       this.handleFiles(pickedFiles);
     }
@@ -192,7 +213,10 @@ export class DemoModel extends DemoSharedFilepicker {
             try {
               pickedFiles = await galleryPicker(MediaType.IMAGE + MediaType.VIDEO, true);
             } catch (err) {
-              if (err) alert(err?.message);
+              if (err) {
+                console.error(err);
+                alert(err?.message);
+              }
             } finally {
               this.handleFiles(pickedFiles);
             }
