@@ -3,3 +3,6 @@
 /dist
 /coverage
 native-src
+/.vscode
+*.json
+*.scss

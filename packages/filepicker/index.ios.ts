@@ -223,7 +223,7 @@ class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePic
       //    but picker shows a progress indicator when preparing video media, and images return almost instantly
       let asset = info.valueForKey(UIImagePickerControllerPHAsset);
       const downloader = new AssetDownloader(asset);
-      downloader.download().then((res) => {
+      downloader.download().then(res => {
         this._resolve([res]); //returns a NS file object although filename will be of form assset???.tmp, but has originalFilename attached
       });
     } else {
@@ -333,7 +333,7 @@ class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerVie
                     let imageAsset: ImageAsset = new ImageAsset(image);
                     let tmppath = TempFile.getPath('asset', '.tmp');
                     File.fromPath(tmppath).removeSync();
-                    ImageSource.fromAsset(imageAsset).then((source) => {
+                    ImageSource.fromAsset(imageAsset).then(source => {
                       source.saveToFile(tmppath, 'jpeg', 0.95);
                       const file = File.fromPath(tmppath);
                       const newPath = tmppath.replace(/\/[^/]+$/, `/${originalFilename}`);
@@ -435,10 +435,163 @@ function getMediaTypes(type: MediaType): Array<string> {
 //https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html
 //https://escapetech.eu/manuals/qdrop/uti.html
 //node_modules/@nativescript/types-ios/lib/ios/objc-x86_64/objc!CoreServices.d.ts
-const MediaFileTypes: { [index: string]: string[] } = {
-  [MediaType.AUDIO]: [kUTTypeMP3, kUTTypeMPEG4Audio, kUTTypeAudio, kUTTypeAudioInterchangeFileFormat, kUTTypeAppleProtectedMPEG4Audio, kUTTypeMIDIAudio, kUTTypeWaveformAudio, 'public.aifc-audio', 'public.aiff-audio', 'com.microsoft.waveform-​audio', 'com.microsoft.windows-​media-wma', 'public.audio', 'public.ulaw-audio', 'com.apple.coreaudio-​format'],
-  [MediaType.IMAGE]: [kUTTypeImage, kUTTypeBMP, kUTTypeGIF, kUTTypeJPEG, kUTTypeJPEG2000, kUTTypePNG, kUTTypeQuickTimeImage, kUTTypeRawImage, kUTTypeScalableVectorGraphics, kUTTypeTIFF, 'public.image', 'public.camera-raw-image', kUTTypePICT, kUTTypeAppleICNS, kUTTypeICO, kUTTypeLivePhoto, 'com.apple.private.auto-loop-gif'],
-  [MediaType.VIDEO]: [kUTTypeVideo, kUTTypeMovie, kUTTypeAudiovisualContent, kUTTypeAVIMovie, kUTTypeAppleProtectedMPEG4Video, kUTTypeMPEG, kUTTypeMPEG2TransportStream, kUTTypeMPEG2Video, kUTTypeMPEG4, kUTTypeQuickTimeMovie, 'public.movie', 'public.audiovisual-content', 'public.avi', 'public.3gpp', 'public.3gpp2'],
-  [MediaType.DOCUMENT]: [kUTTypePDF, kUTTypeText, kUTTypePlainText, kUTTypeUTF8PlainText, kUTTypeUTF16ExternalPlainText, kUTTypeUTF16PlainText, kUTTypeUTF8TabSeparatedText, kUTTypePresentation, kUTTypeRTF, kUTTypeRTFD, kUTTypeSpreadsheet, kUTTypeHTML, kUTTypeXML, kUTTypeSourceCode, 'com.microsoft.word.doc', 'com.microsoft.word.docx', 'org.openxmlformats.wordprocessingml.document', 'com.microsoft.powerpoint.ppt', 'com.microsoft.powerpoint.pptx', 'org.openxmlformats.presentationml.presentation', 'public.rtf', 'com.adobe.postscript', 'com.adobe.encapsulated-postscript', 'public.presentation', 'public.text', kUTTypeCommaSeparatedText, kUTTypeDelimitedText, kUTTypeElectronicPublication, kUTTypeFlatRTFD, kUTTypeScript, kUTTypeShellScript],
-  [MediaType.ARCHIVE]: [kUTTypeArchive, kUTTypeBzip2Archive, kUTTypeGNUZipArchive, 'com.sun.java-archive', 'org.gnu.gnu-tar-archive', 'public.tar-archive', 'org.gnu.gnu-zip-archive', 'org.gnu.gnu-zip-tar-archive', 'com.apple.binhex-archive', 'com.apple.macbinary-​archive', 'public.cpio-archive', 'com.pkware.zip-archive', kUTTypeWebArchive, kUTTypeZipArchive],
+let MediaFileTypes: { [index: string]: string[] } = {
+  [MediaType.AUDIO]: [
+    kUTTypeMP3,
+    kUTTypeMPEG4Audio,
+    kUTTypeAudio,
+    kUTTypeAudioInterchangeFileFormat,
+    kUTTypeAppleProtectedMPEG4Audio,
+    kUTTypeMIDIAudio,
+    kUTTypeWaveformAudio,
+    'public.aifc-audio',
+    'public.aiff-audio',
+    'com.microsoft.waveform-​audio',
+    'com.microsoft.windows-​media-wma',
+    'public.audio',
+    'public.ulaw-audio',
+    'com.apple.coreaudio-​format',
+    'public.ogg-audio',
+  ],
+  [MediaType.IMAGE]: [
+    kUTTypeImage,
+    kUTTypeBMP,
+    kUTTypeGIF,
+    kUTTypeJPEG,
+    kUTTypeJPEG2000,
+    kUTTypePNG,
+    kUTTypeQuickTimeImage,
+    kUTTypeRawImage,
+    kUTTypeScalableVectorGraphics,
+    kUTTypeTIFF,
+    'public.image',
+    'public.camera-raw-image',
+    kUTTypePICT,
+    kUTTypeAppleICNS,
+    kUTTypeICO,
+    kUTTypeLivePhoto,
+    'com.apple.private.auto-loop-gif',
+  ],
+  [MediaType.VIDEO]: [
+    kUTTypeVideo,
+    kUTTypeMovie,
+    kUTTypeAudiovisualContent,
+    kUTTypeAVIMovie,
+    kUTTypeAppleProtectedMPEG4Video,
+    kUTTypeMPEG,
+    kUTTypeMPEG2TransportStream,
+    kUTTypeMPEG2Video,
+    kUTTypeMPEG4,
+    kUTTypeQuickTimeMovie,
+    'public.movie',
+    'public.audiovisual-content',
+    'public.avi',
+    'public.3gpp',
+    'public.3gpp2',
+  ],
+  [MediaType.DOCUMENT]: [
+    kUTTypePDF,
+    kUTTypeText,
+    kUTTypePlainText,
+    kUTTypeUTF8PlainText,
+    kUTTypeUTF16ExternalPlainText,
+    kUTTypeUTF16PlainText,
+    kUTTypeUTF8TabSeparatedText,
+    kUTTypePresentation,
+    kUTTypeRTF,
+    kUTTypeRTFD,
+    kUTTypeSpreadsheet,
+    kUTTypeHTML,
+    kUTTypeXML,
+    kUTTypeSourceCode,
+    'com.microsoft.word.doc',
+    'com.microsoft.word.docx',
+    'org.openxmlformats.wordprocessingml.document',
+    'com.microsoft.powerpoint.ppt',
+    'com.microsoft.powerpoint.pptx',
+    'org.openxmlformats.presentationml.presentation',
+    'public.rtf',
+    'com.adobe.postscript',
+    'com.adobe.encapsulated-postscript',
+    'public.presentation',
+    'public.text',
+    kUTTypeCommaSeparatedText,
+    kUTTypeDelimitedText,
+    kUTTypeElectronicPublication,
+    kUTTypeFlatRTFD,
+    kUTTypeScript,
+    kUTTypeShellScript,
+  ],
+  [MediaType.ARCHIVE]: [
+    kUTTypeArchive,
+    kUTTypeBzip2Archive,
+    kUTTypeGNUZipArchive,
+    'com.sun.java-archive',
+    'org.gnu.gnu-tar-archive',
+    'public.tar-archive',
+    'org.gnu.gnu-zip-archive',
+    'org.gnu.gnu-zip-tar-archive',
+    'com.apple.binhex-archive',
+    'com.apple.macbinary-​archive',
+    'public.cpio-archive',
+    'com.pkware.zip-archive',
+    kUTTypeWebArchive,
+    kUTTypeZipArchive,
+  ],
 };
+if (+iOSNativeHelper.MajorVersion >= 14) {
+  MediaFileTypes[MediaType.IMAGE] = MediaFileTypes[MediaType.IMAGE].concat([
+    UTTypeWebP.identifier,
+    UTTypeBMP.identifier,
+    UTTypeGIF.identifier,
+    UTTypeHEIC.identifier,
+    UTTypeHEIF.identifier,
+    UTTypeImage.identifier,
+    UTTypeJPEG.identifier,
+    UTTypeLivePhoto.identifier,
+    UTTypePNG.identifier,
+    UTTypeRAWImage.identifier,
+    UTTypeSVG.identifier,
+    UTTypeTIFF.identifier,
+  ]);
+  MediaFileTypes[MediaType.AUDIO] = MediaFileTypes[MediaType.AUDIO].concat([
+    UTTypeAIFF.identifier,
+    UTTypeAppleProtectedMPEG4Audio.identifier,
+    UTTypeAudio.identifier,
+    UTTypeMP3.identifier,
+    UTTypeMPEG4Audio.identifier,
+    UTTypeWAV.identifier,
+  ]);
+  MediaFileTypes[MediaType.ARCHIVE] = MediaFileTypes[MediaType.ARCHIVE].concat([
+    UTTypeAppleArchive.identifier,
+    UTTypeArchive.identifier,
+    UTTypeBZ2.identifier,
+    UTTypeDiskImage.identifier,
+    UTTypeGZIP.identifier,
+    UTTypeZIP.identifier,
+  ]);
+  MediaFileTypes[MediaType.VIDEO] = MediaFileTypes[MediaType.VIDEO].concat([
+    UTTypeAVI.identifier,
+    UTTypeAppleProtectedMPEG4Video.identifier,
+    UTTypeMPEG.identifier,
+    UTTypeMPEG2TransportStream.identifier,
+    UTTypeMPEG2Video.identifier,
+    UTTypeMPEG4Movie.identifier,
+    UTTypeMovie.identifier,
+    UTTypeQuickTimeMovie.identifier,
+    UTTypeVideo.identifier,
+  ]);
+  MediaFileTypes[MediaType.DOCUMENT] = MediaFileTypes[MediaType.DOCUMENT].concat([
+    UTTypeCommaSeparatedText.identifier,
+    UTTypeEPUB.identifier,
+    UTTypeFlatRTFD.identifier,
+    UTTypePDF.identifier,
+    UTTypePresentation.identifier,
+    UTTypePlainText.identifier,
+    UTTypeRTF.identifier,
+    UTTypeRTFD.identifier,
+    UTTypeSpreadsheet.identifier,
+    UTTypeTabSeparatedText.identifier,
+    UTTypeText.identifier,
+  ]);
+}

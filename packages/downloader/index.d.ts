@@ -1,1 +1,1 @@
-export { DownloadDestination, DownloadOptions, MessageData, Downloader } from './common';
+export { DownloadOptions, MessageData, Downloader } from './common';

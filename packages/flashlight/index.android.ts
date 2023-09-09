@@ -32,16 +32,16 @@ export class FlashlightImpl extends FlashlightCommon {
   }
 
   /**
-   * @function isAvailable
+   * @property isAvailable
    * returns: if flashlight is available on this device
    */
-  public isAvailable(): boolean {
+  public get isAvailable(): boolean {
     const packageManager = Utils.android.getApplicationContext().getPackageManager();
     return packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_FLASH);
   }
 
   /**
-   * @function isOn
+   * @property isOn
    * returns: if flashlight is currently enabled on this device
    */
   public get isOn(): boolean {
@@ -69,7 +69,7 @@ export class FlashlightImpl extends FlashlightCommon {
     //  https://source.android.com/docs/core/camera/torch-strength-control
     //  intensity is only supported on Android 13 devices via turnOnTorchWithStrengthLevel()
     if (this._isOn) return true;
-    if (!this.isAvailable()) return false;
+    if (!this.isAvailable) return false;
     try {
       if (+Device.sdkVersion > 20) {
         // if (+Device.sdkVersion >= 33 && intensity) {

@@ -140,28 +140,33 @@ export class AssetDownloader {
     const options = new PHVideoRequestOptions();
     options.networkAccessAllowed = true;
     options.deliveryMode = PHVideoRequestOptionsDeliveryMode.FastFormat;
-    PHImageManager.defaultManager().requestExportSessionForVideoOptionsExportPresetResultHandler(this.asset, options, AVAssetExportPresetLowQuality, (session: AVAssetExportSession, info: NSDictionary<any, any>) => {
-      // export the video to our temp file
-      session.outputURL = NSURL.fileURLWithPath(this.path);
-      session.outputFileType = AVFileTypeMPEG4;
-      session.exportAsynchronouslyWithCompletionHandler(() => {
-        const status = session.status;
-        try {
-          if (status == AVAssetExportSessionStatus.Completed) {
-            resolve(File.fromPath(this.path));
-            return;
-          } else if (status == AVAssetExportSessionStatus.Failed) {
-            throw new Error('Failed to export asset: ' + (session.error ? session.error.description : '(no message)'));
-          } else if (status == AVAssetExportSessionStatus.Cancelled) {
-            // "cancelled" is valid
-          } else {
-            throw new Error('Asset export did not complete for unknown reasons - status: ' + status);
+    PHImageManager.defaultManager().requestExportSessionForVideoOptionsExportPresetResultHandler(
+      this.asset,
+      options,
+      AVAssetExportPresetLowQuality,
+      (session: AVAssetExportSession, info: NSDictionary<any, any>) => {
+        // export the video to our temp file
+        session.outputURL = NSURL.fileURLWithPath(this.path);
+        session.outputFileType = AVFileTypeMPEG4;
+        session.exportAsynchronouslyWithCompletionHandler(() => {
+          const status = session.status;
+          try {
+            if (status == AVAssetExportSessionStatus.Completed) {
+              resolve(File.fromPath(this.path));
+              return;
+            } else if (status == AVAssetExportSessionStatus.Failed) {
+              throw new Error('Failed to export asset: ' + (session.error ? session.error.description : '(no message)'));
+            } else if (status == AVAssetExportSessionStatus.Cancelled) {
+              // "cancelled" is valid
+            } else {
+              throw new Error('Asset export did not complete for unknown reasons - status: ' + status);
+            }
+          } catch (e) {
+            console.error(e);
           }
-        } catch (e) {
-          console.error(e);
-        }
-        resolve(null);
-      });
-    });
+          resolve(null);
+        });
+      }
+    );
   }
 }

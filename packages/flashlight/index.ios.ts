@@ -10,18 +10,18 @@ export class FlashlightImpl extends FlashlightCommon {
   }
 
   /**
-   * @function isAvailable
+   * @property isAvailable
    * returns: if flashlight is available on this device
    */
-  public isAvailable(): boolean {
+  public get isAvailable(): boolean {
     return !!this.camera && this.camera.hasTorch && this.camera.isTorchModeSupported(AVCaptureTorchMode.On);
   }
 
   /**
-   * @function isOn
+   * @property isOn
    * returns: if flashlight is currently enabled on this device
    */
-  public isOn(): boolean {
+  public get isOn(): boolean {
     return this._isOn;
   }
 
@@ -43,7 +43,7 @@ export class FlashlightImpl extends FlashlightCommon {
    */
   public enable(intensity?: number): boolean {
     if (this._isOn) return true;
-    if (!this.isAvailable()) return false;
+    if (!this.isAvailable) return false;
     let requestedIntensity = AVCaptureMaxAvailableTorchLevel;
     if (intensity) {
       if (intensity > 0.0 && intensity < 1.0) {

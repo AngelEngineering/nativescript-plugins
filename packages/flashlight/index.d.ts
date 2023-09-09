@@ -2,16 +2,16 @@ import { FlashlightCommon } from './common';
 
 export declare class FlashlightImpl extends FlashlightCommon {
   /**
-   * @function isAvailable
+   * @property isAvailable
    * returns: if flashlight is available on this device
    */
-  public isAvailable(): boolean;
+  public isAvailable: boolean;
 
   /**
-   * @function isOn
+   * @property isOn
    * returns: if flashlight is currently enabled on this device
    */
-  public isOn(): boolean;
+  public isOn: boolean;
 
   /**
    * @function toggle
