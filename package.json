@@ -1,5 +1,6 @@
 {
-  "name": "plugins",
+  "name": "nativescript-plugins",
+  "description": "Plugin packages for Nativescript applications",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {

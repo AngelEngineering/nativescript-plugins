@@ -5,6 +5,15 @@
 - [@angelengineering/flashlight](packages/flashlight/README.md)
 - [@angelengineering/sleepcontrol](packages/sleepcontrol/README.md)
 
+# Overview
+This repo contains source for a number of Nativescript plugins. Check out the individual README's inside each package for more information on each plugin. 
+
+# Setup
+
+After cloning this repo, run `npm run setup` to configure the NX devdeps otherwise you will get errors!
+
+You'll need yarn installed to run this command. To install, `npm install --global yarn` first.
+
 # How to use?
 
 This workspace manages the suite of plugins listed above.
