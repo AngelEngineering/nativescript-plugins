@@ -9,6 +9,9 @@
 This plugin provides an audio player for Android and iOS that supports playback of both local files and remote URL audio files.  For  **Android**,  MediaPlayer will internally cache remote files after first prepare/play. For **iOS**, the plugin will download and cache remote files on first prepare/play. 
 
 ## Contents
+
+- [NativeScript Audio Player](#audio-player)
+  - [Contents](#contents)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Audio Player options](#supported-audio-player-options)
@@ -33,9 +36,13 @@ ns plugin add @angelengineering/audio-player
 The best way to understand how to use the plugin is to study the demo app included in this repo. You can see how the plugin is used in a TypeScript application by looking at `apps/demo/src/plugin-demos/audio-player.ts`.
 
 
-1. Import the plugin.
+1. Import the plugin and create a player instance.
 ```javascript
 import { AudioPlayer, AudioPlayerOptions } from '@angelengineering/audio-player';
+this.player = new AudioPlayer();
+this.player.on(AudioPlayer.completeEvent, () => {
+        console.log('playback complete');
+    });
 ```
 
 2. Play an audio file.
@@ -86,19 +93,22 @@ export interface AudioPlayerOptions {
    * Gets or sets the audio file url.
    */
   audioFile: string;
+  
+  /**
+   * Get or sets the player to loop playback.
+   */
+  loop: boolean;
+
+  /**
+   * enable/disable audio playback mixing with other active audio playback sources. Defaults to false.
+   */
+  audioMixing?: boolean;
 
   /**
    * Gets or sets the callback when the currently playing audio file completes.
    * @returns {Object} An object containing the native values for the callback.
    */
   completeCallback?: Function;
-
-  /**
-   * Get or sets the player to loop playback.
-   */
-  loop: boolean;
-
-  audioMixing?: boolean;
 
   /**
    * Gets or sets the callback when an error occurs with the audio player.
@@ -121,13 +131,20 @@ export interface AudioPlayer {
   /**
    * native instance getters
    */
-  readonly ios?: any;
-  readonly android?: any;
+  readonly ios?: any; //AVAudioPlayer
+  readonly android?: any; //android.media.MediaPlayer
 
   /**
-   * Volume getter/setter
+   * Volume supports values ranging from 0.0 for silence to 1.0 for full volume
    */
   volume: any;
+
+  /**
+   * Duration getter in milliseconds
+   *    Returns 0 if there is no audio file loaded
+   *    Returns -1 if there is an issue getting duration (Android)
+   */
+  duration: number;
 
   /**
    * Prepare Audio player by preloading an audio file from file oath or URL
@@ -142,12 +159,17 @@ export interface AudioPlayer {
   play(): Promise<boolean>;
 
   /**
-   * Pauses playing audio file.
+   * Pauses the currently playing audio file.
    */
   pause(): Promise<boolean>;
 
   /**
-   * Seeks to specific time.
+   * Resume audio player playback.
+   */
+  resume(): void;
+
+  /**
+   * Seeks to specific time, in ms, for the currently prepared audio file.
    */
   seekTo(time: number): Promise<boolean>;
 
@@ -162,19 +184,49 @@ export interface AudioPlayer {
   isAudioPlaying(): boolean;
 
   /**
-   * Get the duration of the audio file playing.
+   * Get the duration of the audio file playing, in ms (Promise version of duration property getter)
    */
-  getAudioTrackDuration(): Promise<string>;
+  getAudioTrackDuration(): Promise<number>;
 
   /**
-   * current time
+   * Get the current time position of the audio file playing in ms
    */
   readonly currentTime: number;
+
+   /**
+   * Sets the player playback speed rate. On Android this only works on API 23+.
+   * @param speed [number] - The speed of the playback.
+   * speed should be a float from 0.0 - X.X, and is a scale factor
+   */
+  changePlayerSpeed(speed: number): void;
+
+  /**
+   * Begins playback at a certain time, relative to the start of the audio track.
+   * @param time [number] - The time to start playing the audio track at.
+   */
+  playAtTime(time: number);
+  
+  /**
+   * Events
+   */
+  public static seekEvent = 'seekEvent';
+  public static pausedEvent = 'pausedEvent';
+  public static startedEvent = 'startedEvent';
+  public static completeEvent = 'completeEvent';
+  public static errorEvent = 'errorEvent'; //will pass the error object
 }
 ```
 
-Tested and working on Android API 25-33.
-Tested and working on iOS 12.x-16.x. 
+## Helper Utils
+``` javascript
+  /*
+  * Utility to find the duration in milliseconds of the mp4 file at `mp4Path`
+  */
+  export function getDuration(mp4Path: string): number;
+```
+
+Tested and working on Android API 25-34.
+Tested and working on iOS 12.x-17.x. 
 
 ## Acknowledgements
 
