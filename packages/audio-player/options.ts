@@ -19,6 +19,9 @@ export interface AudioPlayerOptions {
    */
   loop: boolean;
 
+  /**
+   * enable/disable audio playback mixing with other active audio playback sources. Defaults to false.
+   */
   audioMixing?: boolean;
 
   /**
@@ -33,9 +36,3 @@ export interface AudioPlayerOptions {
    */
   infoCallback?: Function;
 }
-
-export const AudioPlayerEvents = {
-  seek: 'seek',
-  paused: 'paused',
-  started: 'started',
-};

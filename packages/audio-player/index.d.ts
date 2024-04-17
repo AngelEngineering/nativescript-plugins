@@ -13,111 +13,140 @@ export interface AudioPlayerOptions {
    */
   loop: boolean;
 
+  /**
+   * enable/disable audio playback mixing with other active audio playback sources. Defaults to false.
+   */
   audioMixing?: boolean;
 
   /**
    * Callback to execute when playback has completed.
-   * @returns {Object} An object containing the native values for the callback.
+   * @returns [Object] An object containing the native values for the callback.
    */
   completeCallback?: Function;
 
   /**
    * Callback to execute when playback has an error.
-   * @returns {Object} An object containing the native values for the error callback.
+   * @returns [Object] An object containing the native values for the error callback.
    */
   errorCallback?: Function;
 
   /**
    * Callback to execute when info is emitted from the player.
-   * @returns {Object} An object containing the native values for the info callback.
+   * @returns [Object] An object containing the native values for the info callback.
    */
   infoCallback?: Function;
 }
 
 export interface IAudioPlayer {
-  readonly ios?: any;
-  readonly android?: any;
+  readonly ios?: any; //AVAudioPlayer
+  readonly android?: any; //android.media.MediaPlayer
 
   /**
-   * Volume getter/setter
+   * supports values ranging from 0.0 for silence to 1.0 for full volume.
+   * @property volume
    */
-  volume: any;
+  volume: number;
 
   /**
-   * Duration getter
+   * Duration getter in milliseconds.
+   *    Returns 0 if there is no audio file loaded.
+   *    Returns -1 if there is an issue getting duration (Android).
+   * @property duration
    */
   duration: number;
 
-  //prepares audio from file or url to be played back
-  //if there is already an audio file prepared for this instance, disposes first and re-inits
+  /**
+   * Prepare Audio player by preloading an audio file from file oath or URL.
+   * @method prepareAudio
+   * @param options AudioPlayerOptions.
+   * @returns Promise that resolves as true once prepared successfully, or false if there was an error.
+   */
   prepareAudio(options: AudioPlayerOptions): Promise<boolean>;
 
   /**
-   * Play audio file.
+   * Play current audio file that has been prepared by calling prepareAudio(options).
+   * @method play
+   * @returns Promise that resolves as true once playback is complete, or false if there was an error during playback.
    */
   play(): Promise<boolean>;
 
   /**
-   * Pauses playing audio file.
+   * Pauses the currently playing audio file.
+   * @method pause
+   * @returns Promise that resolves as true once pause is complete, or false if there was an error during pause.
    */
   pause(): Promise<boolean>;
 
   /**
-   * Resume audio player.
+   * Resume audio player playback.
+   * @method resume
    */
   resume(): void;
 
   /**
-   * Seeks to specific time.
+   * Seeks to specific time, in ms, for the currently prepared audio file.
+   * @method seekTo
+   * @returns Promise that resolves as true once seek is complete, or false if there was an error during seek.
    */
-  seekTo(time: number): Promise<any>;
+  seekTo(time: number): Promise<boolean>;
 
   /**
    * Releases resources from the audio player.
+   * @method dispose
+   * @returns Promise that resolves as true once disposal is complete, or false if there was an error during disposal.
    */
   dispose(): Promise<boolean>;
 
   /**
    * Check if the audio is actively playing.
+   * @method isAudioPlaying
+   * @returns true if audio is playing, false if not.
    */
   isAudioPlaying(): boolean;
 
   /**
-   * Get the duration of the audio file playing.
+   * Get the duration of the audio file prepared in player, in ms.
+   * @method getAudioTrackDuration
+   * @returns Promise that resolves the duration in ms, or 0 if there was an error when reading duration from native player.
    */
-  getAudioTrackDuration(): Promise<string>;
+  getAudioTrackDuration(): Promise<number>;
 
   /**
    * Sets the player playback speed rate. On Android this works on API 23+.
    * @param speed [number] - The speed of the playback.
+   * speed should be a float from 0.0 - X.X, and is a scale factor
    */
   changePlayerSpeed(speed: number): void;
 
   /**
-   * ** iOS ONLY ** - Begins playback at a certain delay, relative to the current playback time.
-   * @param time [number] - The time to start playing the audio track at.
+   Begins playback at a certain delay, relative to the current playback time.
+   * @param time [number] - The time to start playing the audio track at, in milliseconds
    */
-  playAtTime(time: number);
+  playAtTime(time: number): void;
 }
 
-export declare class AudioPlayer {
+export declare class AudioPlayer extends Observable {
   static ObjCProtocols: any[];
-  readonly ios: any;
-  readonly android: any;
-  readonly events: Observable;
+  readonly ios: any; //AVAudioPlayer
+  readonly android: any; //android.media.MediaPlayer
 
   /**
-   * Volume getter/setter
+   * supports values ranging from 0.0 for silence to 1.0 for full volume.
+   * @property volume
    */
   volume: any;
 
   /**
-   * duration
+   * Duration getter in milliseconds.
+   *    Returns 0 if there is no audio file loaded.
+   *    Returns -1 if there is an issue getting duration (Android).
+   * @property duration
    */
   duration: number;
 
   /**
-   * current time
+   * The current playback time, in ms, for the audio loaded in the native player.
+   * @property currentTime
    */
   readonly currentTime: number;
 
@@ -132,68 +161,80 @@ export declare class AudioPlayer {
    * Sets the audio focus manager for this player
    * @param manager new Audio Focus Manager
    */
-  setAudioFocusManager(manager: AudioFocusManager);
+  setAudioFocusManager(manager: AudioFocusManager): void;
 
   /**
-   * Prepare Audio player by preloading an audio from file or URL
-   * @function prepareAudio
-   * @param options
+   * Prepare Audio player by preloading an audio file from file oath or URL.
+   * @method prepareAudio
+   * @param options AudioPlayerOptions.
+   * @returns Promise that resolves as true once prepared successfully, or false if there was an error.
    */
   prepareAudio(options: AudioPlayerOptions): Promise<boolean>;
 
   /**
-   * Play audio file using options set by prepareAudio
+   * Play current audio file that has been prepared by calling prepareAudio(options).
+   * @method play
+   * @returns Promise that resolves as true once playback is complete, or false if there was an error during playback.
    */
   play(): Promise<boolean>;
 
   /**
-   * Pauses playing audio file.
+   * Pauses the currently playing audio file.
+   * @method pause
+   * @returns Promise that resolves as true once pause is complete, or false if there was an error during pause.
    */
   pause(): Promise<boolean>;
 
   /**
-   * Resume audio player.
+   * Resume audio player playback.
+   * @method resume
    */
   resume(): void;
 
   /**
-   * Seeks to specific time in seconds.
-   * @param time [number] - The position of the track duration to seek to.
+   * Seeks to specific time, in ms, for the currently prepared audio file.
+   * @method seekTo
+   * @returns Promise that resolves as true once seek is complete, or false if there was an error during seek.
    */
-  seekTo(time: number): Promise<any>;
+  seekTo(time: number): Promise<boolean>;
 
   /**
    * Releases resources from the audio player.
+   * @method dispose
+   * @returns Promise that resolves as true once disposal is complete, or false if there was an error during disposal.
    */
   dispose(): Promise<boolean>;
 
   /**
    * Check if the audio is actively playing.
+   * @method isAudioPlaying
+   * @returns true if audio is playing, false if not.
    */
   isAudioPlaying(): boolean;
 
   /**
-   * Get the duration of the audio file playing.
+   * Get the duration of the audio file prepared in player, in ms.
+   * @method getAudioTrackDuration
+   * @returns Promise that resolves the duration in ms, or 0 if there was an error when reading duration from native player.
    */
-  getAudioTrackDuration(): Promise<string>;
+  getAudioTrackDuration(): Promise<number>;
 
   /**
-   * Android Only
-   * Will set the playback speed for Android 23+, this is not available on lower Android APIs.
+   * Sets the player playback speed rate. On Android this only works on API 23+.
    * @param speed [number] - The speed of the playback.
+   * speed should be a float from 0.0 - X.X, and is a scale factor
    */
   changePlayerSpeed(speed: number): void;
 
-  audioPlayerDidFinishPlayingSuccessfully(player?: any, flag?: boolean): void;
+  /**
+   * Events
+   */
+  public static seekEvent = 'seekEvent';
+  public static pausedEvent = 'pausedEvent';
+  public static startedEvent = 'startedEvent';
+  public static completeEvent = 'completeEvent';
+  public static errorEvent = 'errorEvent'; //will pass the error object
 }
-
-export interface IAudioPlayerEvents {
-  seek: 'seek';
-  paused: 'paused';
-  started: 'started';
-}
-
-export const AudioPlayerEvents: IAudioPlayerEvents = {};
 
 export enum AudioFocusDurationHint {
   /**
@@ -242,3 +283,9 @@ export class AudioFocusManager extends Observable {
   constructor(options?: AudioFocusManagerOptions);
   on(event: 'audioFocusChange', callback: (data: AudioFocusChangeEventData) => void, thisArg?: any);
 }
+
+/**
+ * Utility to find the duration in milliseconds of the mp4 file at `mp4Path`
+ * @param mp4Path
+ */
+export function getDuration(mp4Path: string): number;

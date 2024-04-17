@@ -1,6 +1,6 @@
 import { Application, EventData, Observable, Utils } from '@nativescript/core';
 import { resolveAudioFilePath, IAudioPlayer } from './common';
-import { AudioPlayerEvents, AudioPlayerOptions } from './options';
+import { AudioPlayerOptions } from './options';
 
 export enum AudioFocusDurationHint {
   AUDIOFOCUS_GAIN = android.media.AudioManager.AUDIOFOCUS_GAIN,
@@ -156,16 +156,18 @@ function getGlobalMixingManager(): AudioFocusManager {
   return globalMixingManager;
 }
 
-export class AudioPlayer implements IAudioPlayer {
+export class AudioPlayer extends Observable implements IAudioPlayer {
   private _mediaPlayer: android.media.MediaPlayer;
   private _lastPlayerVolume; // ref to the last volume setting so we can reset after ducking
   private _wasPlaying = false;
-  private _events: Observable;
   private _options: AudioPlayerOptions;
   private _audioFocusManager: AudioFocusManager | null;
   private _readyToPlay = false;
+  private _resolve = null;
+  private _reject = null;
 
   constructor(durationHint: AudioFocusDurationHint | AudioFocusManager = AudioFocusDurationHint.AUDIOFOCUS_GAIN) {
+    super();
     if (!(durationHint instanceof AudioFocusManager)) {
       this.setAudioFocusManager(
         new AudioFocusManager({
@@ -177,14 +179,7 @@ export class AudioPlayer implements IAudioPlayer {
     }
   }
 
-  public get events() {
-    if (!this._events) {
-      this._events = new Observable();
-    }
-    return this._events;
-  }
-
-  get android(): any {
+  get android(): android.media.MediaPlayer {
     return this._player;
   }
 
@@ -192,6 +187,9 @@ export class AudioPlayer implements IAudioPlayer {
     return this._readyToPlay;
   }
 
+  /**
+   * Gets the volume on this player. This API is recommended for balancing the output of audio streams within an application. Unless you are writing an application to control user settings, this API should be used in preference to AudioManager#setStreamVolume(int, int, int) which sets the volume of ALL streams of a particular type. Note that the passed volume values are raw scalars in range 0.0 to 1.0. UI controls should be scaled logarithmically.
+   */
   get volume(): number {
     // TODO: find better way to get individual player volume
     const ctx = this._getAndroidContext();
@@ -199,12 +197,21 @@ export class AudioPlayer implements IAudioPlayer {
     return mgr.getStreamVolume(android.media.AudioManager.STREAM_MUSIC);
   }
 
+  /**
+   * Sets the volume on this player. This API is recommended for balancing the output of audio streams within an application. Unless you are writing an application to control user settings, this API should be used in preference to AudioManager#setStreamVolume(int, int, int) which sets the volume of ALL streams of a particular type. Note that the passed volume values are raw scalars in range 0.0 to 1.0. UI controls should be scaled logarithmically.
+   */
   set volume(value: number) {
     if (this._player && value >= 0) {
-      this._player.setVolume(value, value);
+      this._player.setVolume(value, value); // (left,right) volumes
     }
   }
 
+  /**
+   * Duration getter in milliseconds.
+   *    Returns 0 if there is no audio file loaded.
+   *    Returns -1 if there is an issue getting duration (Android).
+   * @property duration
+   */
   public get duration(): number {
     if (this._player) {
       return this._player.getDuration();
@@ -213,11 +220,19 @@ export class AudioPlayer implements IAudioPlayer {
     }
   }
 
+  /**
+   * The current playback time, in ms, for the audio loaded in the native player.
+   * @property currentTime
+   */
   get currentTime(): number {
     return this._player ? this._player.getCurrentPosition() : 0;
   }
 
-  public setAudioFocusManager(manager: AudioFocusManager) {
+  /**
+   * Sets the audio focus manager for this player
+   * @param manager new Audio Focus Manager
+   */
+  public setAudioFocusManager(manager: AudioFocusManager): void {
     if (manager === this._audioFocusManager) {
       return;
     }
@@ -228,9 +243,10 @@ export class AudioPlayer implements IAudioPlayer {
   }
 
   /**
-   * Prepare Audio player by preloading an audio from file or URL
-   * @function prepareAudio
-   * @param options
+   * Prepare Audio player by preloading an audio file from file oath or URL.
+   * @method prepareAudio
+   * @param options AudioPlayerOptions.
+   * @returns Promise that resolves as true once prepared successfully, or false if there was an error.
    */
   prepareAudio(options: AudioPlayerOptions): Promise<boolean> {
     return new Promise((resolve, reject) => {
@@ -289,7 +305,12 @@ export class AudioPlayer implements IAudioPlayer {
     });
   }
 
-  public pause(): Promise<any> {
+  /**
+   * Pauses the currently playing audio file.
+   * @method pause
+   * @returns Promise that resolves as true once pause is complete, or false if there was an error during pause.
+   */
+  public pause(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         if (this._player && this._player.isPlaying()) {
@@ -297,9 +318,8 @@ export class AudioPlayer implements IAudioPlayer {
           // We abandon the audio focus but we still preserve
           // the MediaPlayer so we can resume it in the future
           this._abandonAudioFocus(true);
-          this._sendEvent(AudioPlayerEvents.paused);
+          this._sendEvent(AudioPlayer.pausedEvent);
         }
-
         resolve(true);
       } catch (ex) {
         reject(ex);
@@ -307,7 +327,12 @@ export class AudioPlayer implements IAudioPlayer {
     });
   }
 
-  public play(): Promise<any> {
+  /**
+   * Play current audio file that has been prepared by calling prepareAudio(options).
+   * @method play
+   * @returns Promise that resolves as true once playback is complete, or false if there was an error during playback.
+   */
+  public play(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         if (!this.ready) {
@@ -327,7 +352,7 @@ export class AudioPlayer implements IAudioPlayer {
             throw new Error('Could not request audio focus');
           }
 
-          this._sendEvent(AudioPlayerEvents.started);
+          this._sendEvent(AudioPlayer.startedEvent);
           // set volume controls
           // https://developer.android.com/reference/android/app/Activity.html#setVolumeControlStream(int)
           Application.android.foregroundActivity.setVolumeControlStream(android.media.AudioManager.STREAM_MUSIC);
@@ -336,37 +361,46 @@ export class AudioPlayer implements IAudioPlayer {
           Application.android.registerBroadcastReceiver(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY, (context: android.content.Context, intent: android.content.Intent) => {
             this.pause();
           });
-
+          //Pitch adjustment not supported yet by plugin:
           // if (this._options?.pitch) {
           //   const playBackParams = new android.media.PlaybackParams();
           //   playBackParams.setPitch(this._options!.pitch);
           //   this._player.setPlaybackParams(playBackParams);
           // }
-
           this._player.start();
+          this._resolve = resolve;
+          this._reject = reject;
         }
-        resolve(true);
       } catch (ex) {
         reject(ex);
       }
     });
   }
 
+  /**
+   * Resume audio player playback.
+   * @method resume
+   */
   public resume(): void {
     if (this._player) {
       // We call play so it can request audio focus
       this.play();
-      this._sendEvent(AudioPlayerEvents.started);
+      this._sendEvent(AudioPlayer.startedEvent);
     }
   }
 
-  public seekTo(time: number): Promise<any> {
+  /**
+   * Seeks to specific time, in ms, for the currently prepared audio file.
+   * @method seekTo
+   * @returns Promise that resolves as true once seek is complete, or false if there was an error during seek.
+   */
+  public seekTo(time: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         if (this._player) {
-          time = time * 1000;
+          // time = time * 1000;
           this._player.seekTo(time);
-          this._sendEvent(AudioPlayerEvents.seek);
+          this._sendEvent(AudioPlayer.seekEvent);
         }
         resolve(true);
       } catch (ex) {
@@ -375,13 +409,21 @@ export class AudioPlayer implements IAudioPlayer {
     });
   }
 
-  async playAtTime(time: number) {
-    await this.seekTo(time);
-    this.play();
+  /**
+   Begins playback at a certain delay, relative to the current playback time.
+   * @param time [number] - The time to start playing the audio track at, in milliseconds
+   */
+  playAtTime(time: number): void {
+    this.seekTo(time).then(() => this.play());
   }
 
-  public changePlayerSpeed(speed) {
-    // this checks on API 23 and up
+  /**
+   * Sets the player playback speed rate. On Android this works on API 23+.
+   * @param speed [number] - The speed of the playback.
+   * speed should be a float from 0.0 - X.X, and is a scale factor
+   */
+  public changePlayerSpeed(speed): void {
+    // this is only supported on API 23+
     if (android.os.Build.VERSION.SDK_INT >= 23 && this.play) {
       if (this._player?.isPlaying()) {
         (this._player as any).setPlaybackParams((this._player as any).getPlaybackParams().setSpeed(speed));
@@ -394,7 +436,12 @@ export class AudioPlayer implements IAudioPlayer {
     }
   }
 
-  public dispose(): Promise<any> {
+  /**
+   * Releases resources from the audio player.
+   * @method dispose
+   * @returns Promise that resolves as true once disposal is complete, or false if there was an error during disposal.
+   */
+  public dispose(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         if (this._player) {
@@ -416,6 +463,11 @@ export class AudioPlayer implements IAudioPlayer {
     });
   }
 
+  /**
+   * Check if the audio is actively playing.
+   * @method isAudioPlaying
+   * @returns true if audio is playing, false if not.
+   */
   public isAudioPlaying(): boolean {
     if (this._player) {
       return this._player.isPlaying();
@@ -424,11 +476,16 @@ export class AudioPlayer implements IAudioPlayer {
     }
   }
 
-  public getAudioTrackDuration(): Promise<string> {
+  /**
+   * Get the duration of the audio file prepared in player, in ms.
+   * @method getAudioTrackDuration
+   * @returns Promise that resolves the duration in ms, or 0 if there was an error when reading duration from native player.
+   */
+  public getAudioTrackDuration(): Promise<number> {
     return new Promise((resolve, reject) => {
       try {
         const duration = this._player ? this._player.getDuration() : 0;
-        resolve(duration.toString());
+        resolve(duration);
       } catch (ex) {
         reject(ex);
       }
@@ -439,13 +496,11 @@ export class AudioPlayer implements IAudioPlayer {
    * Notify events by name and optionally pass data
    */
   private _sendEvent(eventName: string, data?: any) {
-    if (this.events) {
-      this.events.notify(<any>{
-        eventName,
-        object: this,
-        data: data,
-      });
-    }
+    this.notify(<any>{
+      eventName,
+      object: this,
+      data: data,
+    });
   }
 
   /**
@@ -494,12 +549,15 @@ export class AudioPlayer implements IAudioPlayer {
       this._mediaPlayer.setOnCompletionListener(
         new android.media.MediaPlayer.OnCompletionListener({
           onCompletion: mp => {
+            this._sendEvent(AudioPlayer.completeEvent);
             if (this._options && this._options.completeCallback) {
               if (this._options.loop === true) {
                 mp.seekTo(5);
                 mp.start();
               }
               this._options.completeCallback({ player: mp });
+              if (this._resolve) this._resolve(true);
+              this._resolve = this._reject = null;
             }
 
             if (this._options && !this._options.loop) {
@@ -513,9 +571,12 @@ export class AudioPlayer implements IAudioPlayer {
       this._mediaPlayer.setOnErrorListener(
         new android.media.MediaPlayer.OnErrorListener({
           onError: (player: any, error: number, extra: number) => {
+            this._sendEvent(AudioPlayer.errorEvent, error);
             if (this._options && this._options.errorCallback) {
               this._options.errorCallback({ player, error, extra });
             }
+            if (this._reject) this._reject(error);
+            this._resolve = this._reject = null;
             this.dispose();
             return true;
           },
@@ -561,4 +622,25 @@ export class AudioPlayer implements IAudioPlayer {
         break;
     }
   }
+
+  /**
+   * Events
+   */
+  public static seekEvent = 'seekEvent';
+  public static pausedEvent = 'pausedEvent';
+  public static startedEvent = 'startedEvent';
+  public static completeEvent = 'completeEvent';
+  public static errorEvent = 'errorEvent'; //will pass the error object
+}
+
+/**
+ * Utility to find the duration in milliseconds of the mp4 file at `mp4Path`
+ * @param mp4Path
+ */
+export function getDuration(mp4Path: string): number {
+  let totalTime = 0;
+  const mediadata = new android.media.MediaMetadataRetriever();
+  mediadata.setDataSource(mp4Path);
+  totalTime = +mediadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+  return totalTime;
 }

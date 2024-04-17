@@ -1,16 +1,26 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="page">
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  navigatingTo="navigatingTo"
+  class="page">
   <Page.actionBar>
-    <ActionBar title="Plugin Demos" icon="" class="action-bar"/>
+    <ActionBar title="Nativescript Plugin Demos"
+      icon=""
+      class="action-bar"/>
   </Page.actionBar>
   <StackLayout class="p-20">
     <ScrollView class="h-full">
       <StackLayout>
-        <Button text="flashlight" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
-        <Button text="filepicker" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
-        <Button text="downloader" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
-<Button text="audio-player" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
-<Button text="audio-recorder" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
-<Button text="sleepcontrol" tap="{{ viewDemo }}" class="btn btn-primary view-demo"/>
+        <Button text="flashlight"
+          tap="{{ viewDemo }}" />
+        <Button text="filepicker"
+          tap="{{ viewDemo }}" />
+        <Button text="downloader"
+          tap="{{ viewDemo }}" />
+        <Button text="audio-player"
+          tap="{{ viewDemo }}" />
+        <Button text="audio-recorder"
+          tap="{{ viewDemo }}" />
+        <Button text="sleepcontrol"
+          tap="{{ viewDemo }}" />
       </StackLayout>
     </ScrollView>
   </StackLayout>
