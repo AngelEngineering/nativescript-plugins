@@ -11,38 +11,41 @@ export class FlashlightImpl extends FlashlightCommon {
 
   /**
    * @property isAvailable
-   * returns: if flashlight is available on this device
+   * @returns if flashlight is available on this device
    */
   public get isAvailable(): boolean {
     return !!this.camera && this.camera.hasTorch && this.camera.isTorchModeSupported(AVCaptureTorchMode.On);
   }
 
+  protected _isOn = false;
   /**
    * @property isOn
-   * returns: if flashlight is currently enabled on this device
+   * @returns: if flashlight is currently enabled on this device
    */
   public get isOn(): boolean {
+    this._isOn = this.camera.torchMode == AVCaptureTorchMode.On && this.camera.flashMode == AVCaptureFlashMode.On;
     return this._isOn;
   }
 
   /**
+   * Toggles the device flashlight on/off
    * @function toggle
-   * toggles flashlight on/off
-   * returns: if flashlight is currently enabled on this device
+   * @param number between 0.0 and 1.0 (iOS only)
+   * @returns if flashlight is currently enabled on this device after toggle
    */
   public toggle(intensity?: number): boolean {
-    if (this._isOn) this.disable();
+    if (this.isOn) this.disable();
     else this.enable(intensity);
-    return this._isOn;
+    return this.isOn;
   }
 
   /**
+   * Enables the device flashlight
    * @function enable
-   * enables flashlight
-   * returns: if flashlight is currently enabled on this device
+   * @param number between 0.0 and 1.0 (iOS only)
+   * @returns if flashlight is currently enabled on this device after enabling
    */
   public enable(intensity?: number): boolean {
-    if (this._isOn) return true;
     if (!this.isAvailable) return false;
     let requestedIntensity = AVCaptureMaxAvailableTorchLevel;
     if (intensity) {
@@ -56,14 +59,13 @@ export class FlashlightImpl extends FlashlightCommon {
       this.camera.flashMode = AVCaptureFlashMode.On;
       this.camera.unlockForConfiguration();
     }
-    this._isOn = this.camera.torchMode == AVCaptureTorchMode.On && this.camera.flashMode == AVCaptureFlashMode.On;
-    return this._isOn;
+    return this.isOn;
   }
 
   /**
+   * Disables the device flashlight
    * @function disable
-   * disables flashlight
-   * returns: if flashlight is currently enabled on this device
+   * @returns if flashlight is currently enabled on this device
    */
   public disable(): boolean {
     if (this.camera.lockForConfiguration()) {
@@ -71,8 +73,7 @@ export class FlashlightImpl extends FlashlightCommon {
       this.camera.flashMode = AVCaptureFlashMode.Off;
       this.camera.unlockForConfiguration();
     }
-    this._isOn = this.camera.torchMode == AVCaptureTorchMode.On && this.camera.flashMode == AVCaptureFlashMode.On;
-    return this._isOn;
+    return this.isOn;
   }
 }
 

@@ -1,14 +1,31 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" loaded="onLoaded" class="page">
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  navigatingTo="navigatingTo"
+  loaded="onLoaded"
+  class="page">
   <Page.actionBar>
-    <ActionBar title="flashlight" icon="" class="action-bar">
+    <ActionBar title="flashlight"
+      icon=""
+      class="action-bar">
     </ActionBar>
   </Page.actionBar>
   <StackLayout class="p-20">
     <ScrollView class="h-full">
       <StackLayout>
-        <Label text = "Disabled" id="labelStatus"/>
-        <TextField hint="Intensity (0.0 - 1.0) iOS only" id="inputIntensity"></TextField>
-        <Button text="Enable flashlight" tap="{{ toggleLight }}" class="btn btn-primary" id="buttonLight"></Button>
+        <Label text = "Disabled"
+          fontSize="30"
+          marginBottom="20"
+          id="labelStatus"/>
+        <TextField hint="Intensity (0.0 - 1.0) iOS only"
+          id="inputIntensity"
+          color="black"
+          style.placeholderColor="grey"
+          borderBottomColor="black"
+          borderBottomWidth="1"
+          marginBottom="20"></TextField>
+        <Button text="Enable flashlight"
+          tap="{{ toggleLight }}"
+          class="btn btn-primary"
+          id="buttonLight"></Button>
       </StackLayout>
     </ScrollView>
   </StackLayout>

@@ -1,13 +1,22 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" loaded="onLoaded" class="page">
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  navigatingTo="navigatingTo"
+  loaded="onLoaded"
+  class="page">
   <Page.actionBar>
-    <ActionBar title="sleepcontrol" icon="" class="action-bar">
+    <ActionBar title="sleepcontrol"
+      icon=""
+      class="action-bar">
     </ActionBar>
   </Page.actionBar>
   <StackLayout class="p-20">
     <ScrollView class="h-full">
       <StackLayout>
-        <Label text = "" id="labelStatus"/>        
-        <Button text="" tap="{{ toggleSleep }}" class="btn btn-primary" id="buttonSleep"></Button>
+        <Label text = ""
+          id="labelStatus"/>
+        <Button text=""
+          tap="{{ toggleSleep }}"
+          class="btn btn-primary"
+          id="buttonSleep"></Button>
       </StackLayout>
     </ScrollView>
   </StackLayout>
