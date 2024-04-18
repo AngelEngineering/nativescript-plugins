@@ -1,6 +1,7 @@
-import { EventData, Page, File, Frame, StackLayout, GridLayout, Color, Label, alert, Button, path, knownFolders } from '@nativescript/core';
+/* eslint-disable @nrwl/nx/enforce-module-boundaries */
+import { EventData, Page, File, Frame, StackLayout, GridLayout, Color, Label, Image, alert, Button, isAndroid, path, knownFolders } from '@nativescript/core';
 import { DemoSharedAudioRecorder } from '@demo/shared';
-import { AudioRecorder, AudioRecorderOptions } from '@angelengineering/audio-recorder';
+import { AudioRecorder, AudioRecorderOptions, getDuration } from '@angelengineering/audio-recorder';
 import { check as checkPermission, request as requestPermission } from '@nativescript-community/perms';
 import { AudioPlayer, AudioPlayerOptions } from '@angelengineering/audio-player';
 
@@ -9,16 +10,25 @@ export function navigatingTo(args: EventData) {
   page.bindingContext = new DemoModel();
 }
 
+type AudioRecorderEventData = EventData & { data: any };
+
 export class DemoModel extends DemoSharedAudioRecorder {
   constructor() {
     super();
     this.recorder = new AudioRecorder();
-    //you can tie these events to update control states as well
-    this.recorder.on('RecorderFinished', () => {
-      console.log('RecorderFinished');
+    //you can tie into events for updating control states
+    this.recorder.on(AudioRecorder.stoppedEvent, () => {
+      console.log('audio recording stopped');
     });
-    this.recorder.on('RecorderFinishedSuccessfully', () => {
-      console.log('RecorderFinishedSuccessfully');
+    this.recorder.on(AudioRecorder.completeEvent, (event: AudioRecorderEventData) => {
+      console.log('audio recording completed, file: ', event.data);
+      console.log('recording has duration (ms): ', getDuration(event.data.path));
+    });
+    this.recorder.on(AudioRecorder.startedEvent, () => {
+      console.log('audio recording started');
+    });
+    this.recorder.on(AudioRecorder.errorEvent, (event: AudioRecorderEventData) => {
+      console.log('audio recording error!', event.data);
     });
     this.player = new AudioPlayer();
   }
@@ -110,7 +120,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
               pauseBtn.visibility = 'visible';
               stopBtn.visibility = 'visible';
 
-              let tempOptions = Object.assign({}, this._recordOptions);
+              const tempOptions = Object.assign({}, this._recordOptions);
               this.lastRecorded = tempOptions.filename = outputPath;
               console.log('recording with options', tempOptions);
               this.recorder
@@ -140,7 +150,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
     const pauseBtn: Button = Frame.topmost().getViewById('pauseBtn');
     pauseBtn.visibility = 'collapsed';
     if (this.recorder.isRecording()) {
-      let lastSegment: File = await this.recorder.stop();
+      const lastSegment: File = await this.recorder.stop();
       console.log('segment just recorded', lastSegment, lastSegment.path, lastSegment.size);
       if (!this.audioFiles) {
         this.audioFiles = [lastSegment.path];
@@ -153,7 +163,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
 
     console.log('stopRecording(): preparing final file', this._recordOptions.filename);
     try {
-      let finalfile = await this.recorder.mergeAudioFiles(this.audioFiles, this._recordOptions.filename);
+      const finalfile = await this.recorder.mergeAudioFiles(this.audioFiles, this._recordOptions.filename);
       console.log('merge func returned', finalfile, finalfile.size);
       if (finalfile.size) {
         console.log('audio file merged, deleting temporary files');
@@ -194,7 +204,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
     const pauseBtn: Button = Frame.topmost().getViewById('pauseBtn');
     pauseBtn.visibility = 'collapsed';
     console.log('pausing recording for session', this._recordOptions.filename);
-    let lastSegment: File = await this.recorder.stop();
+    const lastSegment: File = await this.recorder.stop();
     console.log('Segment last recorded:', lastSegment.path);
     if (!this.audioFiles) this.audioFiles = [lastSegment.path];
     else this.audioFiles.push(lastSegment.path);
@@ -207,7 +217,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
     this._playOptions.audioFile = lastSegment.path;
 
     //prepare a preview of all segments so far
-    let previewfile = await this.recorder.mergeAudioFiles(this.audioFiles, this.sessionPreview);
+    const previewfile = await this.recorder.mergeAudioFiles(this.audioFiles, this.sessionPreview);
     if (previewfile.size) {
       console.log('audio preview files merged');
       const playBtn: Button = Frame.topmost().getViewById('playBtn');
@@ -249,7 +259,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
     const playBtn: Button = Frame.topmost().getViewById('playBtn');
     if (this.audioFiles.length) {
       //generate new preview files
-      let previewfile = await this.recorder.mergeAudioFiles(this.audioFiles, this.sessionPreview);
+      const previewfile = await this.recorder.mergeAudioFiles(this.audioFiles, this.sessionPreview);
       if (previewfile.size) {
         console.log('audio preview files merged');
         playBtn.visibility = 'visible';
@@ -288,7 +298,7 @@ export class DemoModel extends DemoSharedAudioRecorder {
     textContainer['row'] = 0;
     textContainer['col'] = 2;
     const fileLabel = new Label();
-    let fileParts = result?.path?.split('/');
+    const fileParts = result?.path?.split('/');
     fileLabel.text = fileParts[fileParts.length - 1];
     fileLabel.textWrap = true;
     fileLabel.color = new Color('white');
