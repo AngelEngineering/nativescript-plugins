@@ -1,6 +1,10 @@
 import { Application } from '@nativescript/core';
 
-//NOTE: this only works while the current app is running
+/**
+ * Check if the current device can go into sleep mode after the current system idle time limit. Use denySleep() to disable sleep, and allowSleep() to enable sleep.
+ * @function isSleepAllowed
+ * @returns true if sleep is allowed, false if not
+ */
 export function isSleepAllowed(): boolean {
   const activity = Application.android.foregroundActivity || Application.android.startActivity;
   if (activity) {
@@ -10,6 +14,10 @@ export function isSleepAllowed(): boolean {
   } else return false;
 }
 
+/**
+ * Disable device sleep mode
+ * @function denySleep
+ */
 export function denySleep(): void {
   const activity = Application.android.foregroundActivity || Application.android.startActivity;
   if (activity) {
@@ -19,6 +27,10 @@ export function denySleep(): void {
   }
 }
 
+/**
+ * Enable device sleep mode
+ * @function allowSleep
+ */
 export function allowSleep(): void {
   const activity = Application.android.foregroundActivity || Application.android.startActivity;
   if (activity) {
@@ -27,6 +39,10 @@ export function allowSleep(): void {
   }
 }
 
+/**
+ * Internal function to modify Android setting for sleep mode
+ * @param activity
+ */
 function keepAwake(activity: androidx.appcompat.app.AppCompatActivity) {
   const window = activity.getWindow();
   window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
