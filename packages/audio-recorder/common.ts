@@ -4,29 +4,40 @@ import { AudioRecorderOptions } from './options';
 export interface IAudioRecorder {
   /**
    * Starts the native audio recording control.
+   * @method record
+   * @param options AudioRecorderOptions to use when recording audio
+   * @returns Promise that resolves once recording is complete, or rejects if fails
    */
   record(options: AudioRecorderOptions): Promise<any>;
 
   /**
    * Stops the native audio recording control.
+   * @method stop
+   * @returns Promise that resolves once recording is complete and file has been written, or rejects if fails
    */
   stop(): Promise<any>;
 
   /**
    * Releases resources from the recorder.
+   * @method dispose
+   * @returns Promise that resolves once recorder has been released and disposed, or rejects if fails
    */
   dispose(): Promise<any>;
 
   /**
-   * Merges the mp4 files specified in an array of file paths into an mp4 file
-   *      named outputPath.
-   * NOTE: these must be AAC MP4 audio files!
+   * Merges the mp4 files specified by audioFileUrls (array of file paths) into an mp4 audio file
+   *      at the outputPath.
+   * NOTE: inputs must all be AAC encoded MP4 audio files!
+   * @method mergeAudioFiles
+   * @param audioFileUrls
+   * @param outputPath
    **/
   mergeAudioFiles(audioFileUrls: string[], outputPath: string);
 }
 
 /**
  * Helper function to determine if string is a url.
+ * @function isStringUrl
  * @param value [string]
  */
 export function isStringUrl(value: string): boolean {
@@ -45,8 +56,9 @@ export function isStringUrl(value: string): boolean {
 }
 
 /**
- * Will determine if a string is a url or a local path. If the string is a url it will return the url.
+ * Determines if a string is a url or a local path. If the string is a url it will return the url.
  * If it is a local path, then the file-system module will return the file system path.
+ * @function resolveAudioFilePath
  * @param path [string]
  */
 export function resolveAudioFilePath(path: string) {

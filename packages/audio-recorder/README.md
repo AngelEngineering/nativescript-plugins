@@ -8,6 +8,9 @@
 This plugin provides an audio recorder for Android and iOS that supports recording of audio from a device microphone input and saved to an  MP4/AAC audio file. It also provides a function to merge multiple audio recordings together. 
 
 ## Contents
+
+- [NativeScript Audio Recorder](#audio-recorder)
+  - [Contents](#contents)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Android Specifics](#android-specifics)
@@ -31,7 +34,7 @@ ns plugin add @angelengineering/audio-recorder
 
 ## Usage
 
-The best way to understand how to use the plugin is to study the demo app included in this repo. You can see how the plugin is used in a TypeScript application by looking at `apps/demo/src/plugin-demos/audio-recorder.ts`.
+The best way to understand this plugin is to study the demo app included in this repo. You can see how the plugin is used in a TypeScript application by looking at `apps/demo/src/plugin-demos/audio-recorder.ts`.
 
 
 1. Import the plugin.
@@ -42,12 +45,18 @@ import { AudioRecorder, AudioRecorderOptions } from '@angelengineering/audio-rec
 2. Record an audio file.
 ```javascript
 this.recorder = new AudioRecorder();
-//you can tie into these events to update control UI state
-this.recorder.on('RecorderFinished', () => {
-  console.log('RecorderFinished');
+//you can tie into events for updating control states
+this.recorder.on(AudioRecorder.stoppedEvent, () => {
+  console.log('audio recording stopped');
 });
-this.recorder.on('RecorderFinishedSuccessfully', () => {
-  console.log('RecorderFinishedSuccessfully');
+this.recorder.on(AudioRecorder.completeEvent, (event: AudioRecorderEventData) => {
+  console.log('audio recording completed, file: ', event.data);
+});
+this.recorder.on(AudioRecorder.startedEvent, () => {
+  console.log('audio recording started');
+});
+this.recorder.on(AudioRecorder.errorEvent, (event: AudioRecorderEventData) => {
+  console.log('audio recording error!', event.data);
 });
 let recOptions: AudioRecorderOptions = {
     filename: path.join(knownFolders.documents().path, 'audiorecording-1.mp4');,
@@ -103,6 +112,8 @@ In order to record audio, iOS will require permission to access the microphone. 
 Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. 
 
 > **NOTE**: if you do use the perms plugin in a production app, make sure to read their README.md first, as using this plugin in production apps will require you to add all iOS Info.plist permission strings to avoid being rejected by automatic processing since the plugin includes code for all permission types.
+
+For iOS, if the devices has multiple audio input devices available, the plugin will attempt to select a connected bluetooth or airpod device first, then a headset and finally the device microphone.
 
 ## Supported Audio Recorder options
 ``` javascript
@@ -171,41 +182,71 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
   readonly android: any;  //Native Android recorder instance
 
   /**
-   * Starts a recording session with the provided options.
-   * @param options [AudioRecorderOptions]
+   * Starts the native audio recording control.
+   * @method record
+   * @param options AudioRecorderOptions to use when recording audio
+   * @returns Promise that resolves once recording is complete, or rejects if fails
    */
-  record(options: AudioRecorderOptions): Promise<any>;
+  record(options: AudioRecorderOptions): Promise<void>;
 
   /**
-   * Stops the recording
+   * Stops the native audio recording control.
+   * @method stop
+   * @returns Promise that resolves once recording is complete and file has been written, or rejects if fails
    */
   stop(): Promise<File>;
 
   /**
-   * Disposes of the recorder session
+   * Releases resources from the recorder.
+   * @method dispose
+   * @returns Promise that resolves once recorder has been released and disposed, or rejects if fails
    */
-  dispose(): Promise<any>;
+  dispose(): Promise<void>;
 
   /**
-   * Returns the maximum absolute amplitude that was sampled since the last call to this method.
-   * @param channel [number]
+   * For Android, returns the maximum absolute amplitude (unsigned 16-bit integer values from 0-32767 ) that was sampled since the last call to this method. Call this only after the setAudioSource().
+   * For iOS, returns the average power, in decibels full-scale (dBFS), for an audio channel.
+   * @param channel [number] iOS-only
    */
-  getMeters(channel?: number): any;
+  getMeters(channel?: number): number;
 
   /**
-   * Returns value indicating the recorder is currently recording.
+   * Returns true if the audio recorder is currently recording, false if not
+   * @method isRecording
    */
   isRecording(): boolean;
 
   /**
-   * Merges all files with file paths specified in audioFiles into a new file at outputPath. This only supports MP4/AAC audio files currently
-   * Note: For Android, API 26+ is required.
-   */
+   * Merges the mp4 files specified by audioFileUrls (array of file paths) into an mp4 audio file
+   *      at the outputPath.
+   * NOTE: inputs must all be AAC encoded MP4 audio files!
+   * @method mergeAudioFiles
+   * @param audioFileUrls
+   * @param outputPath
+   **/
   mergeAudioFiles(audioFiles: string[], outputPath: string): Promise<File>;
+
+  /**
+   * Events
+   */
+  public static startedEvent = 'startedEvent';
+  public static stoppedEvent = 'stoppedEvent';
+  public static completeEvent = 'completeEvent'; //will pass the recording filename
+  public static errorEvent = 'errorEvent'; //will pass the error object or string
 }
 ```
 
-Tested and working on Android API 26-33.
+## Helper Utils
+``` javascript
+  /**
+ * Utility to find the duration in milliseconds of the mp4 file at `mp4Path`
+ * @function getDuration
+ * @param mp4Path string with the path of the audio file to examine
+ */
+  export function getDuration(mp4Path: string): number;
+```
+
+Tested and working on Android API 25-33. (merge util only on 26+)
 Tested and working on iOS 12.x-16.x. 
 
 

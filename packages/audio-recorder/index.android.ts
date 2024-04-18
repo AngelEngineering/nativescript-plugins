@@ -8,11 +8,17 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
   private _isRecording = false;
   public _recorderOptions: AudioRecorderOptions;
 
-  get android() {
+  get android(): android.media.MediaRecorder {
     return this._recorder;
   }
 
-  public record(options: AudioRecorderOptions): Promise<any> {
+  /**
+   * Starts the native audio recording control.
+   * @method record
+   * @param options AudioRecorderOptions to use when recording audio
+   * @returns Promise that resolves once recording is complete, or rejects if fails
+   */
+  public record(options: AudioRecorderOptions): Promise<void> {
     this._recorderOptions = options;
     return new Promise(async (resolve, reject) => {
       try {
@@ -39,10 +45,10 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
           this._recorder.setAudioChannels(options.channels);
         }
 
-        let sampleRate = options.sampleRate ? options.sampleRate : 44100;
+        const sampleRate = options.sampleRate ? options.sampleRate : 44100;
         this._recorder.setAudioSamplingRate(sampleRate);
 
-        let bitRate = options.bitRate ? options.bitRate : 128000;
+        const bitRate = options.bitRate ? options.bitRate : 128000;
         this._recorder.setAudioEncodingBitRate(bitRate);
 
         if (options.maxDuration) {
@@ -71,38 +77,63 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
 
         this._recorder.prepare();
         this._recorder.start();
+        this._sendEvent(AudioRecorder.startedEvent);
         this._isRecording = true;
         resolve(null);
       } catch (ex) {
+        this._sendEvent(AudioRecorder.errorEvent, ex);
         reject(ex);
       }
     });
   }
 
+  /**
+   *@function getMeters()
+   * @returns the maximum absolute amplitude (unsigned 16-bit integer values from 0-32767 ) that was sampled since the last call to this method. Call this only after the setAudioSource().
+   * https://developer.android.com/reference/android/media/MediaRecorder#getMaxAmplitude()
+   */
   public getMeters(): number {
     if (this._recorder != null) return this._recorder.getMaxAmplitude();
     else return 0;
   }
 
-  public stop(): Promise<any> {
+  /**
+   * Stops the native audio recording control.
+   * @method stop
+   * @returns Promise that resolves once recording is complete and file has been written, or rejects if fails
+   */
+  public stop(): Promise<File> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
           this._recorder.stop();
+          this._sendEvent(AudioRecorder.stoppedEvent);
           this._isRecording = false;
-          resolve(File.fromPath(this._recorderOptions.filename));
+          const audiorecording = File.fromPath(this._recorderOptions.filename);
+          this._sendEvent(AudioRecorder.completeEvent, audiorecording);
+          resolve(audiorecording);
         } else return reject('No native recorder instance, was this cleared by mistake!?');
       } catch (ex) {
+        this._sendEvent(AudioRecorder.errorEvent, ex);
         reject(ex);
       }
     });
   }
 
-  public isRecording() {
+  /**
+   * Returns true if the audio recorder is currently recording, false if not
+   * @method isRecording
+   */
+  public isRecording(): boolean {
     return this._recorder && this._isRecording;
   }
 
-  public dispose(): Promise<any> {
+  /**
+   * Releases resources from the recorder.
+   * @method dispose
+   * @returns Promise that resolves once recorder has been released and disposed, or rejects if fails
+   */
+  public dispose(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
@@ -112,11 +143,20 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
         this._recorder = undefined;
         resolve(null);
       } catch (ex) {
+        this._sendEvent(AudioRecorder.errorEvent, ex);
         reject(ex);
       }
     });
   }
 
+  /**
+   * Merges the mp4 files specified by audioFileUrls (array of file paths) into an mp4 audio file
+   *      at the outputPath.
+   * NOTE: inputs must all be AAC encoded MP4 audio files!
+   * @method mergeAudioFiles
+   * @param audioFileUrls
+   * @param outputPath
+   **/
   public mergeAudioFiles(audioFiles: string[], outputPath: string): Promise<File> {
     return new Promise((resolve, reject) => {
       //Note: This will only merge audio tracks from  mp4 files, and only succeed if all input have same format/encoding
@@ -135,7 +175,7 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
         });
       }
       if (audioFiles.length == 1) {
-        let fileData = File.fromPath(audioFiles[0]).readSync();
+        const fileData = File.fromPath(audioFiles[0]).readSync();
         File.fromPath(outputPath).writeSync(fileData);
         return resolve(File.fromPath(outputPath));
       }
@@ -161,11 +201,11 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
           }
           let audioExtractor: android.media.MediaExtractor = new android.media.MediaExtractor();
           audioExtractor.setDataSource(audioFiles[i]);
-          let tracks = audioExtractor.getTrackCount();
+          const tracks = audioExtractor.getTrackCount();
           if (!audioFormat)
             for (let j = 0; j < audioExtractor.getTrackCount(); j++) {
-              let mf = audioExtractor.getTrackFormat(j);
-              let mime = mf.getString(android.media.MediaFormat.KEY_MIME);
+              const mf = audioExtractor.getTrackFormat(j);
+              const mime = mf.getString(android.media.MediaFormat.KEY_MIME);
               if (mime.startsWith('audio/')) {
                 audioExtractor.selectTrack(j);
                 audioFormat = audioExtractor.getTrackFormat(j);
@@ -176,10 +216,10 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
             audioTrackIndex = muxer.addTrack(audioFormat);
           }
           let sawAudioEOS = false;
-          let bufferSize = MAX_SAMPLE_SIZE;
-          let audioBuf = java.nio.ByteBuffer.allocate(bufferSize);
-          let offset = 0;
-          let bufferInfo: android.media.MediaCodec.BufferInfo = new android.media.MediaCodec.BufferInfo();
+          const bufferSize = MAX_SAMPLE_SIZE;
+          const audioBuf = java.nio.ByteBuffer.allocate(bufferSize);
+          const offset = 0;
+          const bufferInfo: android.media.MediaCodec.BufferInfo = new android.media.MediaCodec.BufferInfo();
 
           // start muxer if not started yet
           if (!muxerStarted) {
@@ -212,8 +252,52 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
         return resolve(File.fromPath(outputPath));
       } catch (err) {
         console.error(err, err.message);
+        this._sendEvent(AudioRecorder.errorEvent, err);
         return reject('Error during merge: ' + err.message);
       }
     });
   }
+
+  /**
+   * Notify events by name and optionally pass data
+   */
+  private _sendEvent(eventName: string, data?: any) {
+    this.notify(<any>{
+      eventName,
+      object: this,
+      data: data,
+    });
+  }
+  /**
+   * Events
+   */
+  /**
+   * @event startedEvent emitted when recording has started
+   */
+  public static startedEvent = 'startedEvent';
+  /**
+   * @event stoppedEvent emitted when recording has stopped
+   */
+  public static stoppedEvent = 'stoppedEvent';
+  /**
+   * @event completeEvent emitted when recording has completed and file is ready, will pass the recording file path
+   */
+  public static completeEvent = 'completeEvent'; //will pass the recording file path
+  /**
+   * @event errorEvent emitted when recording has errored, will pass an error object
+   */
+  public static errorEvent = 'errorEvent'; //will pass the error object
+}
+
+/**
+ * Utility to find the duration in milliseconds of the mp4 file at `mp4Path`
+ * @function getDuration
+ * @param mp4Path string with the path of the audio file to examine
+ */
+export function getDuration(mp4Path: string): number {
+  let totalTime = 0;
+  const mediadata = new android.media.MediaMetadataRetriever();
+  mediadata.setDataSource(mp4Path);
+  totalTime = +mediadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+  return totalTime;
 }

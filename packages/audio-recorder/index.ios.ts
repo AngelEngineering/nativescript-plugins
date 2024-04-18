@@ -1,65 +1,64 @@
-import { Observable, File } from '@nativescript/core';
+import { Observable, File, EventData } from '@nativescript/core';
 import { IAudioRecorder } from './common';
 import { AudioRecorderOptions } from './options';
 
 declare const kAudioFormatAppleLossless, kAudioFormatMPEG4AAC;
 
 @NativeClass()
-class TNSRecorderDelegate extends NSObject implements AVAudioRecorderDelegate {
+class NSRecorderDelegate extends NSObject implements AVAudioRecorderDelegate {
   static ObjCProtocols = [AVAudioRecorderDelegate];
   private _owner: WeakRef<AudioRecorder>;
-  private _resolve;
-  private _reject;
+  public _resolve;
+  public _reject;
+
   static initWithOwner(owner: AudioRecorder, resolve, reject) {
-    const delegate = <TNSRecorderDelegate>TNSRecorderDelegate.new();
+    const delegate = <NSRecorderDelegate>NSRecorderDelegate.new();
     delegate._owner = new WeakRef(owner);
     delegate._resolve = resolve;
     delegate._reject = reject;
     return delegate;
   }
 
+  //this means an error happened and we don't have a recording
   audioRecorderDidFinishRecording(recorder: any, success: boolean) {
     const owner = this._owner.get();
     if (owner) {
-      owner.notify({
-        eventName: 'RecorderFinished',
-      });
+      owner._sendEvent(AudioRecorder.errorEvent, 'Failed to record audio file!');
     }
     this._reject('Failed to record audio file!');
   }
 
+  //recording completed successfully and we have an audio file
   async audioRecorderDidFinishRecordingSuccessfully(recorder: AVAudioRecorder, flag) {
     const owner = this._owner.get();
     const file = File.fromPath(owner._recorderOptions.filename);
     if (owner) {
-      owner.notify({
-        eventName: 'RecorderFinishedSuccessfully',
-      });
+      owner._sendEvent(AudioRecorder.completeEvent, file);
     }
     return this._resolve(file);
   }
 }
 
-export { TNSRecorderDelegate };
+export { NSRecorderDelegate };
 
 export class AudioRecorder extends Observable implements IAudioRecorder {
   private _recorder: AVAudioRecorder;
-  private _recordingSession: any;
-  private _delegate: any;
+  private _recordingSession: AVAudioSession;
+  private _delegate: NSRecorderDelegate;
   public _recorderOptions: AudioRecorderOptions;
 
-  protected getDelegate(resolve, reject): any {
+  protected getDelegate(resolve, reject): NSRecorderDelegate {
     if (!this._delegate) {
-      this._delegate = TNSRecorderDelegate.initWithOwner(this, resolve, reject);
+      this._delegate = NSRecorderDelegate.initWithOwner(this, resolve, reject);
     }
     return this._delegate;
   }
 
-  get ios() {
+  get ios(): AVAudioRecorder {
     return this._recorder;
   }
 
-  requestRecordPermission() {
+  requestRecordPermission(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       this._recordingSession.requestRecordPermission((allowed: boolean) => {
         if (allowed) {
@@ -71,23 +70,25 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
     });
   }
 
-  record(options: AudioRecorderOptions): Promise<any> {
+  /**
+   * Starts the native audio recording control.
+   * @method record
+   * @param options AudioRecorderOptions to use when recording audio
+   * @returns Promise that resolves once recording is complete, or rejects if fails
+   */
+  record(options: AudioRecorderOptions): Promise<void> {
     this._recorderOptions = options;
     return new Promise((resolve, reject) => {
       //starting a new recording
       try {
         this._recordingSession = AVAudioSession.sharedInstance();
         let errorRef = new interop.Reference();
-        this._recordingSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord, errorRef);
-        if (errorRef) {
-          console.error(`setCategoryError: ${errorRef.value}, ${errorRef}`);
-        }
 
-        this._recordingSession.setActiveError(true, null);
+        this._recordingSession.setActiveError(true);
         this._recordingSession.requestRecordPermission((allowed: boolean) => {
           if (allowed) {
             const recordSetting = NSMutableDictionary.alloc().init();
-            let format = kAudioFormatMPEG4AAC;
+            const format = kAudioFormatMPEG4AAC;
             recordSetting.setValueForKey(NSNumber.numberWithInt(format), 'AVFormatIDKey');
 
             let avAudioQualityValue = AVAudioQuality.Medium;
@@ -109,7 +110,7 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
             if (options.sampleRate) sampleRate = parseFloat(parseInt(options.sampleRate).toFixed(1));
             recordSetting.setValueForKey(NSNumber.numberWithFloat(sampleRate), 'AVSampleRateKey');
 
-            let channels = options.channels ? options.channels : 1;
+            const channels = options.channels ? options.channels : 1;
             recordSetting.setValueForKey(NSNumber.numberWithInt(channels), 'AVNumberOfChannelsKey');
 
             AVAudioSession.sharedInstance().setCategoryWithOptionsError(
@@ -119,7 +120,7 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
                 AVAudioSessionCategoryOptions.AllowAirPlay |
                 AVAudioSessionCategoryOptions.DefaultToSpeaker
             );
-            let inputs = AVAudioSession.sharedInstance().availableInputs;
+            const inputs = AVAudioSession.sharedInstance().availableInputs;
             if (inputs.count > 1) {
               let bluetooth = null,
                 headset = null,
@@ -155,57 +156,82 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
                 this._recorder.record();
                 console.log('recorder', this._recorder);
               }
+              this._sendEvent(AudioRecorder.startedEvent);
               resolve(null);
             }
           }
         });
       } catch (ex) {
+        this._sendEvent(AudioRecorder.errorEvent, ex);
         reject(ex);
       }
     });
   }
 
-  stop(): Promise<any> {
+  /**
+   * Stops the native audio recording control.
+   * @method stop
+   * @returns Promise that resolves once recording is complete and file has been written, or rejects if fails
+   */
+  stop(): Promise<File> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
           this._delegate._resolve = resolve;
           this._delegate._reject = reject;
           this._recorder.stop();
+          this._sendEvent(AudioRecorder.stoppedEvent);
         } else {
           console.error('No native recorder instance, was this cleared by mistake!?');
           return reject('No native recorder instance, was this cleared by mistake!?');
         }
         // may need this in future
-        this._recordingSession.setActiveError(false, null);
+        this._recordingSession.setActiveError(false);
         this._recorder.meteringEnabled = false;
       } catch (ex) {
         reject(ex);
+        this._sendEvent(AudioRecorder.errorEvent, ex);
       }
     });
   }
 
-  dispose(): Promise<any> {
+  /**
+   * Releases resources from the recorder.
+   * @method dispose
+   * @returns Promise that resolves once recorder has been released and disposed, or rejects if fails
+   */
+  dispose(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         if (this._recorder) {
           this._recorder.stop();
           this._recorder.meteringEnabled = false;
-          this._recordingSession.setActiveError(false, null);
+          this._recordingSession.setActiveError(false);
           this._recorder = undefined;
           this._delegate = null;
         } else return reject('No native recorder instance, was this cleared by mistake!?');
         resolve(null);
       } catch (ex) {
+        this._sendEvent(AudioRecorder.errorEvent, ex);
         reject(ex);
       }
     });
   }
 
-  isRecording() {
+  /**
+   * Returns true if the audio recorder is currently recording, false if not
+   * @method isRecording
+   */
+  isRecording(): boolean {
     return this._recorder && this._recorder.recording;
   }
 
+  /**
+   *@function getMeters()
+   * @returns Returns the average power, in decibels full-scale (dBFS), for an audio channel.
+   * Before asking the player for its average power value, you must call updateMeters() to generate the latest data. The returned value ranges from –160 dBFS, indicating minimum power, to 0 dBFS, indicating maximum power.
+   * https://developer.apple.com/documentation/avfaudio/avaudiorecorder/1387176-averagepower
+   */
   getMeters(channel?: number) {
     if (this._recorder) {
       if (!this._recorder.meteringEnabled) {
@@ -216,6 +242,14 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
     }
   }
 
+  /**
+   * Merges the mp4 files specified by audioFileUrls (array of file paths) into an mp4 audio file
+   *      at the outputPath.
+   * NOTE: inputs must all be AAC encoded MP4 audio files!
+   * @method mergeAudioFiles
+   * @param audioFileUrls
+   * @param outputPath
+   **/
   public mergeAudioFiles(audioFiles: string[], outputPath: string): Promise<File> {
     return new Promise((resolve, reject) => {
       if (!audioFiles || audioFiles.length <= 0) return reject('audioFiles is empty!');
@@ -229,23 +263,23 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
         });
       }
       if (audioFiles.length == 1) {
-        let suc = NSFileManager.defaultManager.copyItemAtPathToPathError(audioFiles[0], outputPath);
+        const suc = NSFileManager.defaultManager.copyItemAtPathToPathError(audioFiles[0], outputPath);
         if (!suc) {
           console.error('Unable to copy file!');
           return reject('Unable to copy file!');
         }
         return resolve(File.fromPath(outputPath));
       }
-      let composition = AVMutableComposition.new();
+      const composition = AVMutableComposition.new();
       for (let i = 0; i < audioFiles.length; i++) {
-        let compositionAudioTrack: AVMutableCompositionTrack = composition.addMutableTrackWithMediaTypePreferredTrackID(AVMediaTypeAudio, 0);
-        let asset = AVURLAsset.assetWithURL(NSURL.fileURLWithPath(audioFiles[i]));
-        let track = asset.tracksWithMediaType(AVMediaTypeAudio)[0];
-        let timeRange = CMTimeRangeMake(CMTimeMake(0, 600), track.timeRange.duration);
+        const compositionAudioTrack: AVMutableCompositionTrack = composition.addMutableTrackWithMediaTypePreferredTrackID(AVMediaTypeAudio, 0);
+        const asset = AVURLAsset.assetWithURL(NSURL.fileURLWithPath(audioFiles[i]));
+        const track = asset.tracksWithMediaType(AVMediaTypeAudio)[0];
+        const timeRange = CMTimeRangeMake(CMTimeMake(0, 600), track.timeRange.duration);
         compositionAudioTrack.insertTimeRangeOfTrackAtTimeError(timeRange, track, composition.duration);
       }
-      let mergeAudioUrl = NSURL.fileURLWithPath(outputPath);
-      let assetExport = new AVAssetExportSession({ asset: composition, presetName: AVAssetExportPresetAppleM4A });
+      const mergeAudioUrl = NSURL.fileURLWithPath(outputPath);
+      const assetExport = new AVAssetExportSession({ asset: composition, presetName: AVAssetExportPresetAppleM4A });
       assetExport.outputFileType = AVFileTypeAppleM4A;
       assetExport.outputURL = mergeAudioUrl;
       assetExport.exportAsynchronouslyWithCompletionHandler(() => {
@@ -274,4 +308,47 @@ export class AudioRecorder extends Observable implements IAudioRecorder {
       });
     });
   }
+
+  /**
+   * Notify events by name and optionally pass data
+   */
+  public _sendEvent(eventName: string, data?: any) {
+    this.notify(<any>{
+      eventName,
+      object: this,
+      data: data,
+    });
+  }
+  /**
+   * Events
+   */
+  /**
+   * @event startedEvent emitted when recording has started
+   */
+  public static startedEvent = 'startedEvent';
+  /**
+   * @event stoppedEvent emitted when recording has stopped
+   */
+  public static stoppedEvent = 'stoppedEvent';
+  /**
+   * @event completeEvent eemitted when recording has completed and file is ready, will pass the recording file path
+   */
+  public static completeEvent = 'completeEvent'; //will pass the recording file path
+  /**
+   * @event errorEvent emitted when recording has errored, will pass an error object
+   */
+  public static errorEvent = 'errorEvent'; //will pass the error object
+}
+
+/**
+ * Utility to find the duration in milliseconds of the mp4 file at `mp4Path`
+ * @function getDuration
+ * @param mp4Path string with the path of the audio file to examine
+ */
+export function getDuration(mp4Path: string): number {
+  let totalTime = 0;
+  const filePath = NSURL.fileURLWithPath(mp4Path);
+  const avAsset = AVURLAsset.assetWithURL(filePath);
+  totalTime = CMTimeGetSeconds(avAsset.duration) * 1000;
+  return totalTime;
 }
