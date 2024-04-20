@@ -409,8 +409,8 @@ export function getPathFromURI(uri: android.net.Uri) {
   const isGoogleDriveUri = (uri: android.net.Uri) => {
     return 'com.google.android.apps.docs.storage' === uri.getAuthority() || 'com.google.android.apps.docs.storage.legacy' === uri.getAuthority();
   };
-  const activity = Application.android.startActivity || Application.android.foregroundActivity;
-  const context = activity.getApplicationContext();
+
+  const context = getAndroidContext();
 
   if (typeof uri === 'string') {
     uri = android.net.Uri.parse(uri);

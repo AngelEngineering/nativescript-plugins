@@ -1,6 +1,8 @@
-# NativeScript Downloader [![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png)]() [![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)]()[![npm](https://img.shields.io/npm/v/@angelengineering/downloader?style=flat-square)](https://www.npmjs.com/package/@angelengineering/downloader)
+# @angelengineering/downloader
 
-> @angelengineering/downloader
+# NativeScript Downloader ![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png) ![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)
+
+[![npm](https://img.shields.io/npm/v/@angelengineering/downloader?style=flat-square)](https://www.npmjs.com/package/@angelengineering/downloader)
 
 This downloader plugin exports class _Downloader_ that has a single function `download()`.
 
