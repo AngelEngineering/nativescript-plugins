@@ -46,6 +46,9 @@
       ],
       "@angelengineering/sleepcontrol": [
         "packages/sleepcontrol/index.d.ts"
+      ],
+      "@angelengineering/camera": [
+        "packages/camera/index.d.ts"
       ]
     }
   },

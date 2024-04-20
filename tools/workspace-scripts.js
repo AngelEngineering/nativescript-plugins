@@ -85,6 +85,13 @@ module.exports = {
           description: '@angelengineering/sleepcontrol: Build',
         },
       },
+      // @angelengineering/camera
+      'camera': {
+        build: {
+          script: 'nx run camera:build.all',
+          description: '@angelengineering/camera: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -118,6 +125,10 @@ module.exports = {
       'sleepcontrol': {
         script: 'nx run sleepcontrol:focus',
         description: 'Focus on @angelengineering/sleepcontrol',
+      },
+      'camera': {
+        script: 'nx run camera:focus',
+        description: 'Focus on @angelengineering/camera',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',

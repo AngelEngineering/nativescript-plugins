@@ -1,0 +1,28 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+dependencies {
+   constraints {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
+            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
+        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") {
+            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
+        }
+    }
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation "com.google.android.gms:play-services-tasks:18.0.2"
+    api "androidx.appcompat:appcompat:1.5.1"
+    api "androidx.camera:camera-core:1.3.0"
+    api "androidx.camera:camera-camera2:1.3.0"
+    api "androidx.camera:camera-view:1.3.0n"
+    api "androidx.camera:camera-lifecycle:1.3.0"
+    api "androidx.camera:camera-video:1.3.0"
+    api "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+    api "androidx.exifinterface:exifinterface:1.3.6"
+    implementation "com.google.code.gson:gson:2.10.1"
+}

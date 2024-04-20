@@ -1,0 +1,113 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  xmlns:VideoPlayer="nativescript-videoplayer"
+  navigatingTo="navigatingTo"
+  navigatingFrom="navigatingFrom"
+  loaded="onLoaded"
+  xmlns:Cam="@voicethread/nativescript-camera">
+  <Page.actionBar>
+    <ActionBar title="nativescript-camera"
+      icon=""
+      class="action-bar">
+    </ActionBar>
+  </Page.actionBar>
+  <StackLayout class="p-20">
+    <ScrollView class="h-full"
+      id="CamScrollView">
+      <StackLayout >
+        <StackLayout class="p-10">
+          <Label text="You can include the camera as part of a page or let the camera take up the entire page layout. You can also add layout containers inside the NSCamera to overlay view elements over the camera preview."
+            textWrap="true" />
+        </StackLayout>
+
+        <Cam:NSCamera height="{{ cameraHeight }}"
+          id="nscamera"
+          debug="true"
+          enableVideo="true"
+          defaultCamera="front"
+          disablePhoto="false"
+          showCaptureIcon="true"
+          showToggleIcon="true"
+          showFlashIcon="true"
+          insetButtons="true"
+          insetButtonsPercent="0.02"
+          shouldLockRotation="false"
+          confirmPhotos="true"
+          saveToGallery="false"
+          autoSquareCrop="false"
+          confirmRetakeText="nah"
+          confirmSaveText="yeah"
+          maxDimension="800"
+          quality="90"
+          videoQuality="1080p">
+          <!-- 
+              iOS only properties: doubleTapCameraSwitch='true'  
+          -->
+        </Cam:NSCamera>
+
+
+        <StackLayout class="p-10">
+          <Label text="The buttons below are using the public methods for the NSCamera."
+            textWrap="true" />
+        </StackLayout>
+
+        <GridLayout rows="auto, auto, auto, auto"
+          columns="*, *">
+          <Button text="Record Video"
+            tap="{{ recordDemoVideo }}"
+            row="0"
+            col="0"
+            class="btn btn-primary" />
+          <Button text="Stop Recording"
+            tap="{{ stopRecordingDemoVideo }}"
+            row="0"
+            col="1"
+            class="btn btn-primary" />
+          <Button text="Delete last segment"
+            tap="{{ deleteLastSegment }}"
+            row="1"
+            col="0"
+            id="deleteButton"
+            visibility="hidden"
+            class="btn btn-primary" />
+          <Button text="Merge Videos"
+            tap="{{ mergeVideos }}"
+            row="1"
+            col="1"
+            id="mergeButton"
+            visibility="hidden"
+            class="btn btn-primary" />
+          <Button text="Toggle Flash"
+            tap="{{ toggleFlashOnCam }}"
+            row="2"
+            col="1"
+            class="btn btn-primary" />
+          <Button text="Toggle Camera"
+            tap="{{ toggleTheCamera }}"
+            row="2"
+            col="0"
+            class="btn btn-primary" />
+          <Button text="Take Pic"
+            tap="{{ takePicFromCam }}"
+            row="3"
+            col="0"
+            class="btn btn-primary" />
+        </GridLayout>
+
+        <VideoPlayer:Video id="nativeVideoPlayer"
+          controls="true"
+          loop="false"
+          autoplay="false"
+          height="400"
+          src=""
+          opacity="1"
+          visibility="hidden"/>
+
+        <Image height="200"
+          id="photoCaptureResult"
+          src="{{ testImage }}"
+          stretch="aspectFit" />
+
+      </StackLayout>
+    </ScrollView>
+  </StackLayout>
+</Page>

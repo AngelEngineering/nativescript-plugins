@@ -6,6 +6,7 @@
   "dependencies": {
     "@angelengineering/audio-player": "file:../../packages/audio-player",
     "@angelengineering/audio-recorder": "file:../../packages/audio-recorder",
+    "@angelengineering/camera": "file:../../packages/camera",
     "@angelengineering/downloader": "file:../../packages/downloader",
     "@angelengineering/filepicker": "file:../../packages/filepicker",
     "@angelengineering/flashlight": "file:../../packages/flashlight",
@@ -14,7 +15,8 @@
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
     "@nstudio/nativescript-checkbox": "2.0.5",
     "@nstudio/nativescript-loading-indicator": "4.3.4",
-    "@valor/nativescript-feedback": "2.0.2"
+    "@valor/nativescript-feedback": "2.0.2",
+    "nativescript-videoplayer": "^5.0.1"
   },
   "devDependencies": {
     "@nativescript/android": "8.7.0",
