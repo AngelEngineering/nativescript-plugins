@@ -1,29 +1,49 @@
-<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo">
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  navigatingTo="navigatingTo">
   <Page.actionBar>
-    <ActionBar title="Downloader" icon="">
+    <ActionBar title="Downloader"
+      icon="">
     </ActionBar>
   </Page.actionBar>
   <StackLayout>
     <ScrollView class="h-full">
       <StackLayout class="p-20">
-        <Label text="The downloader plugin will default to placing files in the app documents directory for iOS (and visible to other apps if your app is configured as a doc provider) or the app temp/cache directory for Android, where dev can use/copy/etc." textWrap="true" marginBottom="15"/>
-        <Label text="It has a special destination option which will also copy the file to a directory of user's choosing for Android" textWrap="true" marginBottom="15"/>
-        <Label text="Or add a copy to the iOS Photos Gallery if the file has an image or video extension (requires user permission first)" textWrap="true" marginBottom="15"/>
-        <Button text="DL jpeg" tap="{{ downloadValid }}"/>
-        <Button text="DL 1.5mb jpeg" tap="{{ downloadValidLarge }}"/>
-        <Button text="DL jpeg destination picker" tap="{{ downloadValidDest }}"/>
-        <Button text="DL jpeg dest Downloads" tap="{{ downloadValidDestDL }}"/>
-        <Button text="DL invalid image url" tap="{{ downloadInvalid }}"/>
-        <Button text="DL 1.5mb movie url" tap="{{ downloadSmallMovie }}"/>
-        <Button text="DL 10mb mp4" tap="{{ downloadValidMovie }}"/>
-        <Button text="DL 10mb mp4 destination" tap="{{ downloadValidMovieDest }}"/>
-        <Button text="DL 10mb mp4 Downloads" tap="{{ downloadValidMovieDestDL }}"/>
-        <Button text="DL 150mb mp4" tap="{{ downloadLargeValidMovie }}"/>
+        <Label text="The downloader plugin will default to placing files in the app documents directory for iOS (and visible to other apps if your app is configured as a doc provider) or the app temp/cache directory for Android, where dev can use/copy/etc."
+          textWrap="true"
+          marginBottom="15"/>
+        <Label text="It has a special destination option which will also copy the file to a directory of user's choosing for Android"
+          textWrap="true"
+          marginBottom="15"/>
+        <Label text="Or add a copy to the iOS Photos Gallery if the file has an image or video extension (requires user permission first)"
+          textWrap="true"
+          marginBottom="15"/>
+        <Button text="DL jpeg"
+          tap="{{ downloadValid }}"/>
+        <Button text="DL 1.5mb jpeg"
+          tap="{{ downloadValidLarge }}"/>
+        <Button text="DL jpeg destination picker"
+          tap="{{ downloadValidDest }}"/>
+        <Button text="DL jpeg dest Downloads"
+          tap="{{ downloadValidDestDL }}"/>
+        <Button text="DL invalid image url"
+          tap="{{ downloadInvalid }}"/>
+        <Button text="DL 1.5mb movie url"
+          tap="{{ downloadSmallMovie }}"/>
+        <Button text="DL 10mb mp4"
+          tap="{{ downloadValidMovie }}"/>
+        <Button text="DL 10mb mp4 destination"
+          tap="{{ downloadValidMovieDest }}"/>
+        <Button text="DL 10mb mp4 Downloads"
+          tap="{{ downloadValidMovieDestDL }}"/>
+        <Button text="DL 150mb mp4"
+          tap="{{ downloadLargeValidMovie }}"/>
 
         <Label class="divider"/>
 
         <!-- results -->
-        <Label text="Downloaded file:" class="h2" marginTop="20"/>
+        <Label text="Downloaded file:"
+          class="h2"
+          marginTop="20"/>
         <StackLayout id="downloadedFiles"/>
       </StackLayout>
     </ScrollView>

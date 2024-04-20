@@ -138,7 +138,7 @@ export class DemoModel extends DemoSharedDownloader {
   }
 
   downloadFile(dlopts: DownloadOptions): void {
-    let options: OptionsCommon = {
+    const options: OptionsCommon = {
       message: 'Downloading...',
       progress: 0.0,
       margin: 40,
@@ -153,7 +153,7 @@ export class DemoModel extends DemoSharedDownloader {
       },
       ios: {},
     };
-    var indicator;
+    let indicator;
     //indicator plugin doesn't work on iOS 12
     if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator = new LoadingIndicator();
 
