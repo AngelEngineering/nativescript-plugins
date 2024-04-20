@@ -1,7 +1,6 @@
 import { MediaType } from './index.common';
 import { AndroidApplication, AndroidActivityResultEventData, Application, Device, File, Utils } from '@nativescript/core';
 import { TempFile } from './files';
-import { getNativeApplication } from '@nativescript/core/application';
 
 export { MediaType } from './index.common';
 
@@ -11,15 +10,16 @@ export { MediaType } from './index.common';
  * async system requests (ie `startActvityForResult`)
  * NOTE: this is entirely arbitrary
  */
-const FILE_PICKER_CODE = 10321;
+const FILE_PICKER_CODE = 28172;
 
 /**
- * @function getFreeMBs returns the number of megabytes free on file system containing argument filepath
+ * @function getFreeMBs
+ * Returns the number of megabytes free on file system containing the filepath
  * @param {string} filepath full filepath on device
  */
 export function getFreeMBs(filepath: string): number {
   try {
-    const applicationContext = getNativeApplication().getApplicationContext();
+    const applicationContext = getAndroidContext();
     let freesize: number, totalsize: number;
     if (+Device.sdkVersion > 25) {
       //only available in API26+
@@ -49,9 +49,11 @@ export function getFreeMBs(filepath: string): number {
 }
 
 /**
- * @function showPicker returns an array of public files selected by user
+ * @function filePicker
+ * Present a system picker filtered by MediaType and using single or multiple selection mode..
  * @param {MediaType} type  OR'ed from all possible MediaType's to describe types of files allowed in selection
  * @param {boolean} multiple if multiple selections are allowed
+ * @returns {Promise<File[]>} Promise<File[]> returns an array of Files selected by user
  */
 export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> {
   return new Promise((resolve, reject) => {
@@ -132,9 +134,11 @@ export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> 
 }
 
 /**
- * @function galleryPicker returns an array of Photos gallery files selected by user, same as showPicker for Android currently.
+ * @function galleryPicker
+ * Present a Photos gallery picker filtered by MediaType and using single or multiple selection mode. Note: Android will just call showPicker currently.
  * @param {MediaType} type  OR'ed from all possible MediaType's to describe types of files allowed in selection
  * @param {boolean} multiple if multiple selections are allowed
+ * @returns  {Promise<File[]>} Promise<File[]> Returns an array of Photos gallery files selected by user.
  */
 export function galleryPicker(type: MediaType, multiple: boolean): Promise<File[]> {
   console.error('Only supported for iOS currently, using filePicker instead!');
@@ -142,10 +146,12 @@ export function galleryPicker(type: MediaType, multiple: boolean): Promise<File[
 }
 
 /**
- * @function getMediaTypes returns an array of mime types for Android picker intent
+ * @function getMediaTypes
+ * finds all file types based on types filter
+ * @returns returns an array of mime types for Android picker intent
  * @param {MediaType} types  OR'ed from all possible MediaType's to describe types of files allowed in selection
  */
-function getMediaTypes(types: MediaType) {
+function getMediaTypes(types: MediaType): string[] {
   let fileTypes = [];
   if (types & MediaType.AUDIO) {
     fileTypes = fileTypes.concat(MediaFileTypeExts[MediaType.AUDIO]);
@@ -168,9 +174,10 @@ function getMediaTypes(types: MediaType) {
 }
 
 /**
- * @function convertToArray Convert to Android Array of Strings
+ * @function convertToArray
+ * Convert a string array to an Android Array of Strings
  */
-function convertToArray(types) {
+function convertToArray(types): string[] {
   let mimeTypes: string[];
   if (types && types.length > 0) {
     mimeTypes = Array.create(java.lang.String, types.length);
@@ -188,12 +195,11 @@ function convertToArray(types) {
  * @returns file:File
  ** Copies file accessed from Android scoped storage uri to App temp directory and returns an NS File reference
  */
-
 function getNSFile(uri, fileName) {
   //try to extract the filename and file suffix to create a temp file
   //Note: Android doesn't recognize file types without a suffix though and picker won't enable these for selecting
   let fileParts = fileName.split('.');
-  console.log('fileName', fileName);
+  // console.log('fileName', fileName);
   let fileSuffix = fileParts.length > 1 ? '.' + fileParts[fileParts.length - 1] : null;
   let filePrefix = fileSuffix.length > 1 ? fileName.slice(0, fileName.length - fileSuffix.length) : fileName;
   let outputFilePath = TempFile.getPath(filePrefix, fileSuffix);
@@ -216,7 +222,11 @@ function getActivity(): android.app.Activity {
   return Application.android.foregroundActivity || Application.android.startActivity;
 }
 
-// This method is safer than Application.getApplicationContext()
+/**
+ * @function getAndroidContext
+ * Convenience function that returns the android app's current context
+ * This method is safer than Application.getApplicationContext()
+ */
 const getAndroidContext = (): android.app.Application => {
   const ctx =
     java.lang.Class.forName('android.app.AppGlobals').getMethod('getInitialApplication', null).invoke(null, null) ||
@@ -224,6 +234,12 @@ const getAndroidContext = (): android.app.Application => {
   return ctx || Utils.android.getApplicationContext();
 };
 
+/**
+ * @function copyFileFromUri
+ * Reads from an Android URI and copies it to a local system file
+ * @param uri URI to copy from
+ * @param newpath File path to copy to
+ */
 function copyFileFromUri(uri, newpath) {
   try {
     const context: android.content.Context = getAndroidContext();
@@ -247,7 +263,7 @@ function copyFileFromUri(uri, newpath) {
   return true;
 }
 
-//Android file mime types reference
+//Android known file mime type extensions reference array
 //https://developer.android.com/reference/androidx/media3/common/MimeTypes
 //https://android.googlesource.com/platform/external/mime-support/+/9817b71a54a2ee8b691c1dfa937c0f9b16b3473c/mime.types
 //https://developer.android.com/guide/topics/media/media-formats
@@ -449,7 +465,7 @@ export function getPathFromURI(uri: android.net.Uri) {
     /*
      * Get the column indexes of the data in the Cursor,
      *     * move to the first row in the Cursor, get the data,
-     *     * and display it.
+     *     * and use it.
      * */
     let nameIndex = returnCursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
     returnCursor.moveToFirst();
@@ -511,8 +527,8 @@ export function getPathFromURI(uri: android.net.Uri) {
   const isGoogleDriveUri = (uri: android.net.Uri) => {
     return 'com.google.android.apps.docs.storage' === uri.getAuthority() || 'com.google.android.apps.docs.storage.legacy' === uri.getAuthority();
   };
-  const activity = Application.android.startActivity || Application.android.foregroundActivity;
-  const context = activity.getApplicationContext();
+
+  const context = getAndroidContext();
 
   if (typeof uri === 'string') {
     uri = android.net.Uri.parse(uri);

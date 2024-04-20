@@ -4,20 +4,20 @@
   "license": "SEE LICENSE IN LICENSE",
   "repository": "https://github.com/AngelEngineering/nativescript-plugins",
   "dependencies": {
+    "@angelengineering/audio-player": "file:../../packages/audio-player",
+    "@angelengineering/audio-recorder": "file:../../packages/audio-recorder",
     "@angelengineering/downloader": "file:../../packages/downloader",
     "@angelengineering/filepicker": "file:../../packages/filepicker",
     "@angelengineering/flashlight": "file:../../packages/flashlight",
-    "@nativescript-community/perms": "2.3.0",
+    "@angelengineering/sleepcontrol": "file:../../packages/sleepcontrol",
+    "@nativescript-community/perms": "2.3.3",
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
     "@nstudio/nativescript-checkbox": "2.0.5",
-    "@nstudio/nativescript-loading-indicator": "4.2.0",
-    "@valor/nativescript-feedback": "2.0.2",
-    "@angelengineering/audio-player": "file:../../packages/audio-player",
-    "@angelengineering/audio-recorder": "file:../../packages/audio-recorder",
-    "@angelengineering/sleepcontrol": "file:../../packages/sleepcontrol"
+    "@nstudio/nativescript-loading-indicator": "4.3.4",
+    "@valor/nativescript-feedback": "2.0.2"
   },
   "devDependencies": {
-    "@nativescript/android": "8.5.2",
-    "@nativescript/ios": "8.5.2"
+    "@nativescript/android": "8.7.0",
+    "@nativescript/ios": "8.7.0"
   }
 }
