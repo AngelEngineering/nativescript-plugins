@@ -1,7 +1,7 @@
 {
   "name": "@angelengineering/sleepcontrol",
   "version": "1.1.1",
-  "description": "Prevent or allow device sleep in a Nativescript application",
+  "description": "Sleep Control plugin for Nativescript applications",
   "main": "index",
   "typings": "index.d.ts",
   "nativescript": {
