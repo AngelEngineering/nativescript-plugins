@@ -5,6 +5,11 @@ import { Application, File, path, Utils, AndroidApplication, AndroidActivityResu
 const DOWNLOADER_CODE = 26041;
 
 export class Downloader extends DownloaderCommon {
+  /**
+   * Attempts to download a file from the url specified in options.
+   * @param options {DownloadOptions} options to use for this download
+   * @returns
+   */
   public download(options: DownloadOptions): Promise<File> {
     return new Promise<File>((resolve, reject) => {
       let { url, request, destinationFilename, destinationPath, copyPicker, copyDownloads, notification } = options;
@@ -409,8 +414,8 @@ export function getPathFromURI(uri: android.net.Uri) {
   const isGoogleDriveUri = (uri: android.net.Uri) => {
     return 'com.google.android.apps.docs.storage' === uri.getAuthority() || 'com.google.android.apps.docs.storage.legacy' === uri.getAuthority();
   };
-  const activity = Application.android.startActivity || Application.android.foregroundActivity;
-  const context = activity.getApplicationContext();
+
+  const context = getAndroidContext();
 
   if (typeof uri === 'string') {
     uri = android.net.Uri.parse(uri);

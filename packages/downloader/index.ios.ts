@@ -12,6 +12,11 @@ const sessionConfig = NSURLSessionConfiguration.defaultSessionConfiguration;
 const queue = NSOperationQueue.mainQueue;
 
 export class Downloader extends DownloaderCommon {
+  /**
+   * Attempts to download a file from the url specified in options.
+   * @param options {DownloadOptions} options to use for this download
+   * @returns
+   */
   public download(options: DownloadOptions): Promise<File> {
     return new Promise<File>((resolve, reject) => {
       const emit = (event: string, data: any) => {
@@ -137,6 +142,7 @@ export class Downloader extends DownloaderCommon {
               }
               emit(DownloaderCommon.DOWNLOAD_COMPLETE, { filepath: downloadedFile.path });
               //Special handling if user requests a copy be saved to Photos Gallery
+              //NOTE: iOS needs user permission before saving a copy to Photos Gallery, so request it first or this will fail
               if (copyGallery) {
                 let iosurl = NSURL.URLWithString(downloadedFile.path);
                 let fileParts = downloadedFile.path.split('.');

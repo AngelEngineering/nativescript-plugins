@@ -1,6 +1,8 @@
-# NativeScript Downloader [![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png)]() [![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)]()[![npm](https://img.shields.io/npm/v/@angelengineering/downloader?style=flat-square)](https://www.npmjs.com/package/@angelengineering/downloader)
+# @angelengineering/downloader
 
-> @angelengineering/downloader
+# NativeScript Downloader ![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png) ![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)
+
+[![npm](https://img.shields.io/npm/v/@angelengineering/downloader?style=flat-square)](https://www.npmjs.com/package/@angelengineering/downloader)
 
 This downloader plugin exports class _Downloader_ that has a single function `download()`.
 
@@ -85,8 +87,8 @@ interface DownloadOptions {
   destinationPath?: string; //must be a valid path for app to create a new file (existing directory with valid filename)
   destinationFilename?: string; //must be a string like XXXX[].[YYYYYY] without any path preceding
   copyPicker?: boolean; //present user with UI to choose destination directory to save a copy of download
-  copyGallery?: boolean; //iOS only, if download has a recognized image/video file name extension, save a copy to iOS Photos, ignored on Android
-  copyDownloads?: boolean; //Android only, adds a copy to device Downloads directory using legacy DIRECTORY_DOWNLOADS, or MediaStore for 29+
+  copyGallery?: boolean; //iOS only, if download has a recognized image/video file name extension, save a copy to iOS Photos but make sure to request permission first! Ignored on Android
+  copyDownloads?: boolean; //Android only, adds a copy to device Downloads directory using legacy DIRECTORY_DOWNLOADS, or MediaStore for 29+. Ignored on iOS
   notification?: boolean; //Android-only. Show system notification for download success/failure. defaults to false
 }
 ```
@@ -105,7 +107,7 @@ By default, the plugin disabled Android system notifications of downloads, which
   <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"/>
 ```
 
-You can choose to enable these notifications which will show the user progress and completion/failure notifications.
+You can choose to enable these notifications which will show the user progress and completion/failure Android notifications.
 
 Android version of the plugin supports two destination copy approaches:
 
@@ -118,17 +120,18 @@ Android version of the plugin supports two destination copy approaches:
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 ```
-Tested and working on Android API 25-33.
+Tested and working on Android API 25-34.
 
 ### iOS Specifics
 
-iOS applications will download files by default to the application's documents directory, which is defined in Nativescript as `knownFolders.documents()` and does not require any extra permissions from the user. This also has the advantage of being the location where an application can make downloaded files visible to other apps once it has been configured as a document provider.
+iOS applications will download files by default to the application's documents directory, which is defined in Nativescript as `knownFolders.documents()` and does not require any extra permissions from the user. This also has the advantage of being the location where the application can make these files visible to other apps once it has been configured as a document provider.
 
 
 The iOS version of the plugin supports two destination copy approaches: 
 1. `copyPicker` will first download the file to the application documents directory, and then present the user with a picker UI so that they can select where they'd like a copy saved. This approach avoids permission requirements since the user is involved in the destination choice. Note: This is only available on iOS 14+
 
-2. `copyGallery` will save a copy to the device's Photos Gallery in case the user wants to use that file in another application from an easy to find location. This approach requires the user to grant photo library permission first in order to save the downloaded file. Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding something like the following:
+2. `copyGallery` will attempt to save a copy to the device's Photos Gallery if the file is determined ot an image or video. This approach requires the user to have granted photo library permission so make sure to request it first in your app. 
+Your app might be rejected from the Apple App Store if you do not provide a description about why you need this permission. The default message "Requires access to photo library." might not be enough for the App Store reviewers. You can customize it by editing the `app/App_Resources/iOS/Info.plist` file in your app and adding something like the following:
 
     ```xml
     <key>NSPhotoLibraryUsageDescription</key>
@@ -137,7 +140,7 @@ The iOS version of the plugin supports two destination copy approaches:
 
 > **NOTE**: if you do use the perms plugin in a production app, make sure to read their README.md first, as using this plugin in production apps will require you to add all iOS Info.plist permission strings to avoid being rejected by automatic processing since the plugin includes code for all permission types.
 
-Tested and working on iOS 12.x-16.x with caveats noted above. 
+Tested and working on iOS 12.x-17.x with caveats noted above. 
 ## Acknowledgements
 
 This plugin was inspired by https://github.com/tobydeh/nativescript-download-progress
