@@ -21,6 +21,8 @@
           tap="{{ viewDemo }}" />
         <Button text="sleepcontrol"
           tap="{{ viewDemo }}" />
+        <Button text="videoplayer"
+          tap="{{ viewDemo }}" />
       </StackLayout>
     </ScrollView>
   </StackLayout>

@@ -1,0 +1,6 @@
+{
+  "name": "video-source",
+  "main": "video-source.js",
+  "typings": "video-source.d.ts",
+  "version": "0.2.0"
+}

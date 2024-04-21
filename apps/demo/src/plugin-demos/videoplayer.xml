@@ -1,0 +1,42 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  xmlns:Video="@angelengineering/videoplayer"
+  navigatingTo="navigatingTo"
+  class="page">
+  <Page.actionBar>
+    <ActionBar title="videoplayer"
+      icon=""
+      class="action-bar">
+    </ActionBar>
+  </Page.actionBar>
+  <StackLayout>
+    <!-- <Video:VideoPlayer id="nsVideoPlayer" controls="true" loop="false" autoplay="false" height="400" src="" marginBottom="30" opacity="1" visibility="visible" /> -->
+
+    <GridLayout rows="*"
+      columns="*, *"
+      height="300"
+      backgroundColor="#000000"
+      marginBottom="50">
+      <Video:VideoPlayer id="nsVideoPlayer"
+        controls="true"
+        loadingComplete="{{ videoCompleted }}"
+        finished="{{ videoFinished }}"
+        loop="false"
+        autoplay="false"
+        height="300"
+        src="{{ videoSrc }}"
+        row="0"
+        colSpan="2" />
+      <Label text="Label On Top of Video View"
+        row="0"
+        colSpan="2"
+        color="#fff"
+        horizontalAlignment="center"
+        verticalAlignment="top" />
+    </GridLayout >
+    <Button text="Play MP4"
+      tap="{{ playmp4 }}"
+      class="btn btn-primary"/>
+
+
+  </StackLayout>
+</Page>
