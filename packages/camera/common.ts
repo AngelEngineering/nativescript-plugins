@@ -2,6 +2,7 @@
 /**********************************************************************************
   2017, nStudio, LLC & LiveShopper, LLC
   2023, VoiceThread - Angel Dominguez
+  2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
 import { ContentView, File, isAndroid } from '@nativescript/core';
@@ -96,7 +97,7 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public zoom = 0;
 
   /**
-   *  *ANDROID ONLY* Camera white balance, currently only getter support
+   *  *ANDROID ONLY* Camera white balance
    */
   @GetSetProperty()
   public whiteBalance: WhiteBalance | string = WhiteBalance.Auto;
@@ -272,9 +273,8 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   toggleFlash(): void {}
 
   /**
-   * Gets the flash mode
-   * Android: various strings possible
-   * iOS: only 'on' or 'off'
+   * Return the current flash mode of the device. Will return null if the flash mode is not supported by device.
+   * @returns 'on', 'off' or null
    */
   getFlashMode(): string {
     return null;
@@ -296,8 +296,12 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
    */
   abstract stop(): void;
 
-  /*
-   * Utility to merge an array of video filenames, must all be valid mp4 format video files with same audio encoding
+  /**
+   * Merge an array of video filenames, must all be valid mp4 video files with same audio and video encoding
+   * Note: Android MediaMuxer support for multiple audio/video tracks only on API 26+
+   * @param inputFiles string[] Array of video file paths to merge
+   * @param outputPath string Path to save merged video to
+   * @returns Promise<File> merged File
    */
   abstract mergeVideoFiles(inputFiles: string[], outputPath: string): Promise<File>;
 
@@ -415,14 +419,16 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   }
 
   /**
-   * * ANDROID ONLY * - Gets the number of cameras on a device.
+   * Gets the number of cameras on a device.
+   * NOTE: this should be called after the cameraReadyEvent has been received to ensure the camera component has initialized
    */
   getNumberOfCameras(): number {
     return 0;
   }
 
   /**
-   * * ANDROID ONLY * - Returns true if the current camera has a flash mode.
+   * Check if current camera has a flash
+   * @returns true if camera has a flash, false if not
    */
   hasFlash(): boolean {
     return false;

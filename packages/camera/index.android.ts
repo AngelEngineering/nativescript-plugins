@@ -3,6 +3,7 @@
 /**********************************************************************************
   2017, nStudio, LLC & LiveShopper, LLC
   2023, VoiceThread - Angel Dominguez
+  2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
 import { Application, Device, View, File, Utils, ImageSource, path, knownFolders } from '@nativescript/core';
@@ -11,6 +12,9 @@ import * as CamHelpers from './helpers';
 export * from './common';
 export { CameraVideoQuality, WhiteBalance } from './common';
 
+/**
+ * Constants
+ */
 const WRAP_CONTENT = -2;
 const ALIGN_PARENT_TOP = 10;
 const ALIGN_PARENT_BOTTOM = 12;
@@ -21,11 +25,11 @@ const FLASH_MODE_ON = 'on';
 const FLASH_MODE_OFF = 'off';
 const CAMERA_FACING_FRONT = 1; // front camera
 const CAMERA_FACING_BACK = 0; // rear camera
-
 const DEVICE_INFO_STRING = () => `device: ${Device.manufacturer} ${Device.model} on SDK: ${Device.sdkVersion}`;
+
 export class NSCamera extends NSCameraBase {
   private _camera: io.github.triniwiz.fancycamera.FancyCamera;
-  private _cameraId;
+  private _cameraId: number; //either CAMERA_FACING_FRONT or CAMERA_FACING_BACK
 
   @GetSetProperty()
   public flashOnIcon = 'ic_flash_on_white';
@@ -46,15 +50,18 @@ export class NSCamera extends NSCameraBase {
 
   private isRecording = false;
   private _videoQuality: CameraVideoQuality = CameraVideoQuality.MAX_720P;
-  private _nativeView;
+  private _nativeView: android.widget.RelativeLayout;
   private _flashBtn: android.widget.ImageButton = null; // reference to native flash button
   private _takePicBtn: android.widget.ImageButton = null; // reference to native take picture button
   private _toggleCamBtn: android.widget.ImageButton = null; // reference to native toggle camera button
   private isButtonLongPressed = false;
   private _defaultCamera: CameraTypes;
-  readonly _context; // defining this to pass TS warning, NS provides the context during lifecycle
   _lastCameraOptions: ICameraOptions[];
+  // readonly _context; // can define this here to avoid TS warning if encountered, NS provides the context during lifecycle as part of ViewBase
 
+  /**
+   * Creates the NSCamera instance
+   */
   constructor() {
     super();
     this._camera = null;
@@ -77,7 +84,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   // @ts-ignore
-  get ratio() {
+  get ratio(): string {
     return this._camera ? this._camera.getRatio() : '4:3';
   }
   set ratio(value: string) {
@@ -87,7 +94,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   // @ts-ignore
-  get videoQuality() {
+  get videoQuality(): CameraVideoQuality {
     // this.CLog('get current VideoQuality()', this._videoQuality);
     return this._videoQuality;
   }
@@ -105,7 +112,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   // @ts-ignore
-  get zoom() {
+  get zoom(): number {
     return this._camera ? this._camera.getZoom() : 0;
   }
 
@@ -116,7 +123,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   // @ts-ignore
-  get defaultCamera() {
+  get defaultCamera(): CameraTypes {
     return this._defaultCamera ? this._defaultCamera : 'rear';
   }
 
@@ -217,15 +224,16 @@ export class NSCamera extends NSCameraBase {
     return this._camera ? this._camera.getPictureSize() : '0x0';
   }
 
-  get camera() {
+  get camera(): io.github.triniwiz.fancycamera.FancyCamera {
     return this._camera;
   }
 
   /**
    * Create the native view
+   * @returns android.widget.RelativeLayout
    */
-  public createNativeView() {
-    // create the Android RelativeLayout
+  public createNativeView(): android.widget.RelativeLayout {
+    // create the Android RelativeLayout which contains the camera
     Application.android.on('activityRequestPermissions', this._permissionListener);
     this._nativeView = new android.widget.RelativeLayout(this._context);
     this._camera = new io.github.triniwiz.fancycamera.FancyCamera(this._context);
@@ -252,7 +260,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   initNativeView() {
-    console.log('initNativeView()');
+    this.CLog('initNativeView()');
     const that = this;
     super.initNativeView();
     this.on(View.layoutChangedEvent, this._onLayoutChangeListener);
@@ -261,12 +269,12 @@ export class NSCamera extends NSCameraBase {
       owner: null,
 
       onReady(): void {
-        console.log('listenerImpl.onReady()');
+        that.CLog('listenerImpl.onReady()');
         // this.owner.camera.whiteBalance = WhiteBalance.Auto;
       },
 
       onCameraCloseUI(): void {
-        console.log('listenerImpl.onCameraCloseUI()');
+        that.CLog('listenerImpl.onCameraCloseUI()');
       },
 
       onCameraError(message: string, ex: java.lang.Exception): void {
@@ -419,11 +427,11 @@ export class NSCamera extends NSCameraBase {
     super.disposeNativeView();
   }
 
-  get cameraId() {
+  get cameraId(): number {
     return this._cameraId;
   }
 
-  set cameraId(id: any) {
+  set cameraId(id: number) {
     this.CLog('set cameraID() id:', id, io.github.triniwiz.fancycamera.CameraPosition.valueOf('BACK'));
     if (this._camera) {
       switch (id) {
@@ -443,7 +451,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   /**
-   * Takes a picture with from the camera preview.
+   * Takes a picture using the camera preview
    */
   public takePicture(options?: ICameraOptions): void {
     if (this._camera) {
@@ -468,7 +476,7 @@ export class NSCamera extends NSCameraBase {
     }
   }
 
-  private releaseCamera() {
+  private releaseCamera(): void {
     if (this._camera) {
       // this.CLog('releaseCamera()');
       this._camera.release();
@@ -489,7 +497,7 @@ export class NSCamera extends NSCameraBase {
   /**
    * Toggle the opened camera. Only supported on devices with multiple cameras.
    */
-  public toggleCamera() {
+  public toggleCamera(): void {
     if (this._camera) {
       this._togglingCamera = true;
       this._camera.toggleCamera();
@@ -510,7 +518,7 @@ export class NSCamera extends NSCameraBase {
   //convenience function to get the current Android camera2 video quality
   private getVideoQuality(): CameraVideoQuality {
     if (!this.camera) {
-      console.error('No camera instance! Make sure this is created and initialized before calling updateQuality');
+      this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
       return CameraVideoQuality.MAX_720P;
     }
     switch (this._camera.getQuality()) {
@@ -533,10 +541,10 @@ export class NSCamera extends NSCameraBase {
     }
   }
 
-  private updateQuality() {
-    console.log('updateQuality()');
+  private updateQuality(): void {
+    this.CLog('updateQuality()');
     if (!this.camera) {
-      console.error('No camera instance! Make sure this is created and initialized before calling updateQuality');
+      this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
       return;
     }
     switch (this.videoQuality) {
@@ -567,7 +575,11 @@ export class NSCamera extends NSCameraBase {
     }
   }
 
-  public async record(options?: IVideoOptions) {
+  /**
+   * Start recording video
+   * @param options IVideoOptions
+   */
+  public async record(options?: IVideoOptions): Promise<void> {
     if (this.isRecording) {
       this.CLog('Currently recording, cannot call record()');
       return;
@@ -631,7 +643,7 @@ export class NSCamera extends NSCameraBase {
       this._camera.startRecording();
       this.isRecording = true;
     } else {
-      console.error('No camera instance! Make sure this is created and initialized before calling updateQuality');
+      this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
       return;
     }
   }
@@ -643,7 +655,10 @@ export class NSCamera extends NSCameraBase {
     this.stopRecording();
   }
 
-  public stopRecording() {
+  /**
+   * Stop camera recording and update UI
+   */
+  public stopRecording(): void {
     if (!this.isRecording) {
       this.CLog('not currently recording, cannot call stopRecording()');
       return;
@@ -665,8 +680,7 @@ export class NSCamera extends NSCameraBase {
   /**
    * Toggles the flash mode of the camera.
    */
-
-  public toggleFlash() {
+  public toggleFlash(): void {
     if (this._camera) {
       // @ts-ignore
       this._camera.toggleFlash();
@@ -690,7 +704,7 @@ export class NSCamera extends NSCameraBase {
   /**
    * Check if the device has a camera
    */
-  public isCameraAvailable() {
+  public isCameraAvailable(): boolean {
     if (Utils.ad.getApplicationContext().getPackageManager().hasSystemFeature('android.hardware.camera')) {
       return true;
     } else {
@@ -699,7 +713,8 @@ export class NSCamera extends NSCameraBase {
   }
 
   /**
-   * Returns number of cameras on device
+   * Gets the number of cameras on a device.
+   * NOTE: this should be called after the cameraReadyEvent has been received to ensure the camera component has initialized
    */
   public getNumberOfCameras(): number {
     if (!this._camera) return 0;
@@ -707,10 +722,10 @@ export class NSCamera extends NSCameraBase {
   }
 
   /**
-   * Check if device has flash modes
-   * @param camera
+   * Check if current camera has a flash
+   * @returns true if camera has a flash, false if not
    */
-  public hasFlash() {
+  public hasFlash(): boolean {
     if (!this._camera) {
       return false;
     }
@@ -719,8 +734,9 @@ export class NSCamera extends NSCameraBase {
 
   /**
    * Return the current flash mode of the device. Will return null if the flash mode is not supported by device.
+   * @returns 'on', 'off' or null
    */
-  public getFlashMode() {
+  public getFlashMode(): string {
     if (this.hasFlash()) {
       if (this._camera.getFlashMode() !== io.github.triniwiz.fancycamera.CameraFlashMode.valueOf('OFF')) {
         return 'on';
@@ -734,7 +750,7 @@ export class NSCamera extends NSCameraBase {
    * Helper method to ensure the correct icon (on/off) is shown on flash.
    * Useful when toggling cameras.
    */
-  _ensureCorrectFlashIcon() {
+  _ensureCorrectFlashIcon(): void {
     // get current flash mode and set correct image drawable
     const currentFlashMode = this.getFlashMode();
     // this.CLog('_ensureCorrectFlashIcon flash mode', currentFlashMode);
@@ -765,11 +781,11 @@ export class NSCamera extends NSCameraBase {
     this._flashBtn.setImageResource(imageDrawable);
   }
 
-  private _ensureFocusMode() {
-    // setup autoFocus if possible
+  private _ensureFocusMode(): void {
+    // TODO: setup autoFocus if possible
   }
 
-  private _initFlashButton() {
+  private _initFlashButton(): void {
     if (!this.enableVideo && this.disablePhoto) {
       console.warn('Neither photo or video mode enabled, not showing flash button');
       return;
@@ -811,7 +827,7 @@ export class NSCamera extends NSCameraBase {
     this._nativeView.addView(this._flashBtn, flashParams);
   }
 
-  private _initToggleCameraButton() {
+  private _initToggleCameraButton(): void {
     this._toggleCamBtn = CamHelpers.createImageButton();
     const switchCameraDrawable = CamHelpers.getImageDrawable(this.toggleCameraIcon);
     this._toggleCamBtn.setImageResource(switchCameraDrawable);
@@ -844,7 +860,7 @@ export class NSCamera extends NSCameraBase {
     this._nativeView.addView(this._toggleCamBtn, toggleCamParams);
   }
 
-  private _initTakePicButton() {
+  private _initTakePicButton(): void {
     if (this.enableVideo) {
       //video mode show a circle icon
       this._takePicBtn = new android.widget.ImageButton(Application.android.context) as android.widget.ImageButton;
@@ -935,7 +951,7 @@ export class NSCamera extends NSCameraBase {
   /**
    * Creates the default buttons depending on the options to show the various default buttons.
    */
-  private _initDefaultButtons() {
+  private _initDefaultButtons(): void {
     try {
       // flash button setup - if the device doesn't support flash do not setup/show this button
       if (this.showFlashIcon === true && this.getFlashMode() !== null && this._flashBtn === null) {
@@ -990,13 +1006,15 @@ export class NSCamera extends NSCameraBase {
     activity.setRequestedOrientation(14); // SCREEN_ORIENTATION_LOCKED = 14
   }
 
-  /*
-   * Merge an array of video filenames, must all be valid mp4 format video files with same audio encoding
+  /**
+   * Merge an array of video filenames, must all be valid mp4 video files with same audio and video encoding
+   * Note: Android MediaMuxer support for multiple audio/video tracks only on API 26+
+   * @param inputFiles string[] Array of video file paths to merge
+   * @param outputPath string Path to save merged video to
+   * @returns Promise<File> merged File
    */
   public mergeVideoFiles(inputFiles: string[], outputPath: string): Promise<File> {
     return new Promise((resolve, reject) => {
-      //Note: This will only merge video tracks from  mp4 files, and only succeed if all input have same audio and video format/encoding
-      //MediaMuxer support for multiple audio/video tracks only on API 26+ only
       if (+Device.sdkVersion < 26) {
         this.CError('This is only supported on API 26+');
         return reject('This is only supported on API 26+');

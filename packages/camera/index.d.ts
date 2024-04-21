@@ -1,6 +1,7 @@
 /**********************************************************************************
   2017, nStudio, LLC & LiveShopper, LLC
   2023, VoiceThread - Angel Dominguez
+  2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
 import { Observable, ContentView, File } from '@nativescript/core';
@@ -277,14 +278,14 @@ export declare class NSCamera extends ContentView {
   getCurrentCamera(): 'rear' | 'front';
 
   /**
-   * ANDROID ONLY
    * Gets the number of cameras on a device.
+   * NOTE: this should be called after the cameraReadyEvent has been received to ensure the camera component has initialized
    */
   getNumberOfCameras(): number;
 
   /**
-   * ANDROID ONLY
-   * Returns true if the current camera has a flash mode.
+   * Check if current camera has a flash
+   * @returns true if camera has a flash, false if not
    */
   hasFlash(): boolean;
   /*

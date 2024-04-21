@@ -1,5 +1,6 @@
 /* Copyright (c) 2016, Andrew Walz
   2023 VoiceThread - Angel Dominguez
+  2024, Angel Engineering - Angel Dominguez
 
  Redistribution and use in source and binary forms, with or without modification,are permitted provided that the following conditions are met:
  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -83,38 +84,38 @@ import UIKit
   //AVVideoCodecType.hevc
 
   /// Sets whether flash is enabled for photo and video capture
-  @objc public var flashEnabled = false
+  @objc public var flashEnabled: Bool = false
 
   /// Sets whether Pinch to Zoom is enabled for the capture session
-  @objc public var pinchToZoom = true
+  @objc public var pinchToZoom: Bool = true
 
   /// Sets the maximum zoom scale allowed during gestures gesture
-  @objc public var maxZoomScale = CGFloat.greatestFiniteMagnitude
+  @objc public var maxZoomScale: CGFloat = CGFloat.greatestFiniteMagnitude
 
   /// Sets whether Tap to Focus and Tap to Adjust Exposure is enabled for the capture session
-  @objc public var tapToFocus = true
+  @objc public var tapToFocus: Bool = true
 
   /// Sets whether the capture session should adjust to low light conditions automatically
   /// Note: Only supported on iPhone 5 and 5C
-  @objc public var lowLightBoost = true
+  @objc public var lowLightBoost: Bool = true
 
   /// Set whether SwiftyCam should allow background audio from other applications
-  @objc public var allowBackgroundAudio = false
+  @objc public var allowBackgroundAudio: Bool = false
 
   /// Sets whether a double tap to switch cameras is supported
-  @objc public var doubleTapCameraSwitch = true
+  @objc public var doubleTapCameraSwitch: Bool = true
 
   /// Sets whether swipe vertically to zoom is supported
-  @objc public var swipeToZoom = false
+  @objc public var swipeToZoom: Bool = false
 
   /// Sets whether swipe vertically gestures should be inverted
-  @objc public var swipeToZoomInverted = false
+  @objc public var swipeToZoomInverted: Bool = false
 
   /// Set default launch camera
-  @objc public var defaultCamera = CameraSelection.rear
+  @objc public var defaultCamera: SwiftyCamViewController.CameraSelection = CameraSelection.rear
 
   /// Sets wether the taken photo or video should be oriented according to the device orientation
-  @objc public var shouldUseDeviceOrientation = true
+  @objc public var shouldUseDeviceOrientation: Bool = true
 
   // MARK: Public Get-only Variable Declarations
 
@@ -122,7 +123,8 @@ import UIKit
   @objc public var isSessionRunning: Bool { return session.isRunning }
 
   /// Returns the CameraSelection corresponding to the currently utilized camera
-  @objc public private(set) var currentCamera = CameraSelection.rear
+  @objc public private(set) var currentCamera: SwiftyCamViewController.CameraSelection =
+    CameraSelection.rear
 
   // MARK: Private Constant Declarations
 
@@ -145,7 +147,8 @@ import UIKit
   @objc public var isCameraTorchOn: Bool = false
 
   /// Variable to store result of capture session setup
-  @objc public var setupResult = SessionSetupResult.success
+  @objc public var setupResult: SwiftyCamViewController.SessionSetupResult = SessionSetupResult
+    .success
 
   /// BackgroundID variable for video recording
   //Note: the UIBackgroundTaskIdentifier can't be converted to objc
@@ -163,7 +166,7 @@ import UIKit
   @objc public var assetWriterAudioInput: AVAssetWriterInput?
 
   /// Sets default camera location on initial start
-  @objc public var defaultCameraLocation = AVCaptureDevice.Position.back {
+  @objc public var defaultCameraLocation: AVCaptureDevice.Position = AVCaptureDevice.Position.back {
     didSet {
       if !isSessionRunning {
         self.cameraLocation = self.defaultCameraLocation
@@ -172,10 +175,11 @@ import UIKit
   }
 
   //
-  @objc public var captureDeviceType = AVCaptureDevice.DeviceType.builtInWideAngleCamera
+  @objc public var captureDeviceType: AVCaptureDevice.DeviceType = AVCaptureDevice.DeviceType
+    .builtInWideAngleCamera
 
   // Sets whether or not video recordings will record audio
-  @objc public var isAudioEnabled = true
+  @objc public var isAudioEnabled: Bool = true
 
   // Directory used for uploading files Directoy
   @objc public var outputFileDirectory: URL = FileManager.default.temporaryDirectory
@@ -193,7 +197,7 @@ import UIKit
   }
 
   // allow background audio from other applications to continue playing during capture
-  @objc public var allowsBackgroundAudio = true
+  @objc public var allowsBackgroundAudio: Bool = true
 
   //SwiftyCam variables end
 
@@ -224,28 +228,28 @@ import UIKit
   }
 
   //SwiftyCam variables start
-  private let sessionPrimaryQueueIdentifier = "ASCamera_sessionPrimaryQueue"
-  private let sessionPrimaryQueueSpecificKey = DispatchSpecificKey<()>()
+  private let sessionPrimaryQueueIdentifier: String = "ASCamera_sessionPrimaryQueue"
+  private let sessionPrimaryQueueSpecificKey: DispatchSpecificKey<()> = DispatchSpecificKey<()>()
 
   // Serial queue used for setting up session
   private var sessionPrimaryQueue: DispatchQueue
 
   //
-  private let sessionSecondaryQueueIdentifier = "ASCamera_sessionSecondaryQueue"
-  private let sessionSecondaryQueueSpecificKey = DispatchSpecificKey<()>()
+  private let sessionSecondaryQueueIdentifier: String = "ASCamera_sessionSecondaryQueue"
+  private let sessionSecondaryQueueSpecificKey: DispatchSpecificKey<()> = DispatchSpecificKey<()>()
 
   // Serial queue used for setting up session
   private var sessionSecondaryQueue: DispatchQueue
 
   // Variable
-  private var lastZoomScale = CGFloat(1.0)
+  private var lastZoomScale: CGFloat = CGFloat(1.0)
 
-  private var isSwitchingCameras = false
+  private var isSwitchingCameras: Bool = false
 
   // BackgroundID variable for video recording
   private var backgroundTaskID: UIBackgroundTaskIdentifier.RawValue.IntegerLiteralType?
   //
-  private var didStartWritingSession = false
+  private var didStartWritingSession: Bool = false
   //
   private var systemObserver: NSKeyValueObservation?
   //
@@ -257,18 +261,18 @@ import UIKit
   //
   private var frameRate: Int = 0
   //
-  private var frameCount = 0
+  private var frameCount: Int = 0
   //
-  private var shouldCapturePhotoFromDataOutput = false
+  private var shouldCapturePhotoFromDataOutput: Bool = false
   //
-  private var willStartWritingSession = false
+  private var willStartWritingSession: Bool = false
   //
-  private(set) internal var shouldStartWritingSession = false
+  private(set) internal var shouldStartWritingSession: Bool = false
   //
   private var lastVideoSampleDate: Date = Date()
 
   // Returns the current camera being used.
-  private(set) public var cameraLocation = AVCaptureDevice.Position.back
+  private(set) public var cameraLocation: AVCaptureDevice.Position = AVCaptureDevice.Position.back
   //
   private(set) public var recordingDuration: Double = 0.0
 
@@ -371,7 +375,7 @@ import UIKit
       case .configurationFailed:
         // Unknown Error
         DispatchQueue.main.async { [unowned self] in
-          let message = NSLocalizedString(
+          let message: String = NSLocalizedString(
             "Unable to capture media",
             comment: "Alert message when something goes wrong during capture session configuration")
           let alertController = UIAlertController(
@@ -412,7 +416,7 @@ import UIKit
     UIImage will be returned with the SwiftyCamViewControllerDelegate function SwiftyCamDidTakePhoto(photo:)
   */
   @objc public func takePhoto() {
-    guard let device = videoDevice else {
+    guard let device: AVCaptureDevice = videoDevice else {
       NSLog("!!!!   NO Camera Device to capture from!!!!!")
       //TODO: sent an error event with more info?
       return
@@ -467,7 +471,7 @@ import UIKit
       "[SwiftyCam]: This function -startRecording must be called on the main thread.")
 
     //configure flash if set
-    guard let device = videoDevice else {
+    guard let device: AVCaptureDevice = videoDevice else {
       NSLog("!!!!   NO Camera Device to capture from!!!!!")
       //TODO: sent an error event with more info?
       return
@@ -694,6 +698,25 @@ import UIKit
   }
 
   /**
+   *  Gets the number of cameras available on this device
+   */
+  @objc public func getNumberOfCameras() -> Int {
+    let deviceDiscoverySession: AVCaptureDevice.DiscoverySession = AVCaptureDevice.DiscoverySession(
+      deviceTypes: [
+        .builtInDualCamera,
+        .builtInDualWideCamera,
+        .builtInTripleCamera,
+        .builtInWideAngleCamera,
+        .builtInTelephotoCamera,
+        .builtInUltraWideCamera,
+      ],
+      mediaType: AVMediaType.video,
+      position: .unspecified)
+    let foundCameras: [AVCaptureDevice] = deviceDiscoverySession.devices
+    return foundCameras.count
+  }
+
+  /**
      Switch between front and rear camera
      SwiftyCamViewControllerDelegate function SwiftyCamDidSwitchCurrentCamera(camera:  will be return the current camera selection
   */
@@ -707,7 +730,7 @@ import UIKit
 
     guard !isSwitchingCameras else { return }
     self.isSwitchingCameras = true
-    let zoomScale = lastZoomScale
+    let zoomScale: CGFloat = lastZoomScale
 
     self.executeSync { [weak self] in
       guard let self = self else { return }

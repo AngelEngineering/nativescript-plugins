@@ -1,21 +1,22 @@
 /**********************************************************************************
   2017, nStudio, LLC & LiveShopper, LLC
   2023, VoiceThread - Angel Dominguez
+  2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
 import { ImageAsset, Application } from '@nativescript/core';
 
 /**
- * Helper method to get the drawable of an app_resource icon for the ImageButtons 'image'
+ * Helper method to get the drawable id of an app_resource icon for the ImageButtons 'image'
  * @param iconName
  */
-export function getImageDrawable(iconName: string) {
+export function getImageDrawable(iconName: string): number {
   const drawableId = Application.android.context.getResources().getIdentifier(iconName, 'drawable', Application.android.context.getPackageName()) as number;
   return drawableId;
 }
 
 /**
- * Helper method to create android ImageButton
+ * Helper method to create an android ImageButton
  */
 export function createImageButton(): android.widget.ImageButton {
   const btn = new android.widget.ImageButton(Application.android.context) as android.widget.ImageButton;
@@ -37,7 +38,7 @@ export function createTransparentCircleDrawable(): android.graphics.drawable.Gra
 }
 
 /**
- * Create date time stamp similar to Java Date()
+ * Create current date time stamp similar to Java Date()
  */
 export function createDateTimeStamp() {
   let result = '';
@@ -141,6 +142,14 @@ export function getOptimalPictureSize(sizes: java.util.List<android.hardware.Cam
   return optimalSize;
 }
 
+/**
+ * Calculate the largest inSampleSize value that is a power of 2 and keeps both
+ *  height and width larger than the requested height and width.
+ * @param options
+ * @param reqWidth
+ * @param reqHeight
+ * @returns
+ */
 export function calculateInSampleSize(options: android.graphics.BitmapFactory.Options, reqWidth: number, reqHeight: number) {
   // Raw height and width of image
   const height = options.outHeight;
@@ -151,8 +160,6 @@ export function calculateInSampleSize(options: android.graphics.BitmapFactory.Op
     const halfHeight = height / 2;
     const halfWidth = width / 2;
 
-    // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-    // height and width larger than the requested height and width.
     while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
       inSampleSize *= 2;
     }
@@ -161,7 +168,11 @@ export function calculateInSampleSize(options: android.graphics.BitmapFactory.Op
   return inSampleSize;
 }
 
-/* Returns the exif data from the camera byte array */
+/**
+ * Returns the orientation from exif data using the camera byte array
+ * @param data
+ * @returns
+ */
 export function getOrientationFromBytes(data): number {
   // We won't auto-rotate the front Camera image
   const inputStream = new java.io.ByteArrayInputStream(data);
@@ -189,6 +200,13 @@ export function getOrientationFromBytes(data): number {
   return orientation;
 }
 
+/**
+ * Creates an Android alert dialog containing a preview image and confirm/cancel buttons for user to approve taken photo
+ * @param file
+ * @param retakeText
+ * @param saveText
+ * @returns boolean if user approved or denied the preview image shown
+ */
 export function createImageConfirmationDialog(file, retakeText = 'Retake', saveText = 'Save'): Promise<boolean> {
   return new Promise((resolve, reject) => {
     try {

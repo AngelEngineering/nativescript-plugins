@@ -6,6 +6,7 @@
 /**********************************************************************************
   2017, nStudio, LLC & LiveShopper, LLC
   2023, VoiceThread - Angel Dominguez
+  2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
 import { Color, ImageAsset, View, File, Screen, Frame, Application, ImageSource, path, knownFolders } from '@nativescript/core';
@@ -889,6 +890,22 @@ export class NSCamera extends NSCameraBase {
     this._swifty._cameraBtn.changeToSquare();
     if (this.shouldLockRotation) this._swifty.disableRotation();
     return Promise.resolve();
+  }
+
+  /**
+   * Check if current camera has a flash
+   * @returns true if camera has a flash, false if not
+   */
+  public hasFlash(): boolean {
+    return this._swifty?.videoDevice?.hasFlash;
+  }
+
+  /**
+   * Gets the number of cameras on a device.
+   * NOTE: this should be called after the cameraReadyEvent has been received to ensure the camera component has initialized
+   */
+  public getNumberOfCameras(): number {
+    return this._swifty?.getNumberOfCameras() || 0;
   }
 
   /**

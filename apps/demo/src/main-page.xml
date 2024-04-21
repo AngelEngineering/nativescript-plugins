@@ -22,7 +22,7 @@
         <Button text="sleepcontrol"
           tap="{{ viewDemo }}" />
         <Button text="camera"
-          tap="{{ viewDemo }}" />
+          tap="{{ viewCamera }}" />
       </StackLayout>
     </ScrollView>
   </StackLayout>

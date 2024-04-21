@@ -59,7 +59,7 @@ This nativescript camera plugin works on Android (API 26+) and Apple (iOS 12+) d
 
 ## Usage
 The best way to understand how to use the plugin is to look at the demo app included in this repo.
-The `apps/demo/` folder contains a simple NS TypeScript application that uses this plugin. Look at `apps/demo/src/plugin-demos/nativescript-camera.ts` and `apps/demo/src/plugin-demos/nativescript-camera.xml` for camera plugin usage, and `apps/demo/src/main-view-model.ts` for obtaining permissions before using the camera plugin. 
+The `apps/demo/` folder contains a simple NS TypeScript application that uses this plugin. Look at `apps/demo/src/plugin-demos/camera.ts` and `apps/demo/src/plugin-demos/camera.xml` for camera plugin usage, and `apps/demo/src/main-view-model.ts` for obtaining permissions before using the camera plugin. 
 
 1. Import the plugin.
 ```javascript
@@ -173,7 +173,7 @@ Ensure your AndroidMAnifest.xml has the following declarations.
   </application>
 </manifest>
 ```
-And in your application, make sure you request these permissions if you want to use the `saveToGallery` flag. You can see an example in `apps/demo/src/plugin-demos/nativescript-camera.ts`. If this flag is set and no permission has been granted, a copy will not be saved to the Device Photos.
+And in your application, make sure you request these permissions if you want to use the `saveToGallery` flag. You can see an example in `apps/demo/src/plugin-demos/camera.ts`. If this flag is set and no permission has been granted, a copy will not be saved to the Device Photos.
 
 
 ### iOS Permissions
@@ -186,7 +186,7 @@ Add the following to `app/App_Resources/iOS/Info.plist`:
 	<string>This app requires access to your camera to record video and take pictures</string>
 ```
 
-If you want to use the `saveToGallery` flag then you will also need to add the following and request permission from user (look at the example in `apps/demo/src/plugin-demos/nativescript-camera.ts` for a working example). If this flag is set and no permission has been granted, a copy will not be saved to the Photos Gallery.
+If you want to use the `saveToGallery` flag then you will also need to add the following and request permission from user (look at the example in `apps/demo/src/plugin-demos/camera.ts` for a working example). If this flag is set and no permission has been granted, a copy will not be saved to the Photos Gallery.
 
 ```xml
   <key>NSPhotoLibraryUsageDescription</key>

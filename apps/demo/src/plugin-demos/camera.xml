@@ -3,9 +3,9 @@
   navigatingTo="navigatingTo"
   navigatingFrom="navigatingFrom"
   loaded="onLoaded"
-  xmlns:Cam="@voicethread/nativescript-camera">
+  xmlns:Cam="@angelengineering/camera">
   <Page.actionBar>
-    <ActionBar title="nativescript-camera"
+    <ActionBar title="camera"
       icon=""
       class="action-bar">
     </ActionBar>

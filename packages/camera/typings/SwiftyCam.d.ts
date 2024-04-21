@@ -243,6 +243,8 @@ declare class SwiftyCamViewController
 
   getImageOrientationForCamera(forCamera: CameraSelection): UIImageOrientation;
 
+  getNumberOfCameras(): Int;
+
   getPreviewLayerOrientation(): AVCaptureVideoOrientation;
 
   getVideoOrientation(): AVCaptureVideoOrientation;

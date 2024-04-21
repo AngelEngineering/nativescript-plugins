@@ -1,7 +1,7 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EventData, Page, alert, Frame, Screen, Image, File, isIOS, isAndroid, Button, path, knownFolders, Device } from '@nativescript/core';
 import { DemoSharedCamera } from '@demo/shared';
-import { NSCamera, CameraVideoQuality, ICameraOptions } from '@voicethread/nativescript-camera';
+import { NSCamera, CameraVideoQuality, ICameraOptions } from '@angelengineering/camera';
 import { ObservableProperty } from './observable-property';
 import { Result, checkMultiple, check as checkPermission, request } from '@nativescript-community/perms';
 import { Video } from 'nativescript-videoplayer';
@@ -121,6 +121,7 @@ export class DemoModel extends DemoSharedCamera {
         console.log('saveToGallery set true, checking permissions');
         this.requestGalleryPermission();
       }
+      console.log('camera plugin ready, number of cameras:', this.cam.getNumberOfCameras());
     });
     this._counter = 1;
   }
@@ -237,6 +238,7 @@ export class DemoModel extends DemoSharedCamera {
   public toggleTheCamera() {
     console.log('toggleTheCamera()');
     this.cam.toggleCamera();
+    console.log('Current camera has flasy?', this.cam.hasFlash());
   }
 
   // called by custom button on demo page
