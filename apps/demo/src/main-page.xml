@@ -1,5 +1,6 @@
 <Page xmlns="http://schemas.nativescript.org/tns.xsd"
   navigatingTo="navigatingTo"
+  loaded="onLoaded"
   class="page">
   <Page.actionBar>
     <ActionBar title="Nativescript Plugin Demos"

@@ -1,4 +1,4 @@
-import { Application } from '@nativescript/core';
+import { Application, Utils } from '@nativescript/core';
 import { CLog, CLogTypes, headersProperty, VideoCommon, videoSourceProperty, SeekToTimeOptions } from './common';
 
 // declare const NSMutableDictionary;
@@ -28,6 +28,11 @@ export class VideoPlayer extends VideoCommon {
   public player: AVPlayer;
   public videoLoaded = false;
 
+  private rootVC = function () {
+    const appWindow = UIApplication.sharedApplication.keyWindow;
+    return Utils.ios.getVisibleViewController(appWindow.rootViewController);
+  };
+
   constructor() {
     super();
     this._playerController = AVPlayerViewController.alloc().init();
@@ -37,16 +42,25 @@ export class VideoPlayer extends VideoCommon {
     this._playerController.player = this.player;
     // showsPlaybackControls must be set to false on init to avoid any potential 'Unable to simultaneously satisfy constraints' errors
     this._playerController.showsPlaybackControls = false;
-    this.nativeView = this._playerController.view;
     this._observer = PlayerObserverClass.alloc().init();
     CLog(CLogTypes.info, 'this._observer', this._observer);
     this._observer['_owner'] = this;
     (this._observer as any).owner = this;
   }
 
-  // get ios(): any {
-  //   return this.nativeView;
-  // }
+  /**
+   *
+   * @returns UIView for the AVPlayerViewController view
+   */
+  createNativeView() {
+    const vc = this.rootVC();
+    if (vc) {
+      vc.addChildViewController(this._playerController);
+      this._playerController.didMoveToParentViewController(vc);
+    }
+    // console.log('done creating native view for player', this._playerController.view);
+    return this._playerController.view;
+  }
 
   [headersProperty.setNative](value) {
     this._setHeader(value ? value : null);
