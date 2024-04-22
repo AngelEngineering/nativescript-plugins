@@ -1,97 +1,98 @@
 /* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable no-unused-vars */
 import { View } from '@nativescript/core';
 
-export declare class VideoPlayer extends View {
-  /**
-   * If true console logs will be output to help debug the Video events.
-   */
-  debug: boolean;
+export declare enum VideoFill {
+  default = 'default',
+  aspect = 'aspect',
+  aspectFill = 'aspectFill',
+  fill = 'fill',
+}
+export class VideoPlayer extends VideoBase {}
+
+export declare class VideoBase extends View {
+  static finishedEvent: string;
+  static playbackReadyEvent: string;
+  static playbackStartEvent: string;
+  static seekToTimeCompleteEvent: string;
+  static currentTimeUpdatedEvent: string;
+  static pausedEvent: string;
+  static mutedEvent: string;
+  static unmutedEvent: string;
+  static volumeSetEvent: string;
+  static chaptersLoadedEvent: string;
+  static errorEvent: string;
 
   /**
-   * String value for hooking into the errorEvent. This event fires when an error is emitted from Camera Plus.
+   * ignore modifying iOS AVAudioSession category change on initialization
+   * by default, auto changes to: AVAudioSessionCategoryPlayAndRecord
    */
-  public static errorEvent: string;
+  static iosIgnoreAudioSessionChange: boolean;
+  _emit: any;
 
   /**
-   * String value for hooking into the playbackReadyEvent. This event fires when a play back is ready.
-   */
-  public static playbackReadyEvent: string;
-
-  /**
-   * String value for hooking into the playbackStartEvent. This event fires when play back starts.
-   */
-  public static playbackStartEvent: string;
-
-  /**
-   * String value for hooking into the finishedEvent. This event fires when the video completes playing.
-   */
-  public static finishedEvent: string;
-
-  /**
-   * String value for hooking into the seekToTimeCompleteEvent. This event fires when seeking is completed.
-   */
-  public static seekToTimeCompleteEvent: string;
-
-  /**
-   * String value for hooking into the currentTimeUpdatedEvent. This event fires when current playing time is updated.
-   */
-  public static currentTimeUpdatedEvent: string;
-
-  /**
-   * String value for hooking into the mutedEvent. This event fires when video is muted.
-   */
-  public static mutedEvent: string;
-
-  /**
-   * String value for hooking into the unmutedEvent. This event fires when video is unmutedEvent.
-   */
-  public static unmutedEvent: string;
-
-  /**
-   * String value for hooking into the pausedEvent. This event fires when video is paused.
-   */
-  public static pausedEvent: string;
-
-  /**
-   * String value for hooking into the volumeSetEvent. This event fires when the volume is set.
-   */
-  public static volumeSetEvent: string;
-  /**
-   * android.view.TextureView
-   */
-  android: any;
-
-  /**
-   * UIView
-   */
-  ios: any;
-
-  /**
-   * The video player's src file.
+   * video source file
    */
   src: string;
+  srcType: number;
+  imgSrc: string;
+  imgType: number;
+  subtitles: string;
+  subtitleSource: string;
+  observeCurrentTime: boolean;
 
   /**
-   *  The headers to use for video player.
-   */
-  headers: Map<string, string>;
-
-  /**
-   *   If true,  the video loops the playback after finishes.
-   */
-  loop: boolean;
-
-  /**
-   *   If true, the video to start playing when ready.
+   * set true for the video to start playing when ready
    */
   autoplay: boolean;
 
   /**
-   *   If true the videoplayers creates the media player's playback controls.
+   * set true to enable the media player's playback controls
    */
   controls: boolean;
 
-  _emit: any;
+  /**
+   * whether the video loops the playback after extends
+   */
+  loop: boolean;
+  muted: boolean;
+
+  /**
+	 * aspect/fill settings
+	 * Android:
+	 * When set to VideoFill.aspectFill, the aspect ratio of the video will not be honored and it will fill the entire space available.
+
+	* iOS:
+	* VideoFill.default = AVLayerVideoGravityResize
+	* VideoFill.aspect = AVLayerVideoGravityResizeAspect
+	* VideoFill.aspectFill = AVLayerVideoGravityResizeAspectFill
+	*/
+  fill: VideoFill;
+  static IMAGETYPEMONO: number;
+  static IMAGETYPESTEREOTOPBOTTOM: number;
+  static IMAGETYPESTEREOLEFTRIGHT: number;
+
+  /**
+   * encryption parameters
+   */
+  public encryptionKey: string;
+  public encryptionIV: string;
+  public encryption: string;
+
+  /**
+   * (ios) Set the audio session playback category.
+   * backgroundAudio must evaluate to false for this to work.
+   * Available categories:
+   * - AVAudioSessionCategoryAmbient
+   * - AVAudioSessionCategoryAudioProcessing
+   * - AVAudioSessionCategoryMultiRoute
+   * - AVAudioSessionCategoryPlayAndRecord
+   * - AVAudioSessionCategoryPlayback
+   * - AVAudioSessionCategoryRecord
+   * - AVAudioSessionCategorySoloAmbient
+   * - AVAudioSessionCategoryAudioProcessing (Deprecated in iOS 10)
+   */
+  static iosAudioSessionCategory: string;
 
   /**
    * Start playing the video.
@@ -106,21 +107,14 @@ export declare class VideoPlayer extends View {
   /**
    * Seek the video to a time.
    * @param {number} time - Time of the video to seek to in milliseconds.
-   * @param {options} SeekToTimeOptions - Additional time seeking options
    */
-  seekToTime(time: number, options?: SeekToTimeOptions): void;
+  seekToTime(time: number): void;
 
   /**
    * Returns the current time of the video duration in milliseconds.
    * @returns {number} Current time of the video duration.
    */
   getCurrentTime(): number;
-
-  /**
-   * Boolean to determine if observable for current time is registered.
-   * @param {boolean} observeCurrentTime - True to set observable on current time.
-   */
-  observeCurrentTime(observeCurrentTime: boolean): void;
 
   /**
    * Observable for current time of the video duration in milliseconds.
@@ -135,12 +129,10 @@ export declare class VideoPlayer extends View {
   setVolume(volume: number): void;
 
   /**
-   *
-   * *** ANDROID ONLY ***
-   * Set the playback speed rate.
-   * @param {number}
+   * Set the playback speed of the video
+   * @param {number} speed - Set the playback speed in float value
    */
-  changePlayerSpeed(number): void;
+  setPlaybackSpeed(speed: number): void;
 
   /**
    * Destroy the video player and free up resources.
@@ -165,11 +157,16 @@ export declare class VideoPlayer extends View {
    */
   stop(): void;
 
+  /**
+   * Get the video size
+   * @returns {object<width: number, height: number>}
+   */
   getVideoSize(): { width: number; height: number };
 
-  // setFill(fill: boolean): void;
-
-  setMode(mode: string, fill: boolean): void;
+  /**
+   * Get the native player instance.
+   */
+  getPlayer(): AVPlayer | com.google.android.exoplayer2.ExoPlayer;
 
   /**
    * *** IOS ONLY ***
@@ -201,22 +198,4 @@ export declare class VideoPlayer extends View {
    * @param {function} callback - The callback function to execute.
    */
   currentTimeUpdated(callback: Function): void;
-}
-
-export interface IVideoPlayerEvents {
-  errorEvent: any;
-  finishedEvent: any;
-  playbackReadyEvent: any;
-  playbackStartEvent: any;
-  seekToTimeCompleteEvent: any;
-  currentTimeUpdatedEvent: any;
-}
-
-export interface SeekToTimeOptions {
-  /**
-   * Android MediaPlayer time seek mode
-   * Changing this only affects API Version >= 26
-   * @default android.media.MediaPlayer.SEEK_PREVIOUS_SYNC
-   */
-  androidSeekMode?: number;
 }

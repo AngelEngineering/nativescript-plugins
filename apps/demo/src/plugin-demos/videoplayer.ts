@@ -1,4 +1,4 @@
-import { Observable, EventData, Page, path, Frame, File, knownFolders } from '@nativescript/core';
+import { Observable, EventData, Page, path, Frame, File, knownFolders, isAndroid } from '@nativescript/core';
 import { DemoSharedVideoplayer } from '@demo/shared';
 import { VideoPlayer } from '@angelengineering/videoplayer';
 

@@ -1,209 +1,282 @@
-import { Application, Utils } from '@nativescript/core';
-import { CLog, CLogTypes, headersProperty, VideoCommon, videoSourceProperty, SeekToTimeOptions } from './common';
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable no-unused-vars */
+import { Application, Utils, ViewBase } from '@nativescript/core';
+import { VideoBase, VideoFill, videoSourceProperty, fillProperty, VideoEventData } from './common';
 
-// declare const NSMutableDictionary;
+export * from './common';
 
-export class VideoPlayer extends VideoCommon {
+// https://stackoverflow.com/questions/40283596/ios-10-avplayer-shows-black-screen-when-playing-video?rq=1
+// https://stackoverflow.com/questions/50685681/avplayerviewcontroller-show-black-screen-some-times
+// https://stackoverflow.com/questions/40808377/avplayerlayer-shows-black-screen-but-sound-is-working/50736003
+
+function getWindow() {
+  const app = UIApplication.sharedApplication;
+  if (!app) {
+    return;
+  }
+  return app.keyWindow || (app.windows && app.windows.count > 0 && app.windows.objectAtIndex(0));
+}
+function rootVC() {
+  if (Utils.ios.getRootViewController) {
+    return Utils.ios.getRootViewController();
+  } else {
+    // fallback for older versions of NativeScript
+    const win = getWindow();
+    let vc = win && win.rootViewController;
+    while (vc && vc.presentedViewController) {
+      vc = vc.presentedViewController;
+    }
+    return vc;
+  }
+}
+
+export class VideoPlayer extends VideoBase {
+  private _player: AVPlayer;
   private _playerController: AVPlayerViewController;
-  private _src = '';
-  private _url;
-  private _headers: NSMutableDictionary<string, string>;
+  private _src: string;
   private _didPlayToEndTimeObserver: any;
   private _didPlayToEndTimeActive: boolean;
   private _observer: NSObject;
   private _observerActive: boolean;
+  private _videoLoaded: boolean;
   private _playbackTimeObserver: any;
   private _playbackTimeObserverActive: boolean;
   private _videoPlaying: boolean;
-  private _videoFinished = false;
-  private _owner: WeakRef<VideoPlayer>;
-  private _nativeView: UIView;
-  public get nativeView(): UIView {
-    return this._nativeView;
-  }
-  public set nativeView(value: UIView) {
-    if (!value || value === this._nativeView) return;
-    this._nativeView = value;
-  }
-  public player: AVPlayer;
-  public videoLoaded = false;
-
-  private rootVC = function () {
-    const appWindow = UIApplication.sharedApplication.keyWindow;
-    return Utils.ios.getVisibleViewController(appWindow.rootViewController);
-  };
+  private _videoFinished: boolean;
 
   constructor() {
     super();
-    this._playerController = AVPlayerViewController.alloc().init();
-    CLog(CLogTypes.info, 'this._playerController', this._playerController);
-    this.player = AVPlayer.new();
-    CLog(CLogTypes.info, 'this.player', this.player);
-    this._playerController.player = this.player;
-    // showsPlaybackControls must be set to false on init to avoid any potential 'Unable to simultaneously satisfy constraints' errors
+    this._playerController = AVPlayerViewController.new();
+
+    if (!VideoPlayer.iosIgnoreAudioSessionChange) {
+      let audioSession = AVAudioSession.sharedInstance();
+      let output = audioSession.currentRoute.outputs.lastObject.portType;
+      if (output.match(/Receiver/)) {
+        try {
+          audioSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord);
+          audioSession.overrideOutputAudioPortError(AVAudioSessionPortOverride.Speaker);
+          audioSession.setActiveError(true);
+          //console.log("audioSession category set and active");
+        } catch (err) {
+          //console.log("setting audioSession category failed");
+        }
+      }
+    }
+    this._player = AVPlayer.new();
+    this._playerController.player = this._player;
     this._playerController.showsPlaybackControls = false;
-    this._observer = PlayerObserverClass.alloc().init();
-    CLog(CLogTypes.info, 'this._observer', this._observer);
+
+    this._observer = PlayerObserverClass.new();
     this._observer['_owner'] = this;
-    (this._observer as any).owner = this;
+
+    this._videoFinished = false;
   }
 
-  /**
-   *
-   * @returns UIView for the AVPlayerViewController view
-   */
   createNativeView() {
-    const vc = this.rootVC();
+    return this._playerController.view;
+  }
+
+  onLoaded() {
+    super.onLoaded();
+    // we do this on onLoaded as the viewControllers are not properly setup on createNativeView
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let vcParent: ViewBase = this;
+    // start iterating over viewControllers
+    // we also iterate over this as if it has a viewController, it's most likely a modal
+    while (vcParent && !vcParent.viewController) {
+      vcParent = vcParent.parent;
+    }
+    const vc = vcParent?.viewController || rootVC();
     if (vc) {
       vc.addChildViewController(this._playerController);
       this._playerController.didMoveToParentViewController(vc);
     }
-    // console.log('done creating native view for player', this._playerController.view);
-    return this._playerController.view;
-  }
-
-  [headersProperty.setNative](value) {
-    this._setHeader(value ? value : null);
   }
 
   [videoSourceProperty.setNative](value: AVPlayerItem) {
-    this._setNativeVideo(value ? (value as any).ios : null);
+    this._setNativeVideo(value ? (<any>value).ios : null);
   }
 
-  public _setHeader(headers: Map<string, string>): void {
-    CLog(CLogTypes.info, 'VideoPlayer._setHeader ---', `headers: ${headers}`);
-    if (headers && headers.size > 0) {
-      this._headers = new NSMutableDictionary(null);
-      CLog(CLogTypes.info, `VideoPlayer._setHeader ---`, `this._headers: ${this._headers}`);
-      headers.forEach((value: string, key: string) => {
-        this._headers.setValueForKey(value, key);
-      });
-      console.log(this._headers);
+  [fillProperty.setNative](value: VideoFill) {
+    let videoGravity = AVLayerVideoGravityResize; // default
+    switch (value) {
+      case VideoFill.aspect:
+        videoGravity = AVLayerVideoGravityResizeAspect;
+        break;
+      case VideoFill.aspectFill:
+        videoGravity = AVLayerVideoGravityResizeAspectFill;
+        break;
     }
-    if (this._src) {
-      CLog(CLogTypes.info, 'VideoPlayer._setHeader ---', `this._src: ${this._src}`);
-      this._setNativePlayerSource(this._src);
+    if (this._playerController) {
+      this._playerController.videoGravity = videoGravity;
     }
   }
 
   public _setNativeVideo(nativeVideoPlayer: any) {
-    CLog(CLogTypes.info, 'VideoPlayer._setNativeVideo ---', `nativeVideoPlayer: ${nativeVideoPlayer}`);
-    // if (this['_url'] && this._headers && this._headers.count > 0) {
-    if (this._url && this._headers && this._headers.count > 0) {
-      // adding headers if exist when loading video from URL
-      CLog(CLogTypes.warning, 'Need to add headers!');
-      // const url = NSURL.URLWithString(this['_url']);
-      const url = NSURL.URLWithString(this._url);
-      CLog(CLogTypes.info, 'VideoPlayer._setNativeVideo ---', `url: ${url}`);
-      const options: any = NSDictionary.dictionaryWithDictionary(<any>{
-        AVURLAssetHTTPHeaderFieldsKey: this._headers,
-      });
-      const asset: AVURLAsset = AVURLAsset.alloc().initWithURLOptions(url, options);
-      const item: AVPlayerItem = AVPlayerItem.playerItemWithAsset(asset);
-      nativeVideoPlayer = item;
+    //console.log("Set native video: "+nativeVideoPlayer);
+    if (this._player == null) {
+      setTimeout(() => {
+        this._setNativeVideo(nativeVideoPlayer);
+      }, 100);
+      return;
     }
-
     if (nativeVideoPlayer != null) {
-      const currentItem = this.player.currentItem;
+      let currentItem = this._player.currentItem;
       this._addStatusObserver(nativeVideoPlayer);
       this._autoplayCheck();
+      this._backgroundAudioCheck();
       this._videoFinished = false;
       if (currentItem !== null) {
-        this.videoLoaded = false;
+        this._videoLoaded = false;
         this._videoPlaying = false;
         this._removeStatusObserver(currentItem);
         // Need to set to null so the previous video is not shown while its loading
-        this.player.replaceCurrentItemWithPlayerItem(null);
-        this.player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
+        this._player.replaceCurrentItemWithPlayerItem(null);
+        this._player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
       } else {
-        this.player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
+        this._player.replaceCurrentItemWithPlayerItem(nativeVideoPlayer);
         this._init();
       }
     }
   }
 
   public updateAsset(nativeVideoAsset: AVAsset) {
-    CLog(CLogTypes.info, 'VideoPlayer.updateAsset ---', `nativeVideoAsset: ${nativeVideoAsset}`);
-    const newPlayerItem = AVPlayerItem.playerItemWithAsset(nativeVideoAsset);
+    let newPlayerItem = AVPlayerItem.playerItemWithAsset(nativeVideoAsset);
     this._setNativeVideo(newPlayerItem);
   }
 
   public _setNativePlayerSource(nativePlayerSrc: string) {
-    CLog(CLogTypes.info, 'VideoPlayer._setNativePlayerSource ---', `nativePlayerSrc: ${nativePlayerSrc}`);
     this._src = nativePlayerSrc;
-    const url = NSURL.URLWithString(this._src);
-    this.player = AVPlayer.new();
+    let url: NSURL = NSURL.URLWithString(this._src);
+    this._player = new AVPlayer(<any>url);
+    this._playerController.player = null;
+    this._playerController.player = this._player;
+    //console.log("Video src: "+ this._src);
     this._init();
   }
 
+  private _init() {
+    if (this.controls !== false) {
+      this._playerController.showsPlaybackControls = true;
+    }
+
+    this._playerController.player = this._player;
+
+    if (isNaN(<any>this.width) || isNaN(<any>this.height)) {
+      this.requestLayout();
+    }
+
+    if (this.muted === true) {
+      this._player.muted = true;
+    }
+
+    if (!this._didPlayToEndTimeActive) {
+      this._didPlayToEndTimeObserver = Application.ios.addNotificationObserver(AVPlayerItemDidPlayToEndTimeNotification, this.AVPlayerItemDidPlayToEndTimeNotification.bind(this));
+      this._didPlayToEndTimeActive = true;
+    }
+  }
+
+  private AVPlayerItemDidPlayToEndTimeNotification(notification: any) {
+    if (this._player && this._player.currentItem && this._player.currentItem === notification.object) {
+      // This will match exactly to the object from the notification so can ensure only looping and finished event for the video that has finished.
+      // Notification is structured like so: NSConcreteNotification 0x61000024f690 {name = AVPlayerItemDidPlayToEndTimeNotification; object = <AVPlayerItem: 0x600000204190, asset = <AVURLAsset: 0x60000022b7a0, URL = https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4>>}
+      this._emit(VideoBase.finishedEvent);
+      this._videoFinished = true;
+      if (this.loop === true && this._player !== null) {
+        // Go in 5ms for more seamless looping
+        this._player.seekToTime(CMTimeMake(5, 100));
+        this._player.play();
+      }
+    }
+  }
+
   public play() {
-    CLog(CLogTypes.info, 'VideoPlayer.play');
     if (this._videoFinished) {
       this._videoFinished = false;
-      this.seekToTime(5);
+      this.seekToTime(0);
     }
 
     if (this.observeCurrentTime && !this._playbackTimeObserverActive) {
       this._addPlaybackTimeObserver();
     }
 
-    this.player.play();
-    this.sendEvent(VideoCommon.playbackStartEvent);
+    this._player.play();
+  }
+
+  public getPlayer() {
+    return this._player;
+  }
+
+  public getVideoSize() {
+    if (this._player) {
+      const size = this._player.currentItem.presentationSize;
+      return size;
+    }
   }
 
   public pause() {
-    CLog(CLogTypes.info, 'VideoPlayer.pause()');
-    this.player.pause();
-    this.sendEvent(VideoCommon.pausedEvent);
+    if (this._player) {
+      this._player.pause();
+    }
     if (this._playbackTimeObserverActive) {
       this._removePlaybackTimeObserver();
     }
   }
 
   public mute(mute: boolean) {
-    CLog(CLogTypes.info, 'VideoPlayer.mute ---', `mute: ${mute}`);
-    this.player.muted = mute;
-    // send the event
-    if (mute === true) {
-      this.sendEvent(VideoCommon.mutedEvent);
-    } else {
-      this.sendEvent(VideoCommon.unmutedEvent);
+    if (this._player) {
+      this._player.muted = mute;
     }
   }
 
-  public seekToTime(ms: number, options?: SeekToTimeOptions) {
-    CLog(CLogTypes.info, 'VideoPlayer.seekToTime ---', `ms: ${ms}`);
-    const seconds = ms / 1000.0;
-    const time = CMTimeMakeWithSeconds(seconds, this.player.currentTime().timescale);
-    this.player.seekToTimeToleranceBeforeToleranceAfterCompletionHandler(time, kCMTimeZero, kCMTimeZero, isFinished => {
-      CLog(CLogTypes.info, `VideoPlayer.seekToTime ---`, 'emitting seekToTimeCompleteEvent');
-      this.sendEvent(VideoCommon.seekToTimeCompleteEvent, { time: ms });
-    });
+  public seekToTime(seconds: number) {
+    if (this._player) {
+      if (this._player.currentItem && this._player.currentItem.status === 1) {
+        let time = CMTimeMakeWithSeconds(seconds, this._player.currentTime().timescale);
+        try {
+          this._player.seekToTimeToleranceBeforeToleranceAfterCompletionHandler(time, kCMTimeZero, kCMTimeZero, isFinished => {
+            this._emit(VideoBase.seekToTimeCompleteEvent);
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        console.log('AVPlayerItem cannot service a seek request with a completion handler until its status is ReadyToPlay.');
+      }
+    }
   }
 
   public getDuration(): number {
-    const seconds = CMTimeGetSeconds(this.player.currentItem.asset.duration);
-    const milliseconds = seconds * 1000.0;
+    if (!this._player || (this._player && this._player.currentItem == null)) {
+      return 0;
+    }
+    let seconds = CMTimeGetSeconds(this._player.currentItem.asset.duration);
+    let milliseconds = seconds * 1000.0;
     return milliseconds;
   }
 
   public getCurrentTime(): any {
-    if (this.player === null) {
-      return false;
+    if (!this._player) {
+      return 0;
     }
-    const result = (this.player.currentTime().value / this.player.currentTime().timescale) * 1000;
-    return result;
+    return (this._player.currentTime().value / this._player.currentTime().timescale) * 1000;
   }
 
   public setVolume(volume: number) {
-    CLog(CLogTypes.info, 'VideoPlayer.setVolume ---', `volume: ${volume}`);
-    this.player.volume = volume;
-    this.sendEvent(VideoCommon.volumeSetEvent);
+    if (this._player) {
+      this._player.volume = volume;
+    }
+  }
+
+  public setPlaybackSpeed(speed: number) {
+    this._player.rate = speed;
   }
 
   public destroy() {
-    CLog(CLogTypes.info, 'VideoPlayer.destroy');
-    this._removeStatusObserver(this.player.currentItem);
+    if (this._player) {
+      this._removeStatusObserver(this._player.currentItem);
+    }
+
     if (this._didPlayToEndTimeActive) {
       Application.ios.removeNotificationObserver(this._didPlayToEndTimeObserver, AVPlayerItemDidPlayToEndTimeNotification);
       this._didPlayToEndTimeActive = false;
@@ -214,168 +287,113 @@ export class VideoPlayer extends VideoCommon {
     }
 
     this.pause();
-    this.player.replaceCurrentItemWithPlayerItem(null); // de-allocates the AVPlayer
+    if (this._player) {
+      // de-allocates the AVPlayer
+      this._player.replaceCurrentItemWithPlayerItem(null);
+    }
     this._playerController = null;
-    this.player = null;
-  }
-
-  public getVideoSize(): { width: number; height: number } {
-    const r = this._playerController.videoBounds;
-    return {
-      width: r.size.width,
-      height: r.size.height,
-    };
-  }
-
-  private _init() {
-    CLog(CLogTypes.info, 'VideoPlayer._init');
-    if (this.controls !== false) {
-      this._playerController.showsPlaybackControls = true;
-    }
-
-    if (this.fill === true) {
-      this._playerController.videoGravity = AVLayerVideoGravityResizeAspectFill;
-    }
-
-    this._playerController.player = this.player;
-
-    if (isNaN(parseInt(this.width.toString(), 10)) || isNaN(parseInt(this.height.toString(), 10))) {
-      this.requestLayout();
-    }
-
-    if (this.muted === true) {
-      this.player.muted = true;
-    }
-
-    if (!this._didPlayToEndTimeActive) {
-      this._didPlayToEndTimeObserver = Application.ios.addNotificationObserver(AVPlayerItemDidPlayToEndTimeNotification, this.AVPlayerItemDidPlayToEndTimeNotification.bind(this));
-      this._didPlayToEndTimeActive = true;
-    }
-  }
-
-  private AVPlayerItemDidPlayToEndTimeNotification(notification: any) {
-    CLog(CLogTypes.info, 'VideoPlayer.AVPlayerItemDidPlayToEndTimeNotification ---', `notification: ${notification}`);
-    if (this.player.currentItem && this.player.currentItem === notification.object) {
-      // This will match exactly to the object from the notification so can ensure only looping and finished event for the video that has finished.
-      // Notification is structured like so: NSConcreteNotification 0x61000024f690 {name = AVPlayerItemDidPlayToEndTimeNotification; object = <AVPlayerItem: 0x600000204190, asset = <AVURLAsset: 0x60000022b7a0, URL = https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4>>}
-      CLog(CLogTypes.info, 'VideoPlayer.AVPlayerItemDidPlayToEndTimeNotification ---', 'emmitting finishedEvent');
-      this.sendEvent(VideoCommon.finishedEvent);
-      this._videoFinished = true;
-      if (this.loop === true && this.player !== null) {
-        // Go in 5ms for more seamless looping
-        this.player.seekToTime(CMTimeMake(5, 100));
-        this.player.play();
-      }
-    }
+    this._player = null;
   }
 
   private _addStatusObserver(currentItem) {
-    CLog(CLogTypes.info, 'VideoPlayer._addStatusObserver ---', `currentItem: ${currentItem}`);
     this._observerActive = true;
     currentItem.addObserverForKeyPathOptionsContext(this._observer, 'status', 0, null);
   }
 
   private _removeStatusObserver(currentItem) {
-    CLog(CLogTypes.info, 'VideoPlayer._removeStatusObserver ---', `currentItem: ${currentItem}`);
+    // If the observer is active, then we need to remove it...
+    if (!this._observerActive) {
+      return;
+    }
+
     this._observerActive = false;
-    currentItem.removeObserverForKeyPath(this._observer, 'status');
+    if (currentItem) {
+      currentItem.removeObserverForKeyPath(this._observer, 'status');
+    }
   }
 
   private _addPlaybackTimeObserver() {
-    CLog(CLogTypes.info, 'VideoPlayer._addPlaybackTimeObserver');
     this._playbackTimeObserverActive = true;
-    const _interval = CMTimeMake(1, 5);
-    this._playbackTimeObserver = this.player.addPeriodicTimeObserverForIntervalQueueUsingBlock(_interval, null, currentTime => {
-      const _seconds = CMTimeGetSeconds(currentTime);
-      const _milliseconds = _seconds * 1000.0;
-      CLog(CLogTypes.info, `VideoPlayer._addPlaybackTimeObserver ---`, 'emitting currentTimeUpdatedEvent');
-      this.notify({
-        eventName: VideoCommon.currentTimeUpdatedEvent,
-        object: this,
-        position: _milliseconds,
+    let _interval = CMTimeMake(1, 5);
+    if (this._player) {
+      // only if valid player instance
+      this._playbackTimeObserver = this._player.addPeriodicTimeObserverForIntervalQueueUsingBlock(_interval, null, currentTime => {
+        let _seconds = CMTimeGetSeconds(currentTime);
+        let _milliseconds = _seconds * 1000.0;
+        this.notify({
+          eventName: VideoBase.currentTimeUpdatedEvent,
+          object: this,
+          position: _milliseconds,
+        });
       });
-    });
+    }
   }
 
   private _removePlaybackTimeObserver() {
-    CLog(CLogTypes.info, 'VideoPlayer._removePlaybackTimeObserver');
     this._playbackTimeObserverActive = false;
-    this.player.removeTimeObserver(this._playbackTimeObserver);
+    if (this._player) {
+      this._player.removeTimeObserver(this._playbackTimeObserver);
+    }
   }
 
   private _autoplayCheck() {
-    CLog(CLogTypes.info, 'VideoPlayer._autoplayCheck ---', `this.autoplay ${this.autoplay}`);
     if (this.autoplay) {
       this.play();
     }
   }
 
+  private _backgroundAudioCheck() {
+    try {
+      const audioSession = AVAudioSession.sharedInstance();
+      if (this.backgroundAudio) {
+        audioSession.setCategoryError(AVAudioSessionCategoryAmbient);
+      } else {
+        audioSession.setCategoryError(VideoBase.iosAudioSessionCategory || AVAudioSessionCategoryPlayAndRecord);
+      }
+      audioSession.setActiveError(true);
+    } catch (err) {
+      // If for some reason we can't change where the audio is playing, we don't care...  :-)
+    }
+  }
+
   playbackReady() {
-    this.videoLoaded = true;
-    CLog(CLogTypes.info, `VideoPlayer.playbackReady ---`, 'emitting playbackReadyEvent');
-    this.sendEvent(VideoCommon.playbackReadyEvent);
+    this._videoLoaded = true;
+    this._emit(VideoBase.playbackReadyEvent);
+
+    if (this.detectChapters) {
+      const playerItem = <AVPlayerItem>(<AVPlayer>this._player).currentItem;
+      const chapterLocalesKey = 'availableChapterLocales';
+      playerItem.asset.loadValuesAsynchronouslyForKeysCompletionHandler(NSArray.arrayWithArray([chapterLocalesKey]), () => {
+        let status = playerItem.asset.statusOfValueForKeyError(chapterLocalesKey);
+        if (status === AVKeyValueStatus.Loaded) {
+          let languages = NSLocale.preferredLanguages;
+          let chapterMetadata = playerItem.asset.chapterMetadataGroupsBestMatchingPreferredLanguages(languages);
+          // Emit chapter metadata for developers to work with
+          // TODO: could pre-parse them however likely be most versatile allowing dev's to parse however they'd like so no data is missed
+          this.notify(<VideoEventData>{
+            eventName: VideoBase.chaptersLoadedEvent,
+            object: this,
+            data: chapterMetadata,
+          });
+        } else {
+          // Handle other status cases
+        }
+      });
+    }
   }
 
   playbackStart() {
     this._videoPlaying = true;
-    CLog(CLogTypes.info, `VideoPlayer.playbackStart ---`, 'emitting playbackStartEvent');
-    this.sendEvent(VideoCommon.playbackStartEvent);
-  }
-
-  public setMode(mode: string, fill: boolean) {
-    if (this.mode !== mode) {
-      let transform = CGAffineTransformIdentity;
-
-      if (mode === 'LANDSCAPE') {
-        transform = CGAffineTransformRotate(transform, (90 * 3.14159265358979) / 180);
-        this._playerController.view.transform = transform;
-
-        const newFrame = CGRectMake(0, 0, this.nativeView.bounds.size.width, this.nativeView.bounds.size.height);
-        this.nativeView.frame = newFrame;
-      } else if (this.mode !== mode && mode === 'PORTRAIT') {
-        transform = CGAffineTransformRotate(transform, (0 * 3.14159265358979) / 180);
-        this._playerController.view.transform = transform;
-        const newFrame = CGRectMake(0, 0, this.nativeView.bounds.size.height, this.nativeView.bounds.size.width);
-        this.nativeView.frame = newFrame;
-      }
-
-      this.mode = mode;
-    }
-
-    if (this.fill !== fill) {
-      if (fill) {
-        this._playerController.videoGravity = AVLayerVideoGravityResizeAspectFill;
-      } else {
-        this._playerController.videoGravity = AVLayerVideoGravityResizeAspect;
-      }
-
-      this.fill = fill;
-    }
+    this._emit(VideoBase.playbackStartEvent);
   }
 }
 
 @NativeClass()
 class PlayerObserverClass extends NSObject {
-  observeValueForKeyPathOfObjectChangeContext(path: string, obj: NSObject, change: NSDictionary<any, any>, context: any) {
-    CLog(CLogTypes.info, 'PlayerObserverClass.observeValueForKeyPathOfObjectChangeContext ---', `path: ${path}, obj: ${obj}, change: ${change}, context: ${context}`);
+  observeValueForKeyPathOfObjectChangeContext(path: string, obj: Object, change: NSDictionary<any, any>, context: any) {
     if (path === 'status') {
-      const owner = (this as any).owner as VideoPlayer;
-
-      if (owner.player.currentItem.status === AVPlayerItemStatus.Failed) {
-        const baseError = owner.player.currentItem.error.userInfo.objectForKey(NSUnderlyingErrorKey);
-        const error = new Error();
-
-        owner.sendEvent(VideoCommon.errorEvent, {
-          error: {
-            code: baseError.code,
-            domain: baseError.domain,
-          },
-          stack: error.stack,
-        });
-      }
-
-      if (owner.player && owner.player.currentItem.status === AVPlayerItemStatus.ReadyToPlay && !owner.videoLoaded) {
-        owner.playbackReady();
+      if (this['_owner']._player && this['_owner']._player.currentItem.status === AVPlayerItemStatus.ReadyToPlay && !this['_owner']._videoLoaded) {
+        this['_owner'].playbackReady();
       }
     }
   }
