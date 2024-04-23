@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { View } from '@nativescript/core';
 
-export declare enum VideoFill {
+export declare enum VideoFill { //NOTE: read the comments below for the behavior on each platform
   default = 'default',
   aspect = 'aspect',
   aspectFill = 'aspectFill',
@@ -11,6 +11,9 @@ export declare enum VideoFill {
 export class VideoPlayer extends VideoBase {}
 
 export declare class VideoBase extends View {
+  /**
+   * Event Strings
+   */
   static finishedEvent: string;
   static playbackReadyEvent: string;
   static playbackStartEvent: string;
@@ -20,14 +23,18 @@ export declare class VideoBase extends View {
   static mutedEvent: string;
   static unmutedEvent: string;
   static volumeSetEvent: string;
-  static chaptersLoadedEvent: string;
   static errorEvent: string;
+  static chaptersLoadedEvent: string; //NOTE: iOS only
 
   /**
    * ignore modifying iOS AVAudioSession category change on initialization
    * by default, auto changes to: AVAudioSessionCategoryPlayAndRecord
    */
   static iosIgnoreAudioSessionChange: boolean;
+
+  /**
+   * used to send events
+   */
   _emit: any;
 
   /**
@@ -37,8 +44,6 @@ export declare class VideoBase extends View {
   srcType: number;
   imgSrc: string;
   imgType: number;
-  subtitles: string;
-  subtitleSource: string;
   observeCurrentTime: boolean;
 
   /**
@@ -55,6 +60,10 @@ export declare class VideoBase extends View {
    * whether the video loops the playback after extends
    */
   loop: boolean;
+
+  /**
+   * whether the player is currently muted
+   */
   muted: boolean;
 
   /**
@@ -71,13 +80,6 @@ export declare class VideoBase extends View {
   static IMAGETYPEMONO: number;
   static IMAGETYPESTEREOTOPBOTTOM: number;
   static IMAGETYPESTEREOLEFTRIGHT: number;
-
-  /**
-   * encryption parameters
-   */
-  public encryptionKey: string;
-  public encryptionIV: string;
-  public encryption: string;
 
   /**
    * (ios) Set the audio session playback category.
@@ -117,6 +119,7 @@ export declare class VideoBase extends View {
   getCurrentTime(): number;
 
   /**
+   * NOTE: iOS-only!
    * Observable for current time of the video duration in milliseconds.
    * @returns {number} Current time of the video duration.
    */
@@ -130,7 +133,7 @@ export declare class VideoBase extends View {
 
   /**
    * Set the playback speed of the video
-   * @param {number} speed - Set the playback speed in float value
+   * @param {number} speed - Set the playback speed in float value 0.x - Y.y
    */
   setPlaybackSpeed(speed: number): void;
 
@@ -152,8 +155,14 @@ export declare class VideoBase extends View {
   getDuration(): number;
 
   /**
-   * *** ANDROID ONLY ***
-   * Stop playback of the video. This resets the player and video src.
+   * whether the player is currently playing media
+   */
+  isPlaying(): boolean;
+
+  /**
+   * on Android, stops playback of the video and resets the player and video src.
+   *
+   * on iOS this only pauses playback of the video.
    */
   stop(): void;
 
@@ -166,7 +175,7 @@ export declare class VideoBase extends View {
   /**
    * Get the native player instance.
    */
-  getPlayer(): AVPlayer | com.google.android.exoplayer2.ExoPlayer;
+  getPlayer(): AVPlayer | android.media.MediaPlayer;
 
   /**
    * *** IOS ONLY ***
@@ -175,6 +184,7 @@ export declare class VideoBase extends View {
   updateAsset(asset): void;
 
   /**
+   * *** IOS ONLY ***
    * Callback to execute when the video is ready to play
    * @param {function} callback - The callback function to execute.
    */
@@ -188,14 +198,9 @@ export declare class VideoBase extends View {
   playbackStart(callback: Function): void;
 
   /**
+   * *** IOS ONLY ***
    * Callback to execute when the video has finished seekToTime.
    * @param {function} callback - The callback function to execute.
    */
   seekToTimeComplete(callback: Function): void;
-
-  /**
-   * Callback to execute when the time is updated.
-   * @param {function} callback - The callback function to execute.
-   */
-  currentTimeUpdated(callback: Function): void;
 }

@@ -38,6 +38,9 @@ export class VideoPlayer extends VideoBase {
     this._setNativeVideo(value ? value.android : null);
   }
 
+  /**
+   * Called by Nativescript to create the view for the VideoPlayer component
+   */
   public createNativeView(): any {
     console.log('VideoPlayer.createNativeView');
     this.nativeView = new android.view.TextureView(this._context);
@@ -104,8 +107,11 @@ export class VideoPlayer extends VideoBase {
     }
   }
 
+  /**
+   * Start playing the video.
+   */
   public play(): void {
-    console.log('VideoPlayer.play');
+    // console.log('VideoPlayer.play');
     this.playState = STATE_PLAYING;
     if (this.mediaState === SURFACE_WAITING) {
       this._openVideo();
@@ -114,11 +120,14 @@ export class VideoPlayer extends VideoBase {
         this._addPlaybackTimeObserver();
       }
       this.player.start();
-      console.log('VideoPlayer.play ---  emitting playbackStartEvent');
+      console.log('VideoPlayer ---  emitting playbackStartEvent');
       this._emit(VideoBase.playbackStartEvent);
     }
   }
 
+  /**
+   * Pause the currently playing video.
+   */
   public pause(): void {
     this.playState = STATE_PAUSED;
     this.player.pause();
@@ -126,6 +135,10 @@ export class VideoPlayer extends VideoBase {
     this._removePlaybackTimeObserver();
   }
 
+  /**
+   * Mute and unmute the video.
+   * @param {boolean} mute - true to mute the video, false to unmute.
+   */
   public mute(mute: boolean): void {
     if (this.player) {
       if (mute === true) {
@@ -138,6 +151,11 @@ export class VideoPlayer extends VideoBase {
     }
   }
 
+  /**
+   * on Android, stops playback of the video and resets the player and video src.
+   *
+   * on iOS this only pauses playback of the video.
+   */
   public stop(): void {
     this.player.stop();
     this._removePlaybackTimeObserver();
@@ -145,6 +163,10 @@ export class VideoPlayer extends VideoBase {
     this.release();
   }
 
+  /**
+   * Seek the video to a time.
+   * @param {number} time - Time of the video to seek to in milliseconds.
+   */
   public seekToTime(ms: number): void {
     if (!this.player) {
       this.preSeekTime = ms;
@@ -155,10 +177,13 @@ export class VideoPlayer extends VideoBase {
 
     this.player.seekTo(ms);
 
-    console.log('VideoPlayer.play ---  emitting seekToTimeCompleteEvent');
+    console.log('VideoPlayer ---  emitting seekToTimeCompleteEvent');
     this._emit(VideoBase.seekToTimeCompleteEvent, { time: ms });
   }
 
+  /**
+   * whether the player is currently playing media
+   */
   public isPlaying(): boolean {
     if (!this.player) {
       return false;
@@ -166,6 +191,17 @@ export class VideoPlayer extends VideoBase {
     return this.player.isPlaying();
   }
 
+  /**
+   * Get the native player instance.
+   */
+  public getPlayer(): android.media.MediaPlayer {
+    return this.player;
+  }
+
+  /**
+   * Returns the duration of the video in milliseconds.
+   * @returns {number} Video duration in milliseconds.
+   */
   public getDuration(): number {
     if (!this.player || this.mediaState === SURFACE_WAITING || this.playState === STATE_IDLE) {
       return 0;
@@ -173,6 +209,10 @@ export class VideoPlayer extends VideoBase {
     return this.player.getDuration();
   }
 
+  /**
+   * Returns the current time of the video duration in milliseconds.
+   * @returns {number} Current time of the video duration.
+   */
   public getCurrentTime(): number {
     if (!this.player) {
       return 0;
@@ -180,15 +220,26 @@ export class VideoPlayer extends VideoBase {
     return this.player.getCurrentPosition();
   }
 
+  /**
+   * Set the volume of the video
+   * @param {number} volume - Volume to set the video between 0 and 1
+   */
   public setVolume(volume: number) {
     this.player.setVolume(volume, volume);
     this._emit(VideoBase.volumeSetEvent);
   }
 
-  public changePlayerSpeed(speed: number) {
+  /**
+   * Set the playback speed of the video
+   * @param {number} speed - Set the playback speed in float value 0.x - Y.y
+   */
+  public setPlaybackSpeed(speed: number) {
     this.player.setPlaybackParams(this.player.getPlaybackParams().setSpeed(speed));
   }
 
+  /**
+   * Destroy the video player and free up resources.
+   */
   public destroy() {
     this.release();
     this.src = null;
@@ -197,6 +248,10 @@ export class VideoPlayer extends VideoBase {
     this.mediaController = null;
   }
 
+  /**
+   * Get the video size
+   * @returns {object<width: number, height: number>}
+   */
   public getVideoSize(): { width: number; height: number } {
     return {
       width: this.videoWidth,
@@ -218,16 +273,17 @@ export class VideoPlayer extends VideoBase {
     }
   }
 
+  /**
+   * hook into your app's suspend event to clear the player
+   */
   public suspendEvent(): void {
     this.release();
   }
 
+  /**
+   * hook into your app's resume event to restore the player
+   */
   public resumeEvent(): void {
-    this._openVideo();
-  }
-
-  public setNativeSource(nativePlayerSrc: string): void {
-    this._src = nativePlayerSrc;
     this._openVideo();
   }
 
@@ -270,7 +326,7 @@ export class VideoPlayer extends VideoBase {
               this._owner.get().play();
             }
 
-            console.log('VideoPlayer.play ---  emitting playbackReadyEvent');
+            console.log('VideoPlayer ---  emitting playbackReadyEvent');
             this._owner.get()._emit(VideoBase.playbackReadyEvent);
             if (this._owner.get().loop === true) {
               mp.setLooping(true);
@@ -285,7 +341,7 @@ export class VideoPlayer extends VideoBase {
         onSeekComplete: mp => {
           console.log('MediaPlayer.OnSeekCompleteListener.onSeekComplete ---', `mp: ${mp}`);
           if (this._owner.get()) {
-            console.log('VideoPlayer.play ---  emitting seekToTimeCompleteEvent');
+            console.log('VideoPlayer ---  emitting seekToTimeCompleteEvent');
             this._owner.get()._emit(VideoBase.seekToTimeCompleteEvent);
           }
         },
@@ -319,7 +375,7 @@ export class VideoPlayer extends VideoBase {
           console.log('MediaPlayer.OnCompletionListener.onCompletion ---', `mp: ${mp}`);
           if (this._owner.get()) {
             this._owner.get()._removePlaybackTimeObserver();
-            console.log('VideoPlayer.play ---  emitting finishedEvent');
+            console.log('VideoPlayer ---  emitting finishedEvent');
             this._owner.get()._emit(VideoBase.finishedEvent);
           }
         },
@@ -525,11 +581,7 @@ export class VideoPlayer extends VideoBase {
     this._playbackTimeObserver = Utils.setInterval(() => {
       if (this.player.isPlaying) {
         const _milliseconds = this.player.getCurrentPosition();
-        this.notify({
-          eventName: VideoBase.currentTimeUpdatedEvent,
-          object: this,
-          position: _milliseconds,
-        });
+        this._emit(VideoBase.currentTimeUpdatedEvent, { position: _milliseconds });
       }
     }, 500);
   }
@@ -542,83 +594,12 @@ export class VideoPlayer extends VideoBase {
         const _milliseconds = this.player.getCurrentPosition();
         console.log('VideoPlayer._removePlaybackTimeObserver', 'emitting currentTimeUpdatedEvent');
         this._emit(VideoBase.currentTimeUpdatedEvent, {
-          currentPosition: _milliseconds,
+          position: _milliseconds,
         });
       }
 
       Utils.clearInterval(this._playbackTimeObserver);
       this._playbackTimeObserverActive = false;
     }
-  }
-
-  configureTransform(viewWidth, viewHeight, isLandscape, fill) {
-    const matrix = new android.graphics.Matrix();
-    const viewRect = new android.graphics.RectF(0, 0, viewWidth, viewHeight);
-    let bufferRect;
-
-    if (isLandscape) {
-      bufferRect = new android.graphics.RectF(0, 0, viewHeight, viewWidth);
-    } else {
-      bufferRect = new android.graphics.RectF(0, 0, viewWidth, viewHeight);
-    }
-
-    const centerX = viewRect.centerX();
-    const centerY = viewRect.centerY();
-
-    let scaleX, scaleY;
-
-    const currentHeight = (viewWidth * this.videoHeight) / this.videoWidth;
-    const currentWidth = viewWidth;
-
-    if (isLandscape) {
-      if (fill) {
-        scaleX = viewHeight / currentHeight;
-        scaleY = (currentWidth * this.videoHeight) / this.videoWidth / currentWidth;
-
-        if (scaleY * currentWidth < viewWidth) {
-          scaleY = viewWidth / currentWidth;
-          scaleX = (scaleY * currentWidth * this.videoWidth) / this.videoHeight / currentHeight;
-        } else if (scaleX * currentHeight < viewHeight) {
-          scaleX = viewHeight / currentHeight;
-          scaleY = (scaleX * currentHeight * this.videoHeight) / this.videoWidth / currentWidth;
-        }
-      } else {
-        scaleX = viewHeight / currentHeight;
-        scaleY = (scaleX * currentHeight * this.videoHeight) / this.videoWidth / currentWidth;
-
-        if (scaleY * currentWidth > viewWidth) {
-          scaleY = viewWidth / currentWidth;
-          scaleX = (currentWidth * this.videoWidth) / this.videoHeight / currentHeight;
-        }
-      }
-    } else {
-      if (fill) {
-        scaleY = 1;
-        scaleX = (viewHeight * this.videoWidth) / this.videoHeight / currentWidth;
-        // if (scaleY * currentHeight < viewHeight) {
-        //     scaleY = viewHeight / currentHeight;
-        //     scaleX = (scaleY * currentHeight * this.videoWidth / this.videoHeight) / currentWidth;
-        // }
-        // else if (scaleX * currentWidth < viewWidth) {
-        //     scaleX = viewWidth / currentWidth;
-        //     scaleY = (scaleX * currentWidth * this.videoHeight / this.videoWidth) / currentHeight;
-        // }
-      } else {
-        scaleX = viewWidth / currentWidth;
-        scaleY = (currentWidth * this.videoHeight) / this.videoWidth / viewHeight;
-      }
-    }
-
-    bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-    matrix.setRectToRect(viewRect, bufferRect, android.graphics.Matrix.ScaleToFit.CENTER);
-    matrix.postScale(scaleX, scaleY, centerX, centerY);
-
-    if (isLandscape) {
-      matrix.postRotate(90, centerX, centerY);
-    } else {
-      matrix.postRotate(0, centerX, centerY);
-    }
-
-    this.nativeView.setTransform(matrix);
   }
 }

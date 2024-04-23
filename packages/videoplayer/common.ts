@@ -75,10 +75,10 @@ export class VideoBase extends View {
   public static mutedEvent = 'muted';
   public static unmutedEvent = 'unmuted';
   public static volumeSetEvent = 'volumeSet';
-  public static seekToTimeCompleteEvent = 'seekToTimeComplete';
-  public static currentTimeUpdatedEvent = 'currentTimeUpdated';
+  public static seekToTimeCompleteEvent = 'seekToTimeComplete'; //passes current time position in ms of player after seek
+  public static currentTimeUpdatedEvent = 'currentTimeUpdated'; //passes current time position in ms of player after seek
   public static chaptersLoadedEvent = 'chaptersLoaded';
-  public static errorEvent = 'error';
+  public static errorEvent = 'error'; //also passes an error object
 
   /**
    * ignore modifying iOS AVAudioSession category change on initialization
@@ -101,10 +101,6 @@ export class VideoBase extends View {
   public fill: VideoFill = VideoFill.default;
   public detectChapters = false;
   public backgroundAudio = false;
-
-  public encryptionKey: string = null;
-  public encryptionIV: string = null;
-  public encryption = '';
 
   public static IMAGETYPEMONO = 1;
   public static IMAGETYPESTEREOTOPBOTTOM = 2;

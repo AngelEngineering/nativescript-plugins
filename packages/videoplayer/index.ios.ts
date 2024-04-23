@@ -9,6 +9,9 @@ export * from './common';
 // https://stackoverflow.com/questions/50685681/avplayerviewcontroller-show-black-screen-some-times
 // https://stackoverflow.com/questions/40808377/avplayerlayer-shows-black-screen-but-sound-is-working/50736003
 
+/**
+ * Helper functions to get the iOS window and view controller
+ */
 function getWindow() {
   const app = UIApplication.sharedApplication;
   if (!app) {
@@ -59,6 +62,7 @@ export class VideoPlayer extends VideoBase {
           //console.log("audioSession category set and active");
         } catch (err) {
           //console.log("setting audioSession category failed");
+          this._emit(VideoBase.errorEvent, err);
         }
       }
     }
@@ -72,6 +76,9 @@ export class VideoPlayer extends VideoBase {
     this._videoFinished = false;
   }
 
+  /**
+   * Called by Nativescript to create the view for the VideoPlayer component. Most of the actual setup takes place in onLoaded
+   */
   createNativeView() {
     return this._playerController.view;
   }
@@ -151,7 +158,6 @@ export class VideoPlayer extends VideoBase {
     this._player = new AVPlayer(<any>url);
     this._playerController.player = null;
     this._playerController.player = this._player;
-    //console.log("Video src: "+ this._src);
     this._init();
   }
 
@@ -190,6 +196,10 @@ export class VideoPlayer extends VideoBase {
     }
   }
 
+  /**
+   * Start playing the video.
+   * NOTE: on iOS, the player must have issues the playbackReadyEvent before this can be called
+   */
   public play() {
     if (this._videoFinished) {
       this._videoFinished = false;
@@ -203,42 +213,82 @@ export class VideoPlayer extends VideoBase {
     this._player.play();
   }
 
-  public getPlayer() {
+  /**
+   * Get the native player instance.
+   */
+  public getPlayer(): AVPlayer {
     return this._player;
   }
 
-  public getVideoSize() {
+  /**
+   * Get the video size
+   * @returns {object<width: number, height: number>}
+   */
+  public getVideoSize(): CGSize {
     if (this._player) {
-      const size = this._player.currentItem.presentationSize;
+      const size: CGSize = this._player.currentItem.presentationSize;
       return size;
     }
   }
 
-  public pause() {
+  /**
+   * Pause the currently playing video.
+   */
+  public pause(): void {
     if (this._player) {
       this._player.pause();
+      this._emit(VideoBase.pausedEvent);
     }
     if (this._playbackTimeObserverActive) {
       this._removePlaybackTimeObserver();
     }
   }
 
+  /**
+   * on Android, stops playback of the video and resets the player and video src.
+   *
+   * on iOS this only pauses playback of the video.
+   */
+  public stop(): void {
+    this._player.pause();
+  }
+
+  /**
+   * Mute and unmute the video.
+   * @param {boolean} mute - true to mute the video, false to unmute.
+   */
   public mute(mute: boolean) {
     if (this._player) {
       this._player.muted = mute;
+      if (mute) this._emit(VideoBase.mutedEvent);
+      else this._emit(VideoBase.unmutedEvent);
     }
   }
 
-  public seekToTime(seconds: number) {
+  /**
+   * whether the player is currently playing media
+   */
+  public isPlaying(): boolean {
+    return this?._player.rate && !this?._player.error;
+  }
+
+  /**
+   * Seek the video to a time.
+   * @param {number} time - Time of the video to seek to in milliseconds.
+   */
+  public seekToTime(milliseconds: number) {
+    const seconds = milliseconds / 1000;
     if (this._player) {
+      console.log('timescale', this._player.currentTime().timescale);
       if (this._player.currentItem && this._player.currentItem.status === 1) {
         let time = CMTimeMakeWithSeconds(seconds, this._player.currentTime().timescale);
         try {
           this._player.seekToTimeToleranceBeforeToleranceAfterCompletionHandler(time, kCMTimeZero, kCMTimeZero, isFinished => {
-            this._emit(VideoBase.seekToTimeCompleteEvent);
+            this._emit(VideoBase.seekToTimeCompleteEvent, { time: seconds });
           });
         } catch (e) {
           console.error(e);
+          this._emit(VideoBase.errorEvent, e);
         }
       } else {
         console.log('AVPlayerItem cannot service a seek request with a completion handler until its status is ReadyToPlay.');
@@ -246,6 +296,10 @@ export class VideoPlayer extends VideoBase {
     }
   }
 
+  /**
+   * Returns the duration of the video in milliseconds.
+   * @returns {number} Video duration in milliseconds.
+   */
   public getDuration(): number {
     if (!this._player || (this._player && this._player.currentItem == null)) {
       return 0;
@@ -255,6 +309,10 @@ export class VideoPlayer extends VideoBase {
     return milliseconds;
   }
 
+  /**
+   * Returns the current time of the video duration in milliseconds.
+   * @returns {number} Current time of the video duration.
+   */
   public getCurrentTime(): any {
     if (!this._player) {
       return 0;
@@ -262,16 +320,28 @@ export class VideoPlayer extends VideoBase {
     return (this._player.currentTime().value / this._player.currentTime().timescale) * 1000;
   }
 
+  /**
+   * Set the volume of the video
+   * @param {number} volume - Volume to set the video between 0 and 1
+   */
   public setVolume(volume: number) {
     if (this._player) {
       this._player.volume = volume;
+      this._emit(VideoBase.volumeSetEvent);
     }
   }
 
+  /**
+   * Set the playback speed of the video
+   * @param {number} speed - Set the playback speed in float value 0.x - Y.y
+   */
   public setPlaybackSpeed(speed: number) {
     this._player.rate = speed;
   }
 
+  /**
+   * Destroy the video player and free up resources.
+   */
   public destroy() {
     if (this._player) {
       this._removeStatusObserver(this._player.currentItem);
@@ -320,11 +390,7 @@ export class VideoPlayer extends VideoBase {
       this._playbackTimeObserver = this._player.addPeriodicTimeObserverForIntervalQueueUsingBlock(_interval, null, currentTime => {
         let _seconds = CMTimeGetSeconds(currentTime);
         let _milliseconds = _seconds * 1000.0;
-        this.notify({
-          eventName: VideoBase.currentTimeUpdatedEvent,
-          object: this,
-          position: _milliseconds,
-        });
+        this._emit(VideoBase.currentTimeUpdatedEvent, { position: _milliseconds });
       });
     }
   }
@@ -353,6 +419,7 @@ export class VideoPlayer extends VideoBase {
       audioSession.setActiveError(true);
     } catch (err) {
       // If for some reason we can't change where the audio is playing, we don't care...  :-)
+      this._emit(VideoBase.errorEvent, err);
     }
   }
 
@@ -370,11 +437,7 @@ export class VideoPlayer extends VideoBase {
           let chapterMetadata = playerItem.asset.chapterMetadataGroupsBestMatchingPreferredLanguages(languages);
           // Emit chapter metadata for developers to work with
           // TODO: could pre-parse them however likely be most versatile allowing dev's to parse however they'd like so no data is missed
-          this.notify(<VideoEventData>{
-            eventName: VideoBase.chaptersLoadedEvent,
-            object: this,
-            data: chapterMetadata,
-          });
+          this._emit(VideoBase.chaptersLoadedEvent, { data: chapterMetadata });
         } else {
           // Handle other status cases
         }
