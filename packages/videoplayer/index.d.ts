@@ -41,9 +41,10 @@ export declare class VideoBase extends View {
    * video source file
    */
   src: string;
-  srcType: number;
-  imgSrc: string;
-  imgType: number;
+
+  /**
+   * whether to add an observer for current time during playback
+   */
   observeCurrentTime: boolean;
 
   /**

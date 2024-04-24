@@ -33,30 +33,6 @@ function onSrcPropertyChanged(view, oldValue, newValue) {
   }
 }
 
-function onImgSrcPropertyChanged(view, oldValue, newValue) {
-  const video = view;
-  let value = newValue;
-
-  if (Utils.isString(value)) {
-    value = value.trim();
-    video['_url'] = value;
-    video.isLoadingProperty = true;
-    if (Utils.isFileOrResourcePath(value)) {
-      video.imageSource = ImageSource.fromFileOrResourceSync(value);
-      video.isLoadingProperty = false;
-    } else {
-      if (video['_url'] === value) {
-        video.imageSource = ImageSource.fromUrl(value);
-        video.isLoadingProperty = false;
-      }
-    }
-  } else if (value instanceof ImageSource) {
-    video.imageSource = value;
-  } else {
-    video.imageSource = new ImageSource(value);
-  }
-}
-
 /**
  * VideoBase aspect/fill handling
  */
@@ -90,10 +66,7 @@ export class VideoBase extends View {
     this.notify({ eventName: event, object: this, data });
   };
   public src: string; /// video source file
-  public srcType = 0; /// video source file type
-  public imgSrc: string;
-  public imgType = 1;
-  public observeCurrentTime: boolean; // set to true if want to observe current time.
+  public observeCurrentTime: boolean; // set to true if want to observe current time during playback.
   public autoplay = false; /// set true for the video to start playing when ready
   public controls = true; /// set true to enable the media player's playback controls
   public loop = false; /// whether the video loops the playback after extends
@@ -109,52 +82,16 @@ export class VideoBase extends View {
   public static iosAudioSessionCategory: string;
 }
 
-export const encryptionKeyProperty = new Property<VideoBase, any>({
-  name: 'encryptionKey',
-});
-encryptionKeyProperty.register(VideoBase);
-
-export const encryptionIVProperty = new Property<VideoBase, any>({
-  name: 'encryptionIV',
-});
-encryptionIVProperty.register(VideoBase);
-
-export const encryptionProperty = new Property<VideoBase, any>({
-  name: 'encryption',
-});
-encryptionProperty.register(VideoBase);
-
 export const srcProperty = new Property<VideoBase, any>({
   name: 'src',
   valueChanged: onSrcPropertyChanged,
 });
 srcProperty.register(VideoBase);
 
-export const srcTypeProperty = new Property<VideoBase, any>({
-  name: 'srcType',
-});
-srcTypeProperty.register(VideoBase);
-
-export const imgSrcProperty = new Property<VideoBase, any>({
-  name: 'imgSrc',
-  valueChanged: onImgSrcPropertyChanged,
-});
-imgSrcProperty.register(VideoBase);
-
-export const imgTypeProperty = new Property<VideoBase, any>({
-  name: 'imgType',
-});
-imgTypeProperty.register(VideoBase);
-
 export const videoSourceProperty = new Property<VideoBase, any>({
   name: 'videoSource',
 });
 videoSourceProperty.register(VideoBase);
-
-export const imageSourceProperty = new Property<VideoBase, any>({
-  name: 'imageSource',
-});
-imageSourceProperty.register(VideoBase);
 
 export const isLoadingProperty = new Property<VideoBase, boolean>({
   name: 'isLoading',

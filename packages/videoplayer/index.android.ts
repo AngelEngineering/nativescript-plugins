@@ -24,7 +24,7 @@ export class VideoPlayer extends VideoBase {
   private videoHeight = 0;
   private playState = STATE_IDLE;
   private mediaState = SURFACE_WAITING;
-  private audioSession = -1;
+  private audioSession = null; //this will be created and set by the mediaplayer on init
   private preSeekTime = -1;
   private currentBufferPercentage = 0;
   private _playbackTimeObserver = null;
@@ -541,28 +541,40 @@ export class VideoPlayer extends VideoBase {
       console.log(`VideoPlayer._openVideo --- `, `setting up MediaPlayerListeners`);
       this._setupMediaPlayerListeners();
 
-      const videoUri = android.net.Uri.parse(this._src);
-      this.player.setDataSource(Utils.android.getApplicationContext(), videoUri);
-
       this.player.setSurface(this.textureSurface);
       this.player.setAudioStreamType(android.media.AudioManager.STREAM_MUSIC);
+      this.player.setDataSource(this._src);
       this.player.setScreenOnWhilePlaying(true);
-      this.player.prepareAsync();
 
       this.player.setOnErrorListener(
         new android.media.MediaPlayer.OnErrorListener({
           onError: (mp, what, extra) => {
-            const error = new Error();
+            let message = '';
+            switch (what) {
+              case android.media.MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                message = 'Unable to play media';
+                break;
+              case android.media.MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                message = 'Server failed';
+                break;
+              case android.media.MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+                message = 'Invalid media';
+                break;
+              case android.media.MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
+                message = 'Media not supported';
+                break;
+              default:
+                message = 'Unknown error';
+            }
             this._owner.get()._emit(VideoBase.errorEvent, {
-              error: { what: what, extra: extra },
-              stack: error.stack,
+              error: { message: message + '  what:' + what + ' extra:' + extra },
             });
             return true;
           },
         })
       );
-
       this._setupMediaController();
+      this.player.prepareAsync();
     } catch (ex) {
       console.log(`VideoPlayer._openVideo --- error: ${ex}, stack: ${ex.stack}`);
       this._owner.get()._emit(VideoBase.errorEvent, { error: ex, stack: ex.stack });

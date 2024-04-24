@@ -18,16 +18,21 @@
       src=""
       marginBottom="30"
       opacity="1"
-      visibility="visible" />
+      fill="aspectFill"
+      visibility="visible"
+      loaded="onLoaded"/>
 
-    <!-- <GridLayout rows="*" columns="*, *" height="300" backgroundColor="#000000" marginBottom="50">
-      <Video:VideoPlayer id="nsVideoPlayer" controls="true" loadingComplete="{{ videoCompleted }}" finished="{{ videoFinished }}" loop="false" autoplay="false" height="300" src="{{ videoSrc }}" row="0" colSpan="2" />
-      <Label text="Label On Top of Video View" row="0" colSpan="2" color="#fff" horizontalAlignment="center" verticalAlignment="top" />
-    </GridLayout > -->
-    <Button text="Play MP4"
+    <Button text="Load MP4"
       tap="{{ playmp4 }}"
       class="btn btn-primary"/>
 
+    <Button text="Load MOV"
+      tap="{{ playmov }}"
+      class="btn btn-primary"/>
+
+    <Button text="Load MKV"
+      tap="{{ playmkv }}"
+      class="btn btn-primary"/>
 
   </StackLayout>
 </Page>
