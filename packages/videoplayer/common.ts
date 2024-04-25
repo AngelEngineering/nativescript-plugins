@@ -44,9 +44,9 @@ export enum VideoFill {
 }
 
 export class VideoBase extends View {
-  public static finishedEvent = 'finished';
+  public static playbackFinishedEvent = 'finished';
   public static playbackReadyEvent = 'playbackReady';
-  public static playbackStartEvent = 'playbackStart';
+  public static playbackStartedEvent = 'playbackStart';
   public static pausedEvent = 'paused';
   public static mutedEvent = 'muted';
   public static unmutedEvent = 'unmuted';
@@ -72,15 +72,37 @@ export class VideoBase extends View {
   public loop = false; /// whether the video loops the playback after extends
   public muted = false;
   public fill: VideoFill = VideoFill.default;
-  public detectChapters = false;
+  public detectChapters = false; // enables/disables chaptersLoadedEvent (iOS only functionality)
   public backgroundAudio = false;
+  public debug = false; //flag to enable/disable debug logging
 
   public static IMAGETYPEMONO = 1;
   public static IMAGETYPESTEREOTOPBOTTOM = 2;
   public static IMAGETYPESTEREOLEFTRIGHT = 3;
 
   public static iosAudioSessionCategory: string;
+
+  /*
+   * Logging functions controlled by debug property
+   */
+  CLog(...args) {
+    if (this.debug) {
+      console.log('VidePlayer ---', args);
+    }
+  }
+
+  CError(...args) {
+    if (this.debug) {
+      console.error('VidePlayer ---', args);
+    }
+  }
 }
+
+export const degugProperty = new Property<VideoBase, boolean>({
+  name: 'debug',
+  valueConverter: booleanConverter,
+});
+degugProperty.register(VideoBase);
 
 export const srcProperty = new Property<VideoBase, any>({
   name: 'src',
@@ -139,3 +161,9 @@ export const fillProperty = new Property<VideoBase, VideoFill>({
   name: 'fill',
 });
 fillProperty.register(VideoBase);
+
+export const detectChaptersProperty = new Property<VideoBase, boolean>({
+  name: 'detectChapters',
+  valueConverter: booleanConverter,
+});
+detectChaptersProperty.register(VideoBase);

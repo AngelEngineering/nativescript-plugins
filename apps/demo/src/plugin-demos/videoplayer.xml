@@ -1,10 +1,9 @@
 <Page xmlns="http://schemas.nativescript.org/tns.xsd"
   xmlns:Video="@angelengineering/videoplayer"
   navigatingTo="navigatingTo"
-  navigatingFrom="navigatingFrom"
-  class="page">
+  navigatingFrom="navigatingFrom">
   <Page.actionBar>
-    <ActionBar title="videoplayer"
+    <ActionBar title="Videoplayer Demo"
       icon=""
       class="action-bar">
     </ActionBar>
@@ -20,7 +19,10 @@
       opacity="1"
       fill="aspectFill"
       visibility="visible"
-      loaded="onLoaded"/>
+      loaded="onLoaded"
+      observeCurrentTime="false"
+      debug="true"
+      detectChapters="true" />
 
     <Button text="Load MP4"
       tap="{{ playmp4 }}"

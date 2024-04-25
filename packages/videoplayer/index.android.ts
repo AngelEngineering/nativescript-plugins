@@ -42,7 +42,7 @@ export class VideoPlayer extends VideoBase {
    * Called by Nativescript to create the view for the VideoPlayer component
    */
   public createNativeView(): any {
-    console.log('VideoPlayer.createNativeView');
+    this.CLog('VideoPlayer.createNativeView');
     this.nativeView = new android.view.TextureView(this._context);
     this.nativeView.setFocusable(true);
     this.nativeView.setFocusableInTouchMode(true);
@@ -50,7 +50,7 @@ export class VideoPlayer extends VideoBase {
     this.nativeView.setOnTouchListener(
       new android.view.View.OnTouchListener({
         onTouch: (view, event) => {
-          console.log('OnTouchListener --- onTouch', `view: ${view}, event: ${event}`);
+          this.CLog('OnTouchListener --- onTouch', `view: ${view}, event: ${event}`);
           this._owner.get().toggleMediaControllerVisibility();
           return false;
         },
@@ -60,19 +60,19 @@ export class VideoPlayer extends VideoBase {
     this.nativeView.setSurfaceTextureListener(
       new android.view.TextureView.SurfaceTextureListener({
         onSurfaceTextureSizeChanged: (surface, width, height) => {
-          console.log('SurfaceTextureListener.onSurfaceTextureSizeChanged ---', `surface: ${surface}, width: ${width}, height: ${height}`);
+          this.CLog('SurfaceTextureListener.onSurfaceTextureSizeChanged ---', `surface: ${surface}, width: ${width}, height: ${height}`);
           // do nothing
         },
 
         onSurfaceTextureAvailable: (surface, width, height) => {
-          console.log('SurfaceTextureListener.onSurfaceTextureAvailable ---', `surface: ${surface}`);
+          this.CLog('SurfaceTextureListener.onSurfaceTextureAvailable ---', `surface: ${surface}`);
           this._owner.get().textureSurface = new android.view.Surface(surface);
           this._owner.get().mediaState = SURFACE_WAITING;
           this._owner.get()._openVideo();
         },
 
         onSurfaceTextureDestroyed: surface => {
-          console.log('SurfaceTextureListener.onSurfaceTextureDestroyed ---', `surface: ${surface}`);
+          this.CLog('SurfaceTextureListener.onSurfaceTextureDestroyed ---', `surface: ${surface}`);
           // after we return from this we can't use the surface any more
           if (this._owner.get().textureSurface !== null) {
             this._owner.get().textureSurface.release();
@@ -96,7 +96,7 @@ export class VideoPlayer extends VideoBase {
   }
 
   public toggleMediaControllerVisibility() {
-    console.log('VideoPlayer.toggleMediaControllerVisibility');
+    this.CLog('VideoPlayer.toggleMediaControllerVisibility');
     if (!this.mediaController) {
       return;
     }
@@ -111,7 +111,7 @@ export class VideoPlayer extends VideoBase {
    * Start playing the video.
    */
   public play(): void {
-    // console.log('VideoPlayer.play');
+    this.CLog('VideoPlayer.play');
     this.playState = STATE_PLAYING;
     if (this.mediaState === SURFACE_WAITING) {
       this._openVideo();
@@ -120,8 +120,8 @@ export class VideoPlayer extends VideoBase {
         this._addPlaybackTimeObserver();
       }
       this.player.start();
-      console.log('VideoPlayer ---  emitting playbackStartEvent');
-      this._emit(VideoBase.playbackStartEvent);
+      this.CLog('VideoPlayer ---  emitting playbackStartedEvent');
+      this._emit(VideoBase.playbackStartedEvent);
     }
   }
 
@@ -129,8 +129,10 @@ export class VideoPlayer extends VideoBase {
    * Pause the currently playing video.
    */
   public pause(): void {
+    this.CLog('VideoPlayer.pause');
     this.playState = STATE_PAUSED;
     this.player.pause();
+    this.CLog('VideoPlayer ---  emitting pausedEvent');
     this._emit(VideoBase.pausedEvent);
     this._removePlaybackTimeObserver();
   }
@@ -143,9 +145,11 @@ export class VideoPlayer extends VideoBase {
     if (this.player) {
       if (mute === true) {
         this.player.setVolume(0, 0);
+        this.CLog('VideoPlayer ---  emitting mutedEvent');
         this._emit(VideoBase.mutedEvent);
       } else if (mute === false) {
         this.player.setVolume(1, 1);
+        this.CLog('VideoPlayer ---  emitting unmutedEvent');
         this._emit(VideoBase.unmutedEvent);
       }
     }
@@ -177,7 +181,7 @@ export class VideoPlayer extends VideoBase {
 
     this.player.seekTo(ms);
 
-    console.log('VideoPlayer ---  emitting seekToTimeCompleteEvent');
+    this.CLog('VideoPlayer ---  emitting seekToTimeCompleteEvent');
     this._emit(VideoBase.seekToTimeCompleteEvent, { time: ms });
   }
 
@@ -288,11 +292,11 @@ export class VideoPlayer extends VideoBase {
   }
 
   private _setupMediaPlayerListeners() {
-    console.log('VideoPlayer._setupMediaPlayerListeners');
+    this.CLog('VideoPlayer._setupMediaPlayerListeners');
     this.player.setOnPreparedListener(
       new android.media.MediaPlayer.OnPreparedListener({
         onPrepared: mp => {
-          console.log('MediaPlayer.OnPreparedListener.onPrepared ---', `mp: ${mp}`);
+          this.CLog('MediaPlayer.OnPreparedListener.onPrepared ---', `mp: ${mp}`);
           if (this._owner.get()) {
             if (this._owner.get().muted === true) {
               mp.setVolume(0, 0);
@@ -326,7 +330,7 @@ export class VideoPlayer extends VideoBase {
               this._owner.get().play();
             }
 
-            console.log('VideoPlayer ---  emitting playbackReadyEvent');
+            this.CLog('VideoPlayer ---  emitting playbackReadyEvent');
             this._owner.get()._emit(VideoBase.playbackReadyEvent);
             if (this._owner.get().loop === true) {
               mp.setLooping(true);
@@ -339,9 +343,9 @@ export class VideoPlayer extends VideoBase {
     this.player.setOnSeekCompleteListener(
       new android.media.MediaPlayer.OnSeekCompleteListener({
         onSeekComplete: mp => {
-          console.log('MediaPlayer.OnSeekCompleteListener.onSeekComplete ---', `mp: ${mp}`);
+          this.CLog('MediaPlayer.OnSeekCompleteListener.onSeekComplete ---', `mp: ${mp}`);
           if (this._owner.get()) {
-            console.log('VideoPlayer ---  emitting seekToTimeCompleteEvent');
+            this.CLog('VideoPlayer ---  emitting seekToTimeCompleteEvent');
             this._owner.get()._emit(VideoBase.seekToTimeCompleteEvent);
           }
         },
@@ -351,7 +355,7 @@ export class VideoPlayer extends VideoBase {
     this.player.setOnVideoSizeChangedListener(
       new android.media.MediaPlayer.OnVideoSizeChangedListener({
         onVideoSizeChanged: (mp, width, height) => {
-          console.log('MediaPlayer.setOnVideoSizeChangedListener.onVideoSizeChanged ---', `mp: ${mp}, width: ${width}, heigth: ${height}`);
+          this.CLog('MediaPlayer.setOnVideoSizeChangedListener.onVideoSizeChanged ---', `mp: ${mp}, width: ${width}, heigth: ${height}`);
 
           if (this._owner.get()) {
             this._owner.get().videoWidth = mp.getVideoWidth();
@@ -372,11 +376,11 @@ export class VideoPlayer extends VideoBase {
     this.player.setOnCompletionListener(
       new android.media.MediaPlayer.OnCompletionListener({
         onCompletion: mp => {
-          console.log('MediaPlayer.OnCompletionListener.onCompletion ---', `mp: ${mp}`);
+          this.CLog('MediaPlayer.OnCompletionListener.onCompletion ---', `mp: ${mp}`);
           if (this._owner.get()) {
             this._owner.get()._removePlaybackTimeObserver();
-            console.log('VideoPlayer ---  emitting finishedEvent');
-            this._owner.get()._emit(VideoBase.finishedEvent);
+            this.CLog('VideoPlayer ---  emitting playbackFinishedEvent');
+            this._owner.get()._emit(VideoBase.playbackFinishedEvent);
           }
         },
       })
@@ -385,7 +389,7 @@ export class VideoPlayer extends VideoBase {
     this.player.setOnBufferingUpdateListener(
       new android.media.MediaPlayer.OnBufferingUpdateListener({
         onBufferingUpdate: (mp, percent) => {
-          console.log('MediaPlayer.OnBufferingUpdateListener.onBufferingUpdate ---', `mp: ${mp}, percent: ${percent}`);
+          this.CLog('MediaPlayer.OnBufferingUpdateListener.onBufferingUpdate ---', `mp: ${mp}, percent: ${percent}`);
           this._owner.get().currentBufferPercentage = percent;
         },
       })
@@ -394,10 +398,10 @@ export class VideoPlayer extends VideoBase {
   }
 
   private _setupMediaController(): void {
-    console.log('VideoPlayer._setupMediaController');
+    this.CLog('VideoPlayer._setupMediaController');
     if (this.controls !== false || this.controls === undefined) {
       if (this.mediaController == null) {
-        console.log('VideoPlayer._setupMediaController ---', 'creating new MediaController');
+        this.CLog('VideoPlayer._setupMediaController ---', 'creating new MediaController');
         this.mediaController = new android.widget.MediaController(this._context);
       } else {
         // Already setup
@@ -445,21 +449,21 @@ export class VideoPlayer extends VideoBase {
         },
       });
 
-      console.log(`VideoPlayer._setupMediaController ---`, `mediaController.setMediaPlayer(${mediaPlayerControl})`);
+      this.CLog(`VideoPlayer._setupMediaController ---`, `mediaController.setMediaPlayer(${mediaPlayerControl})`);
       this.mediaController.setMediaPlayer(mediaPlayerControl);
-      console.log(`VideoPlayer._setupMediaController ---`, `mediaController.setAnchorView(${this.nativeView})`);
+      this.CLog(`VideoPlayer._setupMediaController ---`, `mediaController.setAnchorView(${this.nativeView})`);
       this.mediaController.setAnchorView(this.nativeView);
-      console.log(`VideoPlayer._setupMediaController ---`, `mediaController.setEnabled(true)`);
+      this.CLog(`VideoPlayer._setupMediaController ---`, `mediaController.setEnabled(true)`);
       this.mediaController.setEnabled(true);
     }
   }
 
   private _setupAspectRatio(): void {
-    console.log(`VideoPlayer._setupAspectRatio`);
+    this.CLog(`VideoPlayer._setupAspectRatio`);
     const viewWidth = this.nativeView.getWidth();
     const viewHeight = this.nativeView.getHeight();
     const aspectRatio = this.videoHeight / this.videoWidth;
-    console.log(`VideoPlayer._setupAspectRatio ---`, `viewHeight: ${viewHeight}, viewWidth: ${viewWidth}, aspectRatio: ${aspectRatio}`);
+    this.CLog(`VideoPlayer._setupAspectRatio ---`, `viewHeight: ${viewHeight}, viewWidth: ${viewWidth}, aspectRatio: ${aspectRatio}`);
 
     let newWidth;
     let newHeight;
@@ -473,14 +477,14 @@ export class VideoPlayer extends VideoBase {
       newHeight = viewHeight;
     }
 
-    console.log(`VideoPlayer._setupAspectRatio ---`, `newWidth: ${newWidth}, newHeight: ${newHeight}`);
+    this.CLog(`VideoPlayer._setupAspectRatio ---`, `newWidth: ${newWidth}, newHeight: ${newHeight}`);
 
     const xoff = (viewWidth - newWidth) / 2;
     const yoff = (viewHeight - newHeight) / 2;
-    console.log(`VideoPlayer._setupAspectRatio ---`, `xoff: ${xoff}, yoff: ${yoff}`);
+    this.CLog(`VideoPlayer._setupAspectRatio ---`, `xoff: ${xoff}, yoff: ${yoff}`);
 
     const txform = new android.graphics.Matrix();
-    console.log(`VideoPlayer._setupAspectRatio ---`, `txform: ${txform}, txform: ${txform}`);
+    this.CLog(`VideoPlayer._setupAspectRatio ---`, `txform: ${txform}, txform: ${txform}`);
 
     this.nativeView.getTransform(txform);
     txform.setScale(newWidth / viewWidth, newHeight / viewHeight);
@@ -496,13 +500,8 @@ export class VideoPlayer extends VideoBase {
     let newWidth;
     let newHeight;
 
-    // if (viewHeight < viewWidth * aspectRatio) {
     newHeight = viewHeight;
     newWidth = viewHeight * aspectRatio;
-    // } else {
-    //   newHeight = viewWidth / aspectRatio;
-    //   newWidth = viewWidth;
-    // }
 
     const xoff = (viewWidth - newWidth) / 2;
     const yoff = (viewHeight - newHeight) / 2;
@@ -519,7 +518,7 @@ export class VideoPlayer extends VideoBase {
       // the Surface event will then call this when we are ready...
       return;
     }
-    console.log(`VideoPlayer._openVideo`);
+    this.CLog(`VideoPlayer._openVideo`);
 
     // clear any old stuff
     this.release();
@@ -529,16 +528,16 @@ export class VideoPlayer extends VideoBase {
 
     try {
       this.player = new android.media.MediaPlayer();
-      console.log(`VideoPlayer._openVideo ---`, `this.player: ${this.player}`);
+      this.CLog(`VideoPlayer._openVideo ---`, `this.player: ${this.player}`);
 
       if (this.audioSession !== null) {
-        console.log(`VideoPlayer._openVideo ---`, `setting audio session Id: ${this.audioSession}`);
+        this.CLog(`VideoPlayer._openVideo ---`, `setting audio session Id: ${this.audioSession}`);
         this.player.setAudioSessionId(this.audioSession);
       } else {
         this.audioSession = this.player.getAudioSessionId();
       }
 
-      console.log(`VideoPlayer._openVideo --- `, `setting up MediaPlayerListeners`);
+      this.CLog(`VideoPlayer._openVideo --- `, `setting up MediaPlayerListeners`);
       this._setupMediaPlayerListeners();
 
       this.player.setSurface(this.textureSurface);
@@ -576,19 +575,19 @@ export class VideoPlayer extends VideoBase {
       this._setupMediaController();
       this.player.prepareAsync();
     } catch (ex) {
-      console.log(`VideoPlayer._openVideo --- error: ${ex}, stack: ${ex.stack}`);
+      this.CLog(`VideoPlayer._openVideo --- error: ${ex}, stack: ${ex.stack}`);
       this._owner.get()._emit(VideoBase.errorEvent, { error: ex, stack: ex.stack });
     }
   }
 
   private _setNativeVideo(nativeVideo: any): void {
-    console.log(`VideoPlayer._setNativeVideo`);
+    this.CLog(`VideoPlayer._setNativeVideo`);
     this._src = nativeVideo;
     this._openVideo();
   }
 
   private _addPlaybackTimeObserver() {
-    console.log(`VideoPlayer._addPlaybackTimeObserver`);
+    this.CLog(`VideoPlayer._addPlaybackTimeObserver`);
     this._playbackTimeObserverActive = true;
     this._playbackTimeObserver = Utils.setInterval(() => {
       if (this.player.isPlaying) {
@@ -599,12 +598,12 @@ export class VideoPlayer extends VideoBase {
   }
 
   private _removePlaybackTimeObserver() {
-    console.log(`VideoPlayer._removePlaybackTimeObserver`);
+    this.CLog(`VideoPlayer._removePlaybackTimeObserver`);
     if (this._playbackTimeObserverActive) {
       // one last emit of the most up-to-date time index
       if (this.player !== null) {
         const _milliseconds = this.player.getCurrentPosition();
-        console.log('VideoPlayer._removePlaybackTimeObserver', 'emitting currentTimeUpdatedEvent');
+        this.CLog('VideoPlayer._removePlaybackTimeObserver', 'emitting currentTimeUpdatedEvent');
         this._emit(VideoBase.currentTimeUpdatedEvent, {
           position: _milliseconds,
         });

@@ -14,9 +14,9 @@ export declare class VideoBase extends View {
   /**
    * Event Strings
    */
-  static finishedEvent: string;
+  static playbackFinishedEvent: string;
   static playbackReadyEvent: string;
-  static playbackStartEvent: string;
+  static playbackStartedEvent: string;
   static seekToTimeCompleteEvent: string;
   static currentTimeUpdatedEvent: string;
   static pausedEvent: string;
@@ -82,6 +82,8 @@ export declare class VideoBase extends View {
   static IMAGETYPESTEREOTOPBOTTOM: number;
   static IMAGETYPESTEREOLEFTRIGHT: number;
 
+  backgroundAudio: boolean;
+
   /**
    * (ios) Set the audio session playback category.
    * backgroundAudio must evaluate to false for this to work.
@@ -96,6 +98,16 @@ export declare class VideoBase extends View {
    * - AVAudioSessionCategoryAudioProcessing (Deprecated in iOS 10)
    */
   static iosAudioSessionCategory: string;
+
+  /**
+   * flag to enable/disable debug logging
+   */
+  debug: boolean;
+
+  /**
+   * enables/disables chaptersLoadedEvent (iOS only functionality)
+   */
+  detectChapters: boolean;
 
   /**
    * Start playing the video.
@@ -204,4 +216,10 @@ export declare class VideoBase extends View {
    * @param {function} callback - The callback function to execute.
    */
   seekToTimeComplete(callback: Function): void;
+
+  /*
+   * Logging functions controlled by debug property
+   */
+  CLog(...args): void;
+  CError(...args): void;
 }

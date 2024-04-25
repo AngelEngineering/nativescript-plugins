@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable no-unused-vars */
 import { Application, Utils, ViewBase } from '@nativescript/core';
-import { VideoBase, VideoFill, videoSourceProperty, fillProperty, VideoEventData } from './common';
+import { VideoBase, VideoFill, videoSourceProperty, fillProperty } from './common';
 
 export * from './common';
 
@@ -59,9 +59,9 @@ export class VideoPlayer extends VideoBase {
           audioSession.setCategoryError(AVAudioSessionCategoryPlayAndRecord);
           audioSession.overrideOutputAudioPortError(AVAudioSessionPortOverride.Speaker);
           audioSession.setActiveError(true);
-          //console.log("audioSession category set and active");
+          this.CLog('audioSession category set and active');
         } catch (err) {
-          //console.log("setting audioSession category failed");
+          this.CLog('setting audioSession category failed');
           this._emit(VideoBase.errorEvent, err);
         }
       }
@@ -120,7 +120,7 @@ export class VideoPlayer extends VideoBase {
   }
 
   public _setNativeVideo(nativeVideoPlayer: any) {
-    //console.log("Set native video: "+nativeVideoPlayer);
+    this.CLog('Set native video: ' + nativeVideoPlayer);
     if (this._player == null) {
       setTimeout(() => {
         this._setNativeVideo(nativeVideoPlayer);
@@ -186,7 +186,7 @@ export class VideoPlayer extends VideoBase {
     if (this._player && this._player.currentItem && this._player.currentItem === notification.object) {
       // This will match exactly to the object from the notification so can ensure only looping and finished event for the video that has finished.
       // Notification is structured like so: NSConcreteNotification 0x61000024f690 {name = AVPlayerItemDidPlayToEndTimeNotification; object = <AVPlayerItem: 0x600000204190, asset = <AVURLAsset: 0x60000022b7a0, URL = https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4>>}
-      this._emit(VideoBase.finishedEvent);
+      this._emit(VideoBase.playbackFinishedEvent);
       this._videoFinished = true;
       if (this.loop === true && this._player !== null) {
         // Go in 5ms for more seamless looping
@@ -198,7 +198,7 @@ export class VideoPlayer extends VideoBase {
 
   /**
    * Start playing the video.
-   * NOTE: on iOS, the player must have issues the playbackReadyEvent before this can be called
+   * NOTE: on iOS, the player must have issued the playbackReadyEvent before this can be called
    */
   public play() {
     if (this._videoFinished) {
@@ -279,7 +279,7 @@ export class VideoPlayer extends VideoBase {
   public seekToTime(milliseconds: number) {
     const seconds = milliseconds / 1000;
     if (this._player) {
-      console.log('timescale', this._player.currentTime().timescale);
+      this.CLog('timescale', this._player.currentTime().timescale);
       if (this._player.currentItem && this._player.currentItem.status === 1) {
         let time = CMTimeMakeWithSeconds(seconds, this._player.currentTime().timescale);
         try {
@@ -291,7 +291,7 @@ export class VideoPlayer extends VideoBase {
           this._emit(VideoBase.errorEvent, e);
         }
       } else {
-        console.log('AVPlayerItem cannot service a seek request with a completion handler until its status is ReadyToPlay.');
+        this.CLog('AVPlayerItem cannot service a seek request with a completion handler until its status is ReadyToPlay.');
       }
     }
   }
@@ -368,6 +368,7 @@ export class VideoPlayer extends VideoBase {
   private _addStatusObserver(currentItem) {
     this._observerActive = true;
     currentItem.addObserverForKeyPathOptionsContext(this._observer, 'status', 0, null);
+    this._player.addObserverForKeyPathOptionsContext(this._observer, 'rate', NSKeyValueObservingOptions.New, null);
   }
 
   private _removeStatusObserver(currentItem) {
@@ -379,6 +380,7 @@ export class VideoPlayer extends VideoBase {
     this._observerActive = false;
     if (currentItem) {
       currentItem.removeObserverForKeyPath(this._observer, 'status');
+      this._player.removeObserverForKeyPath(this._observer, 'rate');
     }
   }
 
@@ -427,6 +429,7 @@ export class VideoPlayer extends VideoBase {
     this._videoLoaded = true;
     this._emit(VideoBase.playbackReadyEvent);
 
+    //This is disabled by default, enable by setting the detectChapters property to true
     if (this.detectChapters) {
       const playerItem = <AVPlayerItem>(<AVPlayer>this._player).currentItem;
       const chapterLocalesKey = 'availableChapterLocales';
@@ -447,7 +450,15 @@ export class VideoPlayer extends VideoBase {
 
   playbackStart() {
     this._videoPlaying = true;
-    this._emit(VideoBase.playbackStartEvent);
+    this._emit(VideoBase.playbackStartedEvent);
+  }
+
+  playbackPaused() {
+    if (!this._videoPlaying) {
+      return;
+    }
+    this._videoPlaying = false;
+    this._emit(VideoBase.pausedEvent);
   }
 }
 
@@ -457,6 +468,12 @@ class PlayerObserverClass extends NSObject {
     if (path === 'status') {
       if (this['_owner']._player && this['_owner']._player.currentItem.status === AVPlayerItemStatus.ReadyToPlay && !this['_owner']._videoLoaded) {
         this['_owner'].playbackReady();
+      }
+    } else if (path === 'rate') {
+      if (this['_owner']._player && this['_owner']._player.rate > 0 && this['_owner']._videoLoaded) {
+        this['_owner'].playbackStart();
+      } else if (this['_owner']._player && this['_owner']._player.rate == 0 && this['_owner']._videoLoaded) {
+        this['_owner'].playbackPaused();
       }
     }
   }
