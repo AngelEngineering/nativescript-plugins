@@ -46,6 +46,9 @@
       ],
       "@angelengineering/sleepcontrol": [
         "packages/sleepcontrol/index.d.ts"
+      ],
+      "@angelengineering/videoplayer": [
+        "packages/videoplayer/index.d.ts"
       ]
     }
   },

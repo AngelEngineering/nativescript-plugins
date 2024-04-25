@@ -1,0 +1,40 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  xmlns:Video="@angelengineering/videoplayer"
+  navigatingTo="navigatingTo"
+  navigatingFrom="navigatingFrom">
+  <Page.actionBar>
+    <ActionBar title="Videoplayer Demo"
+      icon=""
+      class="action-bar">
+    </ActionBar>
+  </Page.actionBar>
+  <StackLayout>
+    <Video:VideoPlayer id="nsVideoPlayer"
+      controls="true"
+      loop="false"
+      autoplay="false"
+      height="400"
+      src=""
+      marginBottom="30"
+      opacity="1"
+      fill="aspectFill"
+      visibility="visible"
+      loaded="onLoaded"
+      observeCurrentTime="false"
+      debug="true"
+      detectChapters="true" />
+
+    <Button text="Load MP4"
+      tap="{{ playmp4 }}"
+      class="btn btn-primary"/>
+
+    <Button text="Load MOV"
+      tap="{{ playmov }}"
+      class="btn btn-primary"/>
+
+    <Button text="Load MKV"
+      tap="{{ playmkv }}"
+      class="btn btn-primary"/>
+
+  </StackLayout>
+</Page>
