@@ -1,9 +1,6 @@
 import * as videoSource from './video-source/video-source';
 import { Utils, View, Property, booleanConverter, EventData, ImageSource } from '@nativescript/core';
 
-// on Android we explicitly set propertySettings to None because android will invalidate its layout (skip unnecessary native call).
-// var AffectsLayout = platform.device.os === platform.platformNames.android ? dependencyObservable.PropertyMetadataSettings.None : dependencyObservable.PropertyMetadataSettings.AffectsLayout;
-
 export interface VideoEventData extends EventData {
   data?: any;
 }
@@ -73,7 +70,7 @@ export class VideoBase extends View {
   public muted = false;
   public fill: VideoFill = VideoFill.default;
   public detectChapters = false; // enables/disables chaptersLoadedEvent (iOS only functionality)
-  public backgroundAudio = false;
+  public backgroundAudio = false; //iOS only, whether to mix audio from player with other audio playing on device
   public debug = false; //flag to enable/disable debug logging
 
   public static IMAGETYPEMONO = 1;
