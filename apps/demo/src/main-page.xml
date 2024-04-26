@@ -1,5 +1,6 @@
 <Page xmlns="http://schemas.nativescript.org/tns.xsd"
   navigatingTo="navigatingTo"
+  loaded="onLoaded"
   class="page">
   <Page.actionBar>
     <ActionBar title="Nativescript Plugin Demos"
@@ -23,6 +24,8 @@
           tap="{{ viewDemo }}" />
         <Button text="camera"
           tap="{{ viewCamera }}" />
+        <Button text="videoplayer"
+          tap="{{ viewDemo }}" />
       </StackLayout>
     </ScrollView>
   </StackLayout>

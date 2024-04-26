@@ -92,6 +92,13 @@ module.exports = {
           description: '@angelengineering/camera: Build',
         },
       },
+      // @angelengineering/videoplayer
+      'videoplayer': {
+        build: {
+          script: 'nx run videoplayer:build.all',
+          description: '@angelengineering/videoplayer: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -129,6 +136,10 @@ module.exports = {
       'camera': {
         script: 'nx run camera:focus',
         description: 'Focus on @angelengineering/camera',
+      },
+      'videoplayer': {
+        script: 'nx run videoplayer:focus',
+        description: 'Focus on @angelengineering/videoplayer',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',

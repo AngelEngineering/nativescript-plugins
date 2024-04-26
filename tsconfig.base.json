@@ -49,6 +49,9 @@
       ],
       "@angelengineering/camera": [
         "packages/camera/index.d.ts"
+      ],
+      "@angelengineering/videoplayer": [
+        "packages/videoplayer/index.d.ts"
       ]
     }
   },

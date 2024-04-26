@@ -5,6 +5,7 @@
 - [@angelengineering/filepicker](packages/filepicker/README.md)
 - [@angelengineering/flashlight](packages/flashlight/README.md)
 - [@angelengineering/sleepcontrol](packages/sleepcontrol/README.md)
+- [@angelengineering/videoplayer](packages/videoplayer/README.md)
 
 # Overview
 This repo contains source for a number of Nativescript plugins. Check out the individual README's inside each package for more information on each plugin. 
