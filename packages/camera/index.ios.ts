@@ -517,7 +517,9 @@ export class MySwifty extends SwiftyCamViewController {
 
   private _flashBtnHandler() {
     if (this._flashBtn) this._flashBtn.removeFromSuperview();
-    if (this.videoDevice && !this.videoDevice.isTorchModeSupported(AVCaptureTorchMode.On)) {
+    //we check for flash instead of torch to support Retina Flash mode for photos
+    // videos made with the front camera will show the flash icon, but it won't do anything during recording from front camera, only rear
+    if (this.videoDevice && !this.videoDevice.isFlashModeSupported(AVCaptureFlashMode.On)) {
       return;
     }
     this._flashBtn = createButton(this, null, null, 'toggleFlash', null, this.flashEnabled ? createIcon('flash') : createIcon('flashOff'));
@@ -893,11 +895,27 @@ export class NSCamera extends NSCameraBase {
   }
 
   /**
-   * Check if current camera has a flash
+   * Check if current camera has a flash.
+   * Note: iOS will use flash for photos, and torch for videos. Front cameras don't have torches, only rear cameras.
+   *        iPhone models 6s or newer have Flash Retina mode which emulates a front flash by showing a bright white screen for photos.
+   *        For videos, it will not have any hardware or software support for torch/flash on front cameras, only rear.
    * @returns true if camera has a flash, false if not
    */
   public hasFlash(): boolean {
-    return this._swifty?.videoDevice?.hasFlash;
+    console.log('hasFlash?', this._swifty.videoDevice.hasFlash, 'hasTorch?', this._swifty.videoDevice.hasTorch);
+    return this._swifty.videoDevice.hasFlash;
+  }
+
+  /**
+   * Check if current camera has a torch.
+   * Note: iOS will use flash for photos, and torch for videos. Front cameras don't have torches, only rear cameras.
+   *        iPhone models 6s or newer have Flash Retina mode which emulates a front flash by showing a bright white screen for photos.
+   *        For videos, it will not have any hardware or software support for torch/flash on front cameras, only rear.
+   * @returns true if camera has a torch, false if not
+   */
+  public hasTorch(): boolean {
+    console.log('hasFlash?', this._swifty.videoDevice.hasFlash, 'hasTorch?', this._swifty.videoDevice.hasTorch);
+    return this._swifty.videoDevice.hasTorch;
   }
 
   /**

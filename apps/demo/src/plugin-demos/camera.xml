@@ -32,7 +32,6 @@
           insetButtonsPercent="0.02"
           shouldLockRotation="false"
           confirmPhotos="true"
-          confirmVideo="true"
           saveToGallery="false"
           autoSquareCrop="false"
           confirmRetakeText="nah"

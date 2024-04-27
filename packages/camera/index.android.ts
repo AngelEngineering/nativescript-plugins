@@ -733,6 +733,15 @@ export class NSCamera extends NSCameraBase {
   }
 
   /**
+   * **iOS-only** Check if current camera has a torch.
+   * On Android, this is the same as hasFlash since it doesn't differentiate between torches and flashlights
+   * @returns true if camera has a torch, false if not
+   */
+  hasTorch(): boolean {
+    return this.hasFlash();
+  }
+
+  /**
    * Return the current flash mode of the device. Will return null if the flash mode is not supported by device.
    * @returns 'on', 'off' or null
    */
@@ -755,7 +764,7 @@ export class NSCamera extends NSCameraBase {
     const currentFlashMode = this.getFlashMode();
     // this.CLog('_ensureCorrectFlashIcon flash mode', currentFlashMode);
 
-    // if the flash mode is null then we need to remove the button from the parent layout
+    // if the flash mode is null then we need to remove the button from the parent layout as camera does not have a flash to use
     if (currentFlashMode === null) {
       // if we have the button - remove it from parent
       if (this._flashBtn) {

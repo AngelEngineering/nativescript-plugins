@@ -288,6 +288,14 @@ export declare class NSCamera extends ContentView {
    * @returns true if camera has a flash, false if not
    */
   hasFlash(): boolean;
+
+  /**
+   * **iOS-only** Check if current camera has a torch.
+   * On Android, this is the same as hasFlash since it doesn't differentiate between torches and flashlights
+   * @returns true if camera has a torch, false if not
+   */
+  hasTorch(): boolean;
+
   /*
    * Utility to merge an array of video filenames, must all be valid mp4 format video files with same audio encoding
    */

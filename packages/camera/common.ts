@@ -435,6 +435,15 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   }
 
   /**
+   * **iOS-only** Check if current camera has a torch.
+   * On Android, this is the same as hasFlash since it doesn't differentiate between torches and flashlights
+   * @returns true if camera has a torch, false if not
+   */
+  hasTorch(): boolean {
+    return false;
+  }
+
+  /**
    * Notify events by name and optionally pass data
    */
   public sendEvent(eventName: string, data?: any, msg?: string) {

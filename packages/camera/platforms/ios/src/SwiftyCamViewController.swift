@@ -413,7 +413,7 @@ import UIKit
 
   /**
     Capture photo from current session
-    UIImage will be returned with the SwiftyCamViewControllerDelegate function SwiftyCamDidTakePhoto(photo:)
+    UIImage will be returned with the SwiftyCamViewControllerDelegate function SwiftyCamDidTakePhoto(photo
   */
   @objc public func takePhoto() {
     guard let device: AVCaptureDevice = videoDevice else {
@@ -422,14 +422,17 @@ import UIKit
       return
     }
 
-    /* TODO: Add Support for Retina Flash and use that instead of white screen view*/
+    //This should work for rear-cameras that have a real flash. For front-cameras on devices 6s or newer,
+    //    iOS will use a Retina Flash mode which will increase the brightness of the display briefly to simulate
+    //    flash lighting.
     if device.hasFlash == true
       && flashEnabled == true
     {
       changeFlashSettings(device: device, mode: .on)
       capturePhotoAsyncronously(completionHandler: { _ in })
 
-    } else if device.hasFlash == false && flashEnabled == true && currentCamera == .front {
+    }  //emulate retina flash by showing a white screen for front-camera pics for devices older than 6s without retina flash support
+    else if device.hasFlash == false && flashEnabled == true && currentCamera == .front {
       flashView = UIView(frame: view.frame)
       flashView?.alpha = 0.0
       flashView?.backgroundColor = UIColor.white
@@ -470,16 +473,14 @@ import UIKit
       Thread.isMainThread,
       "[SwiftyCam]: This function -startRecording must be called on the main thread.")
 
-    //configure flash if set
     guard let device: AVCaptureDevice = videoDevice else {
       NSLog("!!!!   NO Camera Device to capture from!!!!!")
       //TODO: sent an error event with more info?
       return
     }
 
-    //TODO: remove this, just for logging so it shows on main thread console
     self.configureSessionQuality()  //update video quality based on property
-    if device.hasFlash == true && flashEnabled == true {
+    if device.hasTorch == true && flashEnabled == true {
       changeTorchSettings(device: device, mode: .on)
     }
     self.getVideoTransform()
@@ -701,19 +702,36 @@ import UIKit
    *  Gets the number of cameras available on this device
    */
   @objc public func getNumberOfCameras() -> Int {
-    let deviceDiscoverySession: AVCaptureDevice.DiscoverySession = AVCaptureDevice.DiscoverySession(
-      deviceTypes: [
-        .builtInDualCamera,
-        .builtInDualWideCamera,
-        .builtInTripleCamera,
-        .builtInWideAngleCamera,
-        .builtInTelephotoCamera,
-        .builtInUltraWideCamera,
-      ],
-      mediaType: AVMediaType.video,
-      position: .unspecified)
-    let foundCameras: [AVCaptureDevice] = deviceDiscoverySession.devices
-    return foundCameras.count
+    if #available(iOS 13.0, *) {
+      let deviceDiscoverySession: AVCaptureDevice.DiscoverySession =
+        AVCaptureDevice.DiscoverySession(
+          deviceTypes: [
+            .builtInDualCamera,
+            .builtInDualWideCamera,
+            .builtInTripleCamera,
+            .builtInWideAngleCamera,
+            .builtInTelephotoCamera,
+            .builtInUltraWideCamera,
+          ],
+          mediaType: AVMediaType.video,
+          position: .unspecified)
+      let foundCameras: [AVCaptureDevice] = deviceDiscoverySession.devices
+      return foundCameras.count
+    } else {
+      // Fallback on earlier versions
+      let deviceDiscoverySession: AVCaptureDevice.DiscoverySession =
+        AVCaptureDevice.DiscoverySession(
+          deviceTypes: [
+            .builtInDualCamera,
+            .builtInWideAngleCamera,
+            .builtInTelephotoCamera,
+          ],
+          mediaType: AVMediaType.video,
+          position: .unspecified)
+      let foundCameras: [AVCaptureDevice] = deviceDiscoverySession.devices
+      return foundCameras.count
+    }
+
   }
 
   /**
@@ -1840,6 +1858,7 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
     let size = UIScreen.main.bounds.size
     guard let image = UIImage.init(cgImage: cgImage).scaled(toHeight: size.height) else { return }
     let properties = metadata(from: sampleBuffer)
+    //TODO: can use this image as a screen grab for preview purposes
   }
 
   private func handleAudioBuffer(_ sampleBuffer: CMSampleBuffer) {

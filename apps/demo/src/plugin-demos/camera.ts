@@ -70,6 +70,7 @@ export class DemoModel extends DemoSharedCamera {
 
     this.cam.on(NSCamera.toggleCameraEvent, (args: any) => {
       console.log(`toggleCameraEvent: ${args}`);
+      console.log('current camera has flash?', this.cam.hasFlash());
     });
 
     this.cam.on(NSCamera.photoCapturedEvent, (args: any) => {
@@ -269,7 +270,6 @@ export class DemoModel extends DemoSharedCamera {
             //Or use custom options instead:
             const customOptions: ICameraOptions = {
               confirmPhotos: true,
-              confirmVideo: true,
               saveToGallery: true,
               maxDimension: 1000,
               quality: 50,
