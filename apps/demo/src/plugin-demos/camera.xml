@@ -1,5 +1,5 @@
 <Page xmlns="http://schemas.nativescript.org/tns.xsd"
-  xmlns:VideoPlayer="nativescript-videoplayer"
+  xmlns:Video="@angelengineering/videoplayer"
   navigatingTo="navigatingTo"
   navigatingFrom="navigatingFrom"
   loaded="onLoaded"
@@ -32,6 +32,7 @@
           insetButtonsPercent="0.02"
           shouldLockRotation="false"
           confirmPhotos="true"
+          confirmVideo="true"
           saveToGallery="false"
           autoSquareCrop="false"
           confirmRetakeText="nah"
@@ -93,14 +94,15 @@
             class="btn btn-primary" />
         </GridLayout>
 
-        <VideoPlayer:Video id="nativeVideoPlayer"
+        <Video:VideoPlayer id="nativeVideoPlayer"
           controls="true"
           loop="false"
           autoplay="false"
           height="400"
           src=""
           opacity="1"
-          visibility="hidden"/>
+          visibility="hidden"
+          fill="aspectFill" />
 
         <Image height="200"
           id="photoCaptureResult"

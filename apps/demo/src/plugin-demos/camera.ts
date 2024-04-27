@@ -4,7 +4,7 @@ import { DemoSharedCamera } from '@demo/shared';
 import { NSCamera, CameraVideoQuality, ICameraOptions } from '@angelengineering/camera';
 import { ObservableProperty } from './observable-property';
 import { Result, checkMultiple, check as checkPermission, request } from '@nativescript-community/perms';
-import { Video } from 'nativescript-videoplayer';
+import { VideoPlayer } from '@angelengineering/videoplayer';
 
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
@@ -13,7 +13,7 @@ export function navigatingTo(args: EventData) {
 
 export function navigatingFrom(args: EventData) {
   const page = <Page>args.object;
-  const video: Video = page.getViewById('nativeVideoPlayer') as Video;
+  const video: VideoPlayer = page.getViewById('nativeVideoPlayer') as VideoPlayer;
   if (video) {
     if (!isAndroid) video.pause();
     video.disposeNativeView();
@@ -91,7 +91,7 @@ export class DemoModel extends DemoSharedCamera {
       const videoFile = File.fromPath(args.data);
       console.log('File has length', videoFile.size);
       //play the video just recorded
-      const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as Video;
+      const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as VideoPlayer;
       video.visibility = 'visible';
       video.opacity = 1;
       video.src = args.data;
@@ -107,7 +107,7 @@ export class DemoModel extends DemoSharedCamera {
 
     this.cam.on(NSCamera.videoRecordingStartedEvent, (args: any) => {
       console.log(`videoRecordingStartedEvent:`, args.data);
-      const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as Video;
+      const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as VideoPlayer;
       video.visibility = 'hidden';
     });
 
@@ -200,7 +200,7 @@ export class DemoModel extends DemoSharedCamera {
     if (previewfile.size) {
       console.log('video preview files merged');
       console.log('File has length', previewfile.size);
-      const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as Video;
+      const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as VideoPlayer;
       video.visibility = 'visible';
       video.opacity = 1;
       if (video.src && isAndroid) video.stop();
@@ -269,6 +269,7 @@ export class DemoModel extends DemoSharedCamera {
             //Or use custom options instead:
             const customOptions: ICameraOptions = {
               confirmPhotos: true,
+              confirmVideo: true,
               saveToGallery: true,
               maxDimension: 1000,
               quality: 50,
