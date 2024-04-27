@@ -20,7 +20,7 @@ import UIKit
 
 /// UIViewController Camera View Subclass
 
-@objc open class SwiftyCamViewController: UIViewController {
+@objc open class SwiftyCamViewController: UIViewController, AVCapturePhotoCaptureDelegate {
   // MARK: Enumeration Declarations
 
   /// Enumeration for Camera Selection
@@ -202,7 +202,7 @@ import UIKit
   //SwiftyCam variables end
 
   /// Photo File Output variable
-  @objc public var photoFileOutput: AVCaptureStillImageOutput?
+  @objc public var photoFileOutput: AVCapturePhotoOutput?
 
   /// Video Device variable
   @objc public var videoDevice: AVCaptureDevice?
@@ -457,7 +457,8 @@ import UIKit
           })
         })
     } else {
-      if device.isFlashActive == true {
+
+              if device.isFlashActive == true {
         changeFlashSettings(device: device, mode: .off)
       }
       capturePhotoAsyncronously(completionHandler: { _ in })
@@ -483,7 +484,7 @@ import UIKit
     if device.hasTorch == true && flashEnabled == true {
       changeTorchSettings(device: device, mode: .on)
     }
-    self.getVideoTransform()
+    //    self.getVideoTransform()
     self.executeAsync { [weak self] in
       guard let self = self else {
         return
@@ -682,7 +683,7 @@ import UIKit
       self.didStartWritingSession = false
       self.frameCount = 0
       self.recordingDuration = 0.0
-      let url = assetWriter.outputURL
+      //      let url = assetWriter.outputURL
 
       assetWriter.cancelWriting()
 
@@ -816,10 +817,9 @@ import UIKit
     //TODO: replace with image buffer frame grab version
   */
   fileprivate func configurePhotoOutput() {
-    let photoFileOutput = AVCaptureStillImageOutput()
+    let photoFileOutput = AVCapturePhotoOutput()
 
     if session.canAddOutput(photoFileOutput) {
-      photoFileOutput.outputSettings = [AVVideoCodecKey: AVVideoCodecType.jpeg]
       session.addOutput(photoFileOutput)
       self.photoFileOutput = photoFileOutput
     }
@@ -918,27 +918,33 @@ import UIKit
     return image
   }
 
+  @objc public func photoOutput(
+    _ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?
+  ) {
+    guard let photoData = photo.fileDataRepresentation() else {
+      return
+    }
+    guard let photoImage = UIImage(data: photoData) else {
+      return
+    }
+    DispatchQueue.main.async {
+      self.cameraDelegate?.swiftyCam(self, didTake: photoImage)
+    }
+  }
   @objc public func capturePhotoAsyncronously(completionHandler: @escaping (Bool) -> Void) {
     if let videoConnection: AVCaptureConnection = photoFileOutput?.connection(
       with: AVMediaType.video)
     {
-      photoFileOutput?.captureStillImageAsynchronously(
-        from: videoConnection,
-        completionHandler: { sampleBuffer, _ in
-          if sampleBuffer != nil {
-            let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(
-              sampleBuffer!)
-            let image = self.processPhoto(imageData!)
-
-            // Call delegate and return new image
-            DispatchQueue.main.async {
-              self.cameraDelegate?.swiftyCam(self, didTake: image)
-            }
-            completionHandler(true)
-          } else {
-            completionHandler(false)
-          }
-        })
+      let photoSettings: AVCapturePhotoSettings!
+      photoSettings = AVCapturePhotoSettings.init(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
+      photoSettings.isAutoStillImageStabilizationEnabled = true
+      if flashEnabled {
+        photoSettings.flashMode = .on
+      } else {
+        photoSettings.flashMode = .off
+      }
+      photoSettings.isHighResolutionPhotoEnabled = false
+      photoFileOutput?.capturePhoto(with: photoSettings, delegate: self)
     } else {
       NSLog("!!!! Error trying to get photoFileOuput connection")
       completionHandler(false)
@@ -963,10 +969,10 @@ import UIKit
           style: .default,
           handler: { _ in
             if #available(iOS 10.0, *) {
-              UIApplication.shared.openURL(URL(string: UIApplication.openSettingsURLString)!)
+              UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
             } else {
               if let appSettings = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.openURL(appSettings)
+                UIApplication.shared.open(appSettings)
               }
             }
           }))
@@ -1020,8 +1026,7 @@ import UIKit
   @objc public func changeFlashSettings(device: AVCaptureDevice, mode: AVCaptureDevice.FlashMode) {
     do {
       try device.lockForConfiguration()
-      device.flashMode = mode
-      try device.setTorchModeOn(level: 1.0)
+      device.flashMode = mode      
       device.unlockForConfiguration()
     } catch {
       NSLog("[SwiftyCam]: \(error)")
@@ -1854,11 +1859,12 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
       return
     }
 
-    guard let cgImage = self.cgImage(from: sampleBuffer) else { return }
-    let size = UIScreen.main.bounds.size
-    guard let image = UIImage.init(cgImage: cgImage).scaled(toHeight: size.height) else { return }
-    let properties = metadata(from: sampleBuffer)
+    //    guard let cgImage = self.cgImage(from: sampleBuffer) else { return }
+    //    let size = UIScreen.main.bounds.size
+    //    guard let image = UIImage.init(cgImage: cgImage).scaled(toHeight: size.height) else { return }
+    //    let properties = metadata(from: sampleBuffer)
     //TODO: can use this image as a screen grab for preview purposes
+
   }
 
   private func handleAudioBuffer(_ sampleBuffer: CMSampleBuffer) {

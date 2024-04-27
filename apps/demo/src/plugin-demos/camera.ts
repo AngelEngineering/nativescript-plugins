@@ -1,5 +1,5 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
-import { EventData, Page, alert, Frame, Screen, Image, File, isIOS, isAndroid, Button, path, knownFolders, Device } from '@nativescript/core';
+import { EventData, Page, alert, Frame, Screen, Image, File, isIOS, isAndroid, Button, path, knownFolders, Device, ImageSource } from '@nativescript/core';
 import { DemoSharedCamera } from '@demo/shared';
 import { NSCamera, CameraVideoQuality, ICameraOptions } from '@angelengineering/camera';
 import { ObservableProperty } from './observable-property';
@@ -73,7 +73,7 @@ export class DemoModel extends DemoSharedCamera {
       console.log('current camera has flash?', this.cam.hasFlash());
     });
 
-    this.cam.on(NSCamera.photoCapturedEvent, (args: any) => {
+    this.cam.on(NSCamera.photoCapturedEvent, async (args: any) => {
       console.log(`photoCapturedEvent: ${args}`);
       //args.data should be the path of the jpeg file produced by camera library
       if (typeof args.data !== 'string') {
@@ -82,6 +82,8 @@ export class DemoModel extends DemoSharedCamera {
       }
       const photoFile = File.fromPath(args.data);
       console.log('File ', args.data, 'has length', photoFile.size);
+      let tmp = await ImageSource.fromFile(photoFile.path);
+      console.log('WxH:', tmp.width, tmp.height);
       const testImg = Frame.topmost().getViewById('photoCaptureResult') as Image;
       testImg.src = args.data;
     });
