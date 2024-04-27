@@ -244,12 +244,10 @@ If you want to use the `saveToGallery` flag then you will also need to add the f
 | **getFlashMode(): string**                   | Android: various strings possible: https://developer.android.com/reference/android/hardware/Camera.Parameters.html#getFlashMode() iOS: either `'on'` or `'off'` |
 | **record(opts?: IVideoOptions)**             | Starts recording a video.                                                                                                                                       |
 | **stop()**                                   | Stops the video recording. When the video file is ready, the `videoRecordingReadyEvent` event will be emitted with its path.                                                                   |
+| **hasTorch()**                                          | Returns true if the active camera has a torch mode for video recording. *Note: Android will just return hasFlash()*                                                                                                |
+| **hasFlash()**                                          | Returns true if the active camera has a flash mode for taking photo. More info in Caveats section below.                                                                                                 |
+| **getNumberOfCameras()**                                | Returns the number of cameras on the device.   *NOTE: this should be called after the cameraReadyEvent has been received to ensure the plugin has initialized and has access to camera hardware*                                                                                                     |
 
-## Android Only Public Methods
-| Method                                                  | Description                                                                                                                                         |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **getNumberOfCameras()**                                | Returns the number of cameras on the device.                                                                                                        |
-| **hasFlash()**                                          | Returns true if the active camera has a flash mode.                                                                                                 |
 ------------------------------
 
 ## Events
@@ -318,6 +316,10 @@ export enum CameraVideoQuality {
 *Device Orientation Lock* - If your app has it's own orientation management system, use that instead of the plugin flag to ensure consistent behavior, particularly for iOS.  
 
 *High Resolution and Camera Switching during Recording* - Not all cameras support the same range of resolutions on the same device, so you will experience distortion in recordings made when starting with a high-res camera, and switching to a camera that only supports a lower resolution.
+
+*Flash Control during Recording* - For both platforms, the flash/torch icon (if property was enabled) will be hidden during video recording as turning this on or off during recording is not supported. 
+
+*Flash Control and Front Cameras on iOS* - iOS devices since the iPhone 6s have a mode called Retina Flash, which will use the device display to display a bright white screen while using the front camera to take a photo if flash mode is enabled. Rear cameras will use the device flash hardware instead. 
 
 ------------------------------
 

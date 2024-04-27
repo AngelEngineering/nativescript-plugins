@@ -639,7 +639,8 @@ export class NSCamera extends NSCameraBase {
 
       const takePicDrawable = CamHelpers.getImageDrawable(this.stopVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
-
+      //Hide the flash button while recording since we cannot turn it on/off during recording
+      this._flashBtn.setVisibility(android.view.View.GONE);
       this._camera.startRecording();
       this.isRecording = true;
     } else {
@@ -668,6 +669,8 @@ export class NSCamera extends NSCameraBase {
       const takePicDrawable = CamHelpers.getImageDrawable(this.takeVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
       this._camera.stopRecording();
+      //show the flash button again if supported
+      this._ensureCorrectFlashIcon();
       this.isRecording = false;
       if (this.shouldLockRotation) {
         this.enableRotationAndroid();

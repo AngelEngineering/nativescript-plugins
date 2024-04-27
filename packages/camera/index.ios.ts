@@ -357,6 +357,7 @@ export class MySwifty extends SwiftyCamViewController {
 
   public didStartRecording(camera: CameraSelection) {
     // console.log('videoRecordingStarted()');
+    this._flashBtn.removeFromSuperview(); //Hide the flash icon since we cannot turn torch on or off during recording
     this._owner.get().sendEvent(NSCamera.videoRecordingStartedEvent, camera);
   }
 
@@ -372,6 +373,7 @@ export class MySwifty extends SwiftyCamViewController {
 
   public didFinishRecording(camera: CameraSelection) {
     // console.log('didFinishRecording()');
+    this._flashBtnHandler(); //restore flash icon if camera has flash support
     this._owner.get().sendEvent(NSCamera.videoRecordingFinishedEvent, camera);
   }
 
@@ -543,6 +545,7 @@ export class MySwifty extends SwiftyCamViewController {
       if (this.isRecording) {
         if (this._owner.get().shouldLockRotation) this.enableRotation();
         this._owner.get().stop();
+        this._flashBtnHandler();
       } else {
         if (this._owner.get().shouldLockRotation) this.disableRotation();
         this._owner.get().record();
