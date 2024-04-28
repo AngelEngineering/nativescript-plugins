@@ -536,7 +536,7 @@ import UIKit
         ?? AVAssetWriterInput(
           mediaType: AVMediaType.video, outputSettings: videoCompressionSettings)
       assetWriterVideoInput.expectsMediaDataInRealTime = true
-      //TODO: ensure the assigned transform produces video with same orientation as device screen
+
       assetWriterVideoInput.transform = self.getVideoTransform()
       if assetWriter.canAdd(assetWriterVideoInput) {
         assetWriter.add(assetWriterVideoInput)
@@ -921,7 +921,8 @@ import UIKit
     _ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?
   ) {
     if error != nil {
-      NSLog("ERROR while processing photo:" + error?.localizedDescription)
+      NSLog("ERROR while processing photo:")
+      // NSLog(error.localizedDescription)
     }
     guard let photoData = photo.fileDataRepresentation() else {
       return
@@ -937,11 +938,7 @@ import UIKit
     if let videoConnection: AVCaptureConnection = photoFileOutput?.connection(
       with: AVMediaType.video)
     {
-      //        DispatchQueue.main.async {
-      //self.previewLayer.videoPreviewLayer.connection?.videoOrientation =
-      //            self.photoFileOutput.
       videoConnection.videoOrientation = self.getPreviewLayerOrientation()
-      //        }
       let photoSettings: AVCapturePhotoSettings!
       photoSettings = AVCapturePhotoSettings.init(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
       photoSettings.isAutoStillImageStabilizationEnabled = true

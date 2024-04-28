@@ -286,7 +286,7 @@ export class NSCamera extends NSCameraBase {
             owner.stopRecording();
           }
           owner._lastCameraOptions.shift(); //remove the last set of options used
-          owner.sendEvent(NSCamera.errorEvent, null, message);
+          owner.sendEvent(NSCamera.errorEvent, ex, message);
         } else {
           that.CError('!!! No owner reference found when handling onCameraError event');
         }
