@@ -458,7 +458,7 @@ import UIKit
         })
     } else {
 
-              if device.isFlashActive == true {
+      if device.isFlashActive == true {
         changeFlashSettings(device: device, mode: .off)
       }
       capturePhotoAsyncronously(completionHandler: { _ in })
@@ -845,7 +845,7 @@ import UIKit
     if !UIDevice.current.orientation.isFlat {
       deviceOrientation = UIDevice.current.orientation
     } else {
-      // NSLog("device is flat, ignoring")
+      // NSLog("deviceDidRotate, device is flat, ignoring")
     }
   }
 
@@ -885,7 +885,6 @@ import UIKit
     guard shouldUseDeviceOrientation, let deviceOrientation = deviceOrientation else {
       return forCamera == .rear ? .right : .leftMirrored
     }
-
     switch deviceOrientation {
     case .landscapeLeft:
       return forCamera == .rear ? .up : .downMirrored
@@ -921,23 +920,32 @@ import UIKit
   @objc public func photoOutput(
     _ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?
   ) {
+    if error != nil {
+      NSLog("ERROR while processing photo:" + error?.localizedDescription)
+    }
     guard let photoData = photo.fileDataRepresentation() else {
       return
     }
-    guard let photoImage = UIImage(data: photoData) else {
-      return
-    }
+
+    let photoImage = self.processPhoto(photoData)
     DispatchQueue.main.async {
       self.cameraDelegate?.swiftyCam(self, didTake: photoImage)
     }
   }
+
   @objc public func capturePhotoAsyncronously(completionHandler: @escaping (Bool) -> Void) {
     if let videoConnection: AVCaptureConnection = photoFileOutput?.connection(
       with: AVMediaType.video)
     {
+      //        DispatchQueue.main.async {
+      //self.previewLayer.videoPreviewLayer.connection?.videoOrientation =
+      //            self.photoFileOutput.
+      videoConnection.videoOrientation = self.getPreviewLayerOrientation()
+      //        }
       let photoSettings: AVCapturePhotoSettings!
       photoSettings = AVCapturePhotoSettings.init(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
       photoSettings.isAutoStillImageStabilizationEnabled = true
+
       if flashEnabled {
         photoSettings.flashMode = .on
       } else {
@@ -1026,7 +1034,7 @@ import UIKit
   @objc public func changeFlashSettings(device: AVCaptureDevice, mode: AVCaptureDevice.FlashMode) {
     do {
       try device.lockForConfiguration()
-      device.flashMode = mode      
+      device.flashMode = mode
       device.unlockForConfiguration()
     } catch {
       NSLog("[SwiftyCam]: \(error)")

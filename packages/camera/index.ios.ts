@@ -706,8 +706,10 @@ export class MySwifty extends SwiftyCamViewController {
 }
 
 export class NSCamera extends NSCameraBase {
-  //currently we want this orientation flag disabled
-  public static useDeviceOrientation = false;
+  // useDeviceOrientation is true by default. Set to false if you DO NOT want photos to have their orientation set to current device orientation
+  //     This does not currently affect videos, they always set the device orientation as the orientation metadata.
+  public static useDeviceOrientation = true;
+
   private _swifty: MySwifty;
   private _isIPhoneX: boolean;
   private _defaultCamera: CameraTypes = 'rear';
