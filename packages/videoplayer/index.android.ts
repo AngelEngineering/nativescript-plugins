@@ -1,5 +1,6 @@
 import { Utils } from '@nativescript/core';
-import { VideoBase, videoSourceProperty, VideoFill, fillProperty } from './common';
+import { VideoBase, videoSourceProperty } from './common';
+export * from './common';
 
 const STATE_IDLE = 0;
 const STATE_PLAYING = 1;
