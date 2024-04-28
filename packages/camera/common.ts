@@ -147,7 +147,7 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
    * The resolution used when capturing video from camera
    */
   @GetSetProperty()
-  public videoQuality: CameraVideoQuality = CameraVideoQuality.MAX_720P;
+  public videoQuality: CameraVideoQuality = CameraVideoQuality.HIGHEST;
 
   /**
    * TODO: not supported yet
@@ -305,8 +305,9 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
    */
   abstract mergeVideoFiles(inputFiles: string[], outputPath: string): Promise<File>;
 
-  /*
+  /**
    * Utility to log information on the video format used by the video file at `videoPath`
+   * @param videoPath string path of video file to read codec information from
    */
   public getVideoCodec(videoPath: string): string {
     let videoFormat: any = null;
@@ -357,8 +358,9 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
     return videoFormat;
   }
 
-  /*
+  /**
    * Utility to check video resolution for the video file at `videoPath`
+   * @param videoPath string path of video file to read resolution information from
    */
   public getVideoResolution(videoPath: string): { width: number; height: number } {
     if (isAndroid) {
@@ -387,8 +389,9 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
     }
   }
 
-  /*
+  /**
    * Utility to find the duration in milliseconds of the video file at `videoPath`
+   * @param videoPath string path of video file to read duration information from
    */
   public getVideoDuration(videoPath: string): number {
     let totalTime = 0;

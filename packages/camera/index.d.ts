@@ -252,12 +252,13 @@ export declare class NSCamera extends ContentView {
   getFlashMode(): string;
 
   /**
-   * Takes a picture of the current preview of the NSCamera.
+   * Takes a picture of the current preview of the NSCamera, using options if passed
+   * @param options ICameraOptions
    */
   takePicture(options?: ICameraOptions): void;
 
   /**
-   * Start recording video
+   * Start recording video, using options if passed
    * @param options IVideoOptions
    */
   record(options?: IVideoOptions): Promise<void>;
@@ -296,20 +297,27 @@ export declare class NSCamera extends ContentView {
    */
   hasTorch(): boolean;
 
-  /*
-   * Utility to merge an array of video filenames, must all be valid mp4 format video files with same audio encoding
+  /**
+   * Merge an array of video filenames, must all be valid mp4 video files with same audio and video encoding
+   * Note: Android MediaMuxer support for multiple audio/video tracks only on API 26+
+   * @param inputFiles string[] Array of video file paths to merge
+   * @param outputPath string Path to save merged video to
+   * @returns Promise<File> merged File
    */
   mergeVideoFiles(audioFiles: string[], outputPath: string): Promise<File>;
-  /*
+  /**
    * Utility to log information on the video format used by the video file at `videoPath`
+   * @param videoPath string path of video file to read codec information from
    */
   getVideoCodec(videoPath: string): string;
-  /*
+  /**
    * Utility to check video resolution for the video file at `videoPath`
+   * @param videoPath string path of video file to read resolution information from
    */
   getVideoResolution(videoPath: string): { width: number; height: number };
-  /*
+  /**
    * Utility to find the duration in milliseconds of the video file at `videoPath`
+   * @param videoPath string path of video file to read duration information from
    */
   getVideoDuration(videoPath: string): number;
 }
