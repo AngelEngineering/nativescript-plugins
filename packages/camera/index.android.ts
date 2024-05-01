@@ -98,7 +98,6 @@ export class NSCamera extends NSCameraBase {
     // this.CLog('get current VideoQuality()', this._videoQuality);
     return this._videoQuality;
   }
-
   set videoQuality(value: CameraVideoQuality) {
     this._videoQuality = value;
     if (this._camera) {
@@ -119,6 +118,17 @@ export class NSCamera extends NSCameraBase {
   set zoom(value: number) {
     if (this._camera) {
       this._camera.setZoom(value);
+    }
+  }
+
+  // @ts-ignore
+  get doubleTapCameraSwitch(): boolean {
+    return this._camera ? this._camera.getDoubleTapCameraSwitch() : false;
+  }
+
+  set doubleTapCameraSwitch(value: boolean) {
+    if (this._camera) {
+      this._camera.setDoubleTapCameraSwitch(value);
     }
   }
 
@@ -365,19 +375,11 @@ export class NSCamera extends NSCameraBase {
         if (owner) {
           owner._initDefaultButtons();
           if (owner._togglingCamera) {
-            owner.sendEvent(NSCamera.toggleCameraEvent, owner.camera);
             owner._ensureCorrectFlashIcon();
             owner._togglingCamera = true;
           } else {
             owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera);
             owner.isRecording = false;
-            //set default camera and videoQuality
-            // owner.cameraId = owner.defaultCamera === 'front' ? CAMERA_FACING_FRONT : CAMERA_FACING_BACK;
-            // if (owner.cameraId != (owner.defaultCamera === 'front' ? CAMERA_FACING_FRONT : CAMERA_FACING_BACK)) {
-            //   this.toggleCamera();
-            // }
-
-            // owner.updateQuality();
           }
         }
       },
@@ -416,6 +418,7 @@ export class NSCamera extends NSCameraBase {
     this.enableVideo = this.isVideoEnabled();
     this.disablePhoto = this.isPhotoDisabled();
     this.isRecording = false;
+    this._camera.setDoubleTapCameraSwitch(this.doubleTapCameraSwitch);
     this.updateQuality();
   }
 

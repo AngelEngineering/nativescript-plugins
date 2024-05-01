@@ -5,7 +5,7 @@
   2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
-import { ContentView, File, isAndroid } from '@nativescript/core';
+import { ContentView, File, Property, booleanConverter, isAndroid } from '@nativescript/core';
 import { NSCamera as NSCameraDefinition } from '.';
 
 export type CameraTypes = 'front' | 'rear';
@@ -253,12 +253,14 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public autoFocus = true;
 
   /**
-   * *iOS ONLY* - Enable/disable double tap gesture to switch camera. (enabled)
+   * Enable/disable double tap gesture on preview view to switch camera. Default is true.
    */
   @GetSetProperty()
   public doubleTapCameraSwitch = true;
 
-  /** If true it will crop the picture to the center square **/
+  /**
+   *  If true it will crop the picture to the center square
+   */
   @GetSetProperty()
   public autoSquareCrop = false;
 
@@ -541,3 +543,9 @@ export function GetSetProperty() {
     });
   };
 }
+
+export const doubleTapCameraSwitchProperty = new Property<NSCameraBase, boolean>({
+  name: 'doubleTapCameraSwitch',
+  valueConverter: booleanConverter,
+});
+doubleTapCameraSwitchProperty.register(NSCameraBase);

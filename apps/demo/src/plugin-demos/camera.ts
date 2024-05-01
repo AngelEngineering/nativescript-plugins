@@ -1,5 +1,5 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
-import { EventData, Page, alert, Frame, Screen, Image, File, isIOS, isAndroid, Button, path, knownFolders, Device, ImageSource } from '@nativescript/core';
+import { EventData, Page, alert, Frame, Screen, Image, File, isIOS, isAndroid, Button, path, knownFolders, Device, ImageSource, Application, OrientationChangedEventData } from '@nativescript/core';
 import { DemoSharedCamera } from '@demo/shared';
 import { NSCamera, CameraVideoQuality, ICameraOptions } from '@angelengineering/camera';
 import { ObservableProperty } from './observable-property';
@@ -39,6 +39,7 @@ export class DemoModel extends DemoSharedCamera {
 
     //Notes on properties that affect camera instance
     //[ Both Platforms ]
+    // this.cam.doubleTapCameraSwitch = false; //default is true so double taps on view will switch camera
     //this.cam.enableVideo = true;//defaults to false. Enable to true for video mode
     //this.cam.disablePhoto = true;//defaults to false. Set to true and enableVideo to true, and camera button gestures ignored
     //CURRENTLY UNSUPPORTED:
@@ -54,9 +55,8 @@ export class DemoModel extends DemoSharedCamera {
     }
 
     //[ iOS only ]
-    if (isIOS) {
-      // this.cam.doubleTapCameraSwitch = false; //default is true so double taps on view will switch camera
-    }
+    // if (isIOS) {
+    // }
 
     this.cameraHeight = Screen.mainScreen.heightDIPs * 0.7;
 
@@ -64,13 +64,16 @@ export class DemoModel extends DemoSharedCamera {
       return;
     }
 
-    this.cam.on(NSCamera.errorEvent, args => {
-      console.error('errorEvent:', args);
+    this.cam.on(NSCamera.errorEvent, (args: any) => {
+      console.error('errorEvent:', args.data);
     });
 
     this.cam.on(NSCamera.toggleCameraEvent, (args: any) => {
       console.log(`toggleCameraEvent: ${args}`);
       console.log('current camera has flash?', this.cam.hasFlash());
+      console.log(' toggling doubleTapCameraSwitch from:', this.cam.doubleTapCameraSwitch);
+      this.cam.doubleTapCameraSwitch = !this.cam.doubleTapCameraSwitch;
+      console.log(' tp doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
     });
 
     this.cam.on(NSCamera.photoCapturedEvent, async (args: any) => {
@@ -124,7 +127,30 @@ export class DemoModel extends DemoSharedCamera {
         console.log('saveToGallery set true, checking permissions');
         this.requestGalleryPermission();
       }
-      console.log('camera plugin ready, number of cameras:', this.cam.getNumberOfCameras());
+      console.log(' number of cameras:', this.cam.getNumberOfCameras());
+
+      //doubleTapCameraSwitch
+      console.log(' current doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
+      //zoom
+      console.log(' current zoom:', this.cam.zoom);
+
+      //whiteBalance - Android only
+      console.log(' current whiteBalance:', this.cam.whiteBalance);
+
+      //pictureSize
+      console.log(' current pictureSize:', this.cam.pictureSize);
+
+      //maxDimension, ensure this is working properly
+      console.log(' current maxDimension:', this.cam.maxDimension);
+
+      //autoSquareCrop, ensure this is working both alone and when used with maxDimension
+      console.log(' current autoSquareCrop:', this.cam.autoSquareCrop);
+
+      //doubleTapCameraSwitch - try to add this to Android
+      console.log(' current doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
+
+      //getAvailablePictureSizes fix this for both
+      console.log(' available picture Resolutions:', this.cam.getAvailablePictureSizes(null));
     });
     this._counter = 1;
   }
@@ -229,9 +255,9 @@ export class DemoModel extends DemoSharedCamera {
   public toggleFlashOnCam() {
     console.log('toggleFlashOnCam()');
     this.cam.toggleFlash();
+    console.log('Flash is now: ', this.cam.getFlashMode());
   }
 
-  // called by custom button on demo page
   public toggleShowingFlashIcon() {
     console.log(`showFlashIcon = ${this.cam.showFlashIcon}`);
     this.cam.showFlashIcon = !this.cam.showFlashIcon;
@@ -241,7 +267,7 @@ export class DemoModel extends DemoSharedCamera {
   public toggleTheCamera() {
     console.log('toggleTheCamera()');
     this.cam.toggleCamera();
-    console.log('Current camera has flasy?', this.cam.hasFlash());
+    console.log('Current camera has flash?', this.cam.hasFlash(), ' has torch?', this.cam.hasTorch());
   }
 
   // called by custom button on demo page

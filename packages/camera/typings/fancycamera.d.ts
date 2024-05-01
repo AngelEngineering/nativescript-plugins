@@ -52,6 +52,7 @@ declare module io {
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
           public getMaxZoomRatio(): number;
           public setDb(param0: number): void;
+          public getDoubleTapCameraSwitch(): boolean;
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
           public setZoomRatio(param0: number): void;
           public getMaxVideoBitrate(): number;
@@ -64,6 +65,7 @@ declare module io {
           public getZoom(): number;
           public getAvailablePictureSizes(param0: string): androidNative.Array<io.github.triniwiz.fancycamera.Size>;
           public setAutoFocus(param0: boolean): void;
+          public setDoubleTapCameraSwitch(param0: boolean): void;
           public getEnableTapToFocus(): boolean;
           public getStoredZoom(): number;
           public setDisplayRatio(param0: string): void;
@@ -133,6 +135,7 @@ declare module io {
           public getProcessEveryNthFrame(): number;
           public getListener$camera_release(): io.github.triniwiz.fancycamera.CameraEventListener;
           public getLatestImage$camera_release(): globalAndroid.graphics.Bitmap;
+          public getDoubleTapCameraSwitch(): boolean;
           public getDuration(): number;
           public requestAudioPermission(): void;
           public hasAudioPermission(): boolean;
@@ -205,6 +208,7 @@ declare module io {
           public getPreviewSurface(): any;
           public getAmplitude(): number;
           public getZoom(): number;
+          public setDoubleTapCameraSwitch(param0: boolean): void;
           public setDisplayRatio(param0: string): void;
           public deInitListener$camera_release(): void;
           public requestStoragePermission(): void;
@@ -459,6 +463,7 @@ declare module io {
           public setEnableAudio(param0: boolean): void;
           public getProcessEveryNthFrame(): number;
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
+          public getDoubleTapCameraSwitch(): boolean;
           public hasPermission(): boolean;
           public getGetSupportedRatios(): androidNative.Array<string>;
           public getDuration(): number;
@@ -471,6 +476,7 @@ declare module io {
           public getZoom(): number;
           public getAvailablePictureSizes(param0: string): androidNative.Array<io.github.triniwiz.fancycamera.Size>;
           public setAutoFocus(param0: boolean): void;
+          public setDoubleTapCameraSwitch(param0: boolean): void;
           public getEnableTapToFocus(): boolean;
           public setProcessEveryNthFrame(param0: number): void;
           public requestStoragePermission(): void;

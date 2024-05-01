@@ -37,6 +37,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     abstract var allowExifRotation: Boolean
     abstract var autoSquareCrop: Boolean
     abstract var autoFocus: Boolean
+    abstract var doubleTapCameraSwitch: Boolean
     abstract var saveToGallery: Boolean
     abstract var maxAudioBitRate: Int
     abstract var maxVideoBitrate: Int

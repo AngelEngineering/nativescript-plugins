@@ -156,6 +156,15 @@ class FancyCamera : FrameLayout {
             cameraView.autoFocus = value
         }
 
+    var doubleTapCameraSwitch : Boolean = true
+        get() {
+            return cameraView.doubleTapCameraSwitch 
+        }
+        set(value) {
+            field = value
+            cameraView.doubleTapCameraSwitch  = value
+        }
+
     var saveToGallery: Boolean = false
         get() {
             return cameraView.saveToGallery

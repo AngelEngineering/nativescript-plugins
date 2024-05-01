@@ -214,6 +214,8 @@ If you want to use the `saveToGallery` flag then you will also need to add the f
 | **disablePhoto**       | boolean | *false*       | If true the Camera instance UI will only allow video mode operation. if enableVideo is false and disablePhoto is true, the main camera button will not trigger any actions.                                       |
 | **defaultCamera** | `'front'` or `'rear'` | *'rear'*         | Which camera to use on launch.  `'front'` or `'rear'`.                                                  |
 | **shouldLockRotation**| boolean | *true*  | If true, locks the device orientation while recording video|
+| **doubleTapCameraSwitch** | boolean | *true*  | Enable/disable double tap gesture to switch camera.  |
+
 
 ## Android Only Properties
 | Name                 | Type    | Description                                                                                 |
@@ -227,10 +229,7 @@ If you want to use the `saveToGallery` flag then you will also need to add the f
 | **insetButtons**     | boolean | If true (defaults to false), adjusts the spacing from edge of screen for built-in buttons.                      |
 | **insetButtonsPercent**|number | The percentage to inset by, from 0.0 - 1.0                                                  |
 
-## iOS Only Properties
-| Name                      | Type    | Description                                                   |
-| ------------------------- | ------- | ------------------------------------------------------------- |
-| **doubleTapCameraSwitch** | boolean | Enable/disable double tap gesture to switch camera. (enabled) |
+
 
 ------------------------------
 

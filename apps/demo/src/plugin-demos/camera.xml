@@ -38,6 +38,7 @@
           confirmSaveText="yeah"
           maxDimension="800"
           quality="90"
+          doubleTapCameraSwitch="false"
           videoQuality="1080p">
           <!-- 
               iOS only properties: doubleTapCameraSwitch='true'  

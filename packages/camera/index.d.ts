@@ -232,9 +232,9 @@ export declare class NSCamera extends ContentView {
   autoFocus: boolean;
 
   /**
-   * *iOS ONLY* - Enable/disable double tap gesture to switch camera. (enabled)
+   * Enable/disable double tap gesture on preview view to switch camera. Default is true.
    */
-  doubleTapCameraSwitch: boolean;
+  public doubleTapCameraSwitch: boolean;
 
   /**
    * Toggles the device camera (front/back).

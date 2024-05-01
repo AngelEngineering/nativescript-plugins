@@ -208,8 +208,8 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     private fun setupGestureListeners() {
         val listener =
                 object :
-                        ScaleGestureDetector.SimpleOnScaleGestureListener(),
-                        GestureDetector.OnGestureListener {
+                        ScaleGestureDetector.SimpleOnScaleGestureListener(),                        
+                        GestureDetector.OnGestureListener,GestureDetector.OnDoubleTapListener {                            
                     override fun onScale(detector: ScaleGestureDetector): Boolean {
                         camera?.cameraInfo?.zoomState?.value?.let { zoomState ->
                             camera?.cameraControl?.setZoomRatio(
@@ -225,6 +225,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                     override fun onShowPress(p0: MotionEvent) = Unit
 
                     override fun onSingleTapUp(event: MotionEvent): Boolean {
+                        // Log.d( "io.github.triniwiz.fancycamera","onSingleTapUp")
                         val factory: MeteringPointFactory = previewView.meteringPointFactory
                         val autoFocusPoint = factory.createPoint(event.x, event.y)
                         try {
@@ -253,11 +254,24 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                             )
                         } catch (e: CameraInfoUnavailableException) {
                             Log.d(
-                                    "io.github.triniwiz.fancycamera",
-                                    "ERROR! cannot access camera",
+                                "io.github.triniwiz.fancycamera",
+                                "ERROR! cannot access camera",
                                     e
                             )
                         }
+                        return true
+                    }
+                   
+                    override fun onDoubleTap(event: MotionEvent): Boolean {
+                        // Log.d( "io.github.triniwiz.fancycamera","onDoubleTap")
+                        if (doubleTapCameraSwitch) {toggleCamera();
+                            // Log.d( "io.github.triniwiz.fancycamera","toggling Camera")
+                        } 
+                        // else Log.d( "io.github.triniwiz.fancycamera","flag disabled, ignoring")
+                        return true
+                    }
+                    override fun onDoubleTapEvent(event: MotionEvent): Boolean {
+                        // Log.d( "io.github.triniwiz.fancycamera","onDoubleTapEvent")                        
                         return true
                     }
                     override fun onScroll(p0: MotionEvent?, p1: MotionEvent, p2: Float, p3: Float) =
@@ -265,12 +279,13 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                     override fun onFling(p0: MotionEvent?, p1: MotionEvent, p2: Float, p3: Float) =
                             false
                     override fun onLongPress(p0: MotionEvent) = Unit
+                    override fun onSingleTapConfirmed(p0: MotionEvent) = false
                 }
         val scaleGestureDetector = ScaleGestureDetector(context, listener)
         val gestureDetectorCompat = GestureDetectorCompat(context, listener)
         previewView.setOnTouchListener { view, event ->
             if (enablePinchZoom) scaleGestureDetector.onTouchEvent(event)
-            if (enableTapToFocus) gestureDetectorCompat.onTouchEvent(event)
+            if (enableTapToFocus) gestureDetectorCompat.onTouchEvent(event)            
             view.performClick()
             true
         }
@@ -327,6 +342,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     override var allowExifRotation: Boolean = false
     override var autoSquareCrop: Boolean = false
     override var autoFocus: Boolean = true
+    override var doubleTapCameraSwitch: Boolean = true
     override var saveToGallery: Boolean = false
     override var maxAudioBitRate: Int = -1
     override var maxVideoBitrate: Int = -1
