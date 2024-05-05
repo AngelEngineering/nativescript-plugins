@@ -90,9 +90,10 @@ export declare class NSCamera extends ContentView {
   zoom: number;
 
   /**
-   *  *ANDROID ONLY* Camera white balance setting. Currently only getter support
+   *  *ANDROID ONLY* Camera white balance setting when taking pictures or video.
+   *    NOTE: this is currently not working to set, only to read. Default is Auto.
    */
-  whiteBalance: WhiteBalance | string;
+  public whiteBalance: WhiteBalance | string;
 
   /**
    * A string representing the size of picture {@link takePicture} will output. Available sizes can be fetched using {@link getAvailablePictureSizes}

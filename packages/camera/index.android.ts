@@ -145,6 +145,11 @@ export class NSCamera extends NSCameraBase {
     this.cameraId = value === 'front' ? CAMERA_FACING_FRONT : CAMERA_FACING_BACK;
   }
 
+  /**
+   *  Camera white balance setting when taking pictures or video.
+   *    NOTE: this is currently not working properly, and only updates camera preview with whitebalance once
+   *          photo is being taken or video recording starts.
+   */
   // @ts-ignore
   set whiteBalance(value: WhiteBalance | string) {
     if (this._camera) {
@@ -280,6 +285,7 @@ export class NSCamera extends NSCameraBase {
 
       onReady(): void {
         that.CLog('listenerImpl.onReady()');
+        // not working here:
         // this.owner.camera.whiteBalance = WhiteBalance.Auto;
       },
 

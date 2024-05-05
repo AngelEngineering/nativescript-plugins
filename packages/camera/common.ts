@@ -97,7 +97,8 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public zoom = 0;
 
   /**
-   *  *ANDROID ONLY* Camera white balance
+   *  *ANDROID ONLY* Camera white balance setting when taking pictures or video.
+   *    NOTE: this is currently not working to set, only to read. Default is Auto.
    */
   @GetSetProperty()
   public whiteBalance: WhiteBalance | string = WhiteBalance.Auto;

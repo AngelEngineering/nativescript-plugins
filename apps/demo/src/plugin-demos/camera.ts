@@ -48,8 +48,10 @@ export class DemoModel extends DemoSharedCamera {
     //[ Android only ]
     if (isAndroid) {
       // this.cam.autoFocus = false; // defaults to true so camera will auto focus before capturing image
-      //CURRENTLY UNSUPPORTED:
-      // this.cam.whiteBalance = 'twilight';//not curreently supported to change whiteBalance, can read current whiteBalance
+      /******
+       CURRENTLY UNSUPPORTED:
+       ******/
+      // this.cam.whiteBalance = 'twilight';//not currently supported to change whiteBalance, can read current whiteBalance
       // this.cam.zoom = 0.4; //not currently supported to set the zoom, but can read zoom level float from 0.0-1.0
       // this.cam.ratio = '1:1'; //not currently supported, camera defaults to size based on viewport dimensions
     }
@@ -134,7 +136,7 @@ export class DemoModel extends DemoSharedCamera {
       //zoom
       console.log(' current zoom:', this.cam.zoom);
 
-      //whiteBalance - Android only
+      //whiteBalance - Android only and read-only for now, setting this will cause instability
       console.log(' current whiteBalance:', this.cam.whiteBalance);
 
       //pictureSize
