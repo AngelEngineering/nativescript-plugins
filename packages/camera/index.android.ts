@@ -8,7 +8,6 @@
 
 import { Application, Device, View, File, Utils, ImageSource, path, knownFolders } from '@nativescript/core';
 import { NSCameraBase, CameraTypes, CameraVideoQuality, GetSetProperty, ICameraOptions, IVideoOptions, WhiteBalance } from './common';
-import * as CamHelpers from './helpers';
 export * from './common';
 export { CameraVideoQuality, WhiteBalance } from './common';
 
@@ -342,7 +341,7 @@ export class NSCamera extends NSCameraBase {
 
         if (confirmPic === true) {
           owner.sendEvent(NSCamera.confirmScreenShownEvent);
-          const result = await CamHelpers.createImageConfirmationDialog(file.getAbsolutePath(), confirmPicRetakeText, confirmPicSaveText).catch(ex => {
+          const result = await createImageConfirmationDialog(file.getAbsolutePath(), confirmPicRetakeText, confirmPicSaveText).catch(ex => {
             that.CError('Error in createImageConfirmationDialog', ex);
           });
           owner.sendEvent(NSCamera.confirmScreenDismissedEvent);
@@ -646,7 +645,7 @@ export class NSCamera extends NSCameraBase {
         this.disableRotationAndroid();
       }
 
-      const takePicDrawable = CamHelpers.getImageDrawable(this.stopVideoIcon);
+      const takePicDrawable = getImageDrawable(this.stopVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
       //Hide the flash button while recording since we cannot turn it on/off during recording
       this._flashBtn.setVisibility(android.view.View.GONE);
@@ -675,7 +674,7 @@ export class NSCamera extends NSCameraBase {
     }
     if (this._camera) {
       // this.CLog(`*** stopping mediaRecorder ***`);
-      const takePicDrawable = CamHelpers.getImageDrawable(this.takeVideoIcon);
+      const takePicDrawable = getImageDrawable(this.takeVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
       this._camera.stopRecording();
       //show the flash button again if supported
@@ -798,7 +797,7 @@ export class NSCamera extends NSCameraBase {
 
     const flashIcon = currentFlashMode === FLASH_MODE_OFF ? this.flashOffIcon : this.flashOnIcon;
     // this.CLog('flash icon is now ', flashIcon, 'off icon is ', this.flashOffIcon);
-    const imageDrawable = CamHelpers.getImageDrawable(flashIcon);
+    const imageDrawable = getImageDrawable(flashIcon);
     this._flashBtn.setImageResource(imageDrawable);
   }
 
@@ -811,10 +810,10 @@ export class NSCamera extends NSCameraBase {
       console.warn('Neither photo or video mode enabled, not showing flash button');
       return;
     }
-    this._flashBtn = CamHelpers.createImageButton();
+    this._flashBtn = createImageButton();
     // set correct flash icon on button
     this._ensureCorrectFlashIcon();
-    const shape = CamHelpers.createTransparentCircleDrawable();
+    const shape = createTransparentCircleDrawable();
     this._flashBtn.setBackgroundDrawable(shape);
     const ref = new WeakRef(this);
     this._flashBtn.setOnClickListener(
@@ -849,10 +848,10 @@ export class NSCamera extends NSCameraBase {
   }
 
   private _initToggleCameraButton(): void {
-    this._toggleCamBtn = CamHelpers.createImageButton();
-    const switchCameraDrawable = CamHelpers.getImageDrawable(this.toggleCameraIcon);
+    this._toggleCamBtn = createImageButton();
+    const switchCameraDrawable = getImageDrawable(this.toggleCameraIcon);
     this._toggleCamBtn.setImageResource(switchCameraDrawable);
-    const shape = CamHelpers.createTransparentCircleDrawable();
+    const shape = createTransparentCircleDrawable();
     this._toggleCamBtn.setBackgroundDrawable(shape);
     const ref = new WeakRef(this);
     this._toggleCamBtn.setOnClickListener(
@@ -887,7 +886,7 @@ export class NSCamera extends NSCameraBase {
       this._takePicBtn = new android.widget.ImageButton(Application.android.context) as android.widget.ImageButton;
       this._takePicBtn.setMaxHeight(48);
       this._takePicBtn.setMaxWidth(48);
-      const takePicDrawable = CamHelpers.getImageDrawable(this.takeVideoIcon);
+      const takePicDrawable = getImageDrawable(this.takeVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
       const shape = new android.graphics.drawable.GradientDrawable();
       shape.setColor(0x99000000);
@@ -896,10 +895,10 @@ export class NSCamera extends NSCameraBase {
       this._takePicBtn.setBackgroundDrawable(shape);
     } else if (!this.disablePhoto) {
       //if we're in camera photo mode, show the takePhoto icon
-      this._takePicBtn = CamHelpers.createImageButton();
-      const takePicDrawable = CamHelpers.getImageDrawable(this.takePicIcon);
+      this._takePicBtn = createImageButton();
+      const takePicDrawable = getImageDrawable(this.takePicIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
-      const shape = CamHelpers.createTransparentCircleDrawable();
+      const shape = createTransparentCircleDrawable();
       this._takePicBtn.setBackgroundDrawable(shape); // set the transparent background
     } else {
       console.warn('Neither photo or video mode enabled, not showing button');
@@ -1186,4 +1185,266 @@ export class NSCamera extends NSCameraBase {
       }
     });
   }
+}
+
+/**
+ * Helper method to get the drawable id of an app_resource icon for the ImageButtons 'image'
+ * @param iconName
+ */
+export function getImageDrawable(iconName: string): number {
+  const drawableId = Application.android.context.getResources().getIdentifier(iconName, 'drawable', Application.android.context.getPackageName()) as number;
+  return drawableId;
+}
+
+/**
+ * Helper method to create an android ImageButton
+ */
+export function createImageButton(): android.widget.ImageButton {
+  const btn = new android.widget.ImageButton(Application.android.context) as android.widget.ImageButton;
+  btn.setPadding(24, 24, 24, 24);
+  btn.setMaxHeight(48);
+  btn.setMaxWidth(48);
+  return btn;
+}
+
+/**
+ * Creates a new rounded GradientDrawable with transparency and rounded corners.
+ */
+export function createTransparentCircleDrawable(): android.graphics.drawable.GradientDrawable {
+  const shape = new android.graphics.drawable.GradientDrawable();
+  shape.setColor(0x99000000);
+  shape.setCornerRadius(96);
+  shape.setAlpha(160);
+  return shape;
+}
+/**
+ * Helper method to get the optimal sizing for the preview from the camera.
+ * Android cameras support different sizes for previewing.
+ * @param sizes
+ * @param width
+ * @param height
+ */
+export function getOptimalPreviewSize(sizes: java.util.List<android.hardware.Camera.Size>, width: number, height: number): android.hardware.Camera.Size {
+  const targetRatio = height / width;
+
+  if (sizes === null) return null;
+
+  let optimalSize = null as android.hardware.Camera.Size;
+
+  const targetHeight = height;
+
+  for (let i = 0; i < sizes.size(); i++) {
+    const element = sizes.get(i) as android.hardware.Camera.Size;
+    if (element.width <= width && element.height <= height) {
+      if (optimalSize == null) {
+        optimalSize = element;
+      } else {
+        const resultArea = optimalSize.width * optimalSize.height;
+        const newArea = element.width * element.height;
+
+        if (newArea > resultArea) {
+          optimalSize = element;
+        }
+      }
+    }
+  }
+  return optimalSize;
+}
+
+/**
+ * Helper method to get the optimal sizing for the picture from the camera.
+ * Android cameras support different sizes for taking picture.
+ * @param sizes
+ * @param width
+ * @param height
+ */
+export function getOptimalPictureSize(sizes: java.util.List<android.hardware.Camera.Size>, width: number, height: number): android.hardware.Camera.Size {
+  let sizeSet = false;
+
+  if (sizes === null) return null;
+
+  let optimalSize = null as android.hardware.Camera.Size;
+  let minDiff = Number.MAX_SAFE_INTEGER;
+
+  const targetHeight = height;
+  const targetWidth = height;
+
+  for (let i = 0; i < sizes.size(); i++) {
+    const size = sizes.get(i) as android.hardware.Camera.Size;
+    let desiredMinimumWidth: number;
+    let desiredMaximumWidth: number;
+
+    if (width > 1000) {
+      desiredMinimumWidth = width - 200;
+      desiredMaximumWidth = width + 200;
+    } else {
+      desiredMinimumWidth = 800;
+      desiredMaximumWidth = 1200;
+    }
+
+    if (size.width > desiredMinimumWidth && size.width < desiredMaximumWidth && size.height < size.width) {
+      optimalSize = size;
+      sizeSet = true;
+      break;
+    }
+  }
+
+  if (!sizeSet) {
+    // minDiff = Double.MAX_VALUE;
+    minDiff = Number.MAX_SAFE_INTEGER;
+    for (let i = 0; i < sizes.size(); i++) {
+      const element = sizes.get(i) as android.hardware.Camera.Size;
+      if (Math.abs(element.height - targetHeight) < minDiff) {
+        optimalSize = element;
+        minDiff = Math.abs(element.height - targetHeight);
+      }
+    }
+    sizeSet = true;
+  }
+
+  return optimalSize;
+}
+
+/**
+ * Calculate the largest inSampleSize value that is a power of 2 and keeps both
+ *  height and width larger than the requested height and width.
+ * @param options
+ * @param reqWidth
+ * @param reqHeight
+ * @returns
+ */
+export function calculateInSampleSize(options: android.graphics.BitmapFactory.Options, reqWidth: number, reqHeight: number) {
+  // Raw height and width of image
+  const height = options.outHeight;
+  const width = options.outWidth;
+  let inSampleSize = 1;
+
+  if (height > reqHeight || width > reqWidth) {
+    const halfHeight = height / 2;
+    const halfWidth = width / 2;
+
+    while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+      inSampleSize *= 2;
+    }
+  }
+
+  return inSampleSize;
+}
+
+/**
+ * Returns the orientation from exif data using the camera byte array
+ * @param data
+ * @returns
+ */
+export function getOrientationFromBytes(data): number {
+  // We won't auto-rotate the front Camera image
+  const inputStream = new java.io.ByteArrayInputStream(data);
+  let exif;
+  if (android.os.Build.VERSION.SDK_INT >= 24) {
+    exif = new android.media.ExifInterface(inputStream as any);
+  } else {
+    exif = new (android.support as any).media.ExifInterface(inputStream);
+  }
+  let orientation = exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_UNDEFINED);
+  try {
+    inputStream.close();
+  } catch (ex) {
+    console.error('byteArrayInputStream.close error', ex);
+  }
+  if (this.cameraId === 1) {
+    if (orientation === 1) {
+      orientation = 2;
+    } else if (orientation === 3) {
+      orientation = 4;
+    } else if (orientation === 6) {
+      orientation = 7;
+    }
+  }
+  return orientation;
+}
+
+/**
+ * Creates an Android alert dialog containing a preview image and confirm/cancel buttons for user to approve taken photo
+ * @param file
+ * @param retakeText
+ * @param saveText
+ * @returns boolean if user approved or denied the preview image shown
+ */
+export function createImageConfirmationDialog(file, retakeText = 'Retake', saveText = 'Save'): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    try {
+      const alert = new android.app.AlertDialog.Builder(Application.android.foregroundActivity) as android.app.AlertDialog.Builder;
+      alert.setOnDismissListener(
+        new android.content.DialogInterface.OnDismissListener({
+          onDismiss: dialog => {
+            resolve(false);
+          },
+        })
+      );
+
+      const layout = new android.widget.LinearLayout(Application.android.context) as android.widget.LinearLayout;
+      layout.setOrientation(1);
+      layout.setMinimumHeight(800);
+      layout.setMinimumWidth(600);
+      // - Brad - working on OOM issue - use better Bitmap creation
+      // https://developer.android.com/topic/performance/graphics/load-bitmap.html
+      const bitmapFactoryOpts = new android.graphics.BitmapFactory.Options();
+      bitmapFactoryOpts.inJustDecodeBounds = true;
+      let picture = android.graphics.BitmapFactory.decodeFile(file, bitmapFactoryOpts);
+      bitmapFactoryOpts.inMutable = false;
+      bitmapFactoryOpts.inSampleSize = calculateInSampleSize(bitmapFactoryOpts, 600, 800);
+
+      // decode with inSampleSize set now
+      bitmapFactoryOpts.inJustDecodeBounds = false;
+
+      picture = android.graphics.BitmapFactory.decodeFile(file, bitmapFactoryOpts);
+
+      const img = new android.widget.ImageView(Application.android.context);
+
+      const scale = Application.android.context.getResources().getDisplayMetrics().density;
+      img.setPadding(0, 10 * scale, 0, 0);
+      img.setMinimumHeight(800);
+      img.setMinimumWidth(600);
+      img.setImageBitmap(picture);
+      layout.addView(img);
+      alert.setView(layout);
+      alert.setNegativeButton(
+        retakeText,
+        new android.content.DialogInterface.OnClickListener({
+          onClick: (dialog, which) => {
+            resolve(false);
+          },
+        })
+      );
+
+      alert.setPositiveButton(
+        saveText,
+        new android.content.DialogInterface.OnClickListener({
+          onClick: (dialog, which) => {
+            resolve(true);
+          },
+        })
+      );
+      alert.show();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/**
+ * Create current date time stamp similar to Java Date()
+ */
+export function createDateTimeStamp() {
+  let result = '';
+  const date = new Date();
+  result =
+    date.getFullYear().toString() +
+    (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1).toString() : (date.getMonth() + 1).toString()) +
+    (date.getDate() < 10 ? '0' + date.getDate().toString() : date.getDate().toString()) +
+    '_' +
+    date.getHours().toString() +
+    date.getMinutes().toString() +
+    date.getSeconds().toString();
+  return result;
 }
