@@ -89,9 +89,7 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public ratio: string;
 
   /**
-   *  *ANDROID ONLY*  Camera zoom uses a float 0 - 1. Currently only getter support
-   *  0 being no zoom
-   *  1 being max zoom
+   *  Zoom is a float between  0 - 1 that scales from no zoom to max current camera zoom
    */
   @GetSetProperty()
   public zoom = 0;

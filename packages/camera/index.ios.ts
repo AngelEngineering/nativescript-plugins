@@ -61,7 +61,9 @@ export class SwiftyDelegate extends NSObject implements SwiftyCamViewControllerD
     this._owner.get().didStartRecording(camera);
   }
 
-  swiftyCamDidChangeZoomLevel(swiftyCam: SwiftyCamViewController, zoom: number) {}
+  swiftyCamDidChangeZoomLevel(swiftyCam: SwiftyCamViewController, zoom: number) {
+    console.log('camera changed zoom to ', zoom);
+  }
 
   swiftyCamDidFinishProcessVideoAt(swiftyCam: SwiftyCamViewController, url: NSURL) {
     this._owner.get().recordingReady(url.path);
@@ -833,6 +835,19 @@ export class NSCamera extends NSCameraBase {
 
   get pictureSize(): string {
     return this._pictureQuality;
+  }
+
+  // @ts-ignore
+  get zoom(): number {
+    return this._swifty ? this._swifty.getZoom() : 0;
+  }
+
+  //iOS zoom starts at 1.0 to maxZoom for camera, so we will use the zoom float value to scale and the camera zoom between 1 - maxZoom
+  set zoom(value: number) {
+    console.log('set zoom', value);
+    if (this._swifty) {
+      this._swifty.setZoomWithValue(value);
+    } else console.error('no native camera to set zoom');
   }
 
   private _onLayoutChangeFn(args) {

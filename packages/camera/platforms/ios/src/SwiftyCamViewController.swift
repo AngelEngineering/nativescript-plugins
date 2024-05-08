@@ -897,6 +897,39 @@ import UIKit
     }
   }
 
+  @objc public func getZoom() -> CGFloat {
+    return zoomScale
+  }
+
+  @objc public func setZoom(value: CGFloat) {
+    do {
+      let videoDevice: AVCaptureDevice? = AVCaptureDevice.devices().first
+      try videoDevice?.lockForConfiguration()
+      if value <= 0.0 {
+        zoomScale = 1.0
+      } else if value > 1.0 {
+        zoomScale = videoDevice!.activeFormat.videoMaxZoomFactor
+        return
+      } else {
+        zoomScale = value * videoDevice!.activeFormat.videoMaxZoomFactor
+      }
+      NSLog("setZoom called with ")
+      NSLog("%f", value)
+      NSLog("%f", zoomScale)
+      videoDevice?.videoZoomFactor = zoomScale
+
+      // Call Delegate function with current zoom scale
+      DispatchQueue.main.async {
+        self.cameraDelegate?.swiftyCam(self, didChangeZoomLevel: self.zoomScale)
+      }
+
+      videoDevice?.unlockForConfiguration()
+
+    } catch {
+      NSLog("[SwiftyCam]: Error locking configuration while changing zoom")
+    }
+  }
+
   /**
      Returns a UIImage from Image Data.
      - Parameter imageData: Image Data returned from capturing photo from the capture session.

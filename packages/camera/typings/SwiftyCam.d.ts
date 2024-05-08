@@ -87,7 +87,7 @@ declare var SwiftyCamButtonDelegate: {
 
 declare class SwiftyCamViewController
   extends UIViewController
-  implements AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, SwiftyCamButtonDelegate, UIGestureRecognizerDelegate
+  implements AVCaptureAudioDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, SwiftyCamButtonDelegate, UIGestureRecognizerDelegate
 {
   static alloc(): SwiftyCamViewController; // inherited from NSObject
 
@@ -147,7 +147,7 @@ declare class SwiftyCamViewController
 
   outputFileDirectory: NSURL;
 
-  photoFileOutput: AVCaptureStillImageOutput;
+  photoFileOutput: AVCapturePhotoOutput;
 
   pinchToZoom: boolean;
 
@@ -199,13 +199,56 @@ declare class SwiftyCamViewController
 
   cancelVideoRecording(): void;
 
+  captureOutputDidCapturePhotoForResolvedSettings(output: AVCapturePhotoOutput, resolvedSettings: AVCaptureResolvedPhotoSettings): void;
+
   captureOutputDidDropSampleBufferFromConnection(output: AVCaptureOutput, sampleBuffer: any, connection: AVCaptureConnection): void;
 
+  captureOutputDidFinishCaptureForResolvedSettingsError(output: AVCapturePhotoOutput, resolvedSettings: AVCaptureResolvedPhotoSettings, error: NSError): void;
+
+  captureOutputDidFinishCapturingDeferredPhotoProxyError(output: AVCapturePhotoOutput, deferredPhotoProxy: AVCaptureDeferredPhotoProxy, error: NSError): void;
+
+  captureOutputDidFinishProcessingLivePhotoToMovieFileAtURLDurationPhotoDisplayTimeResolvedSettingsError(
+    output: AVCapturePhotoOutput,
+    outputFileURL: NSURL,
+    duration: CMTime,
+    photoDisplayTime: CMTime,
+    resolvedSettings: AVCaptureResolvedPhotoSettings,
+    error: NSError
+  ): void;
+
+  captureOutputDidFinishProcessingPhotoError(output: AVCapturePhotoOutput, photo: AVCapturePhoto, error: NSError): void;
+
+  captureOutputDidFinishProcessingPhotoSampleBufferPreviewPhotoSampleBufferResolvedSettingsBracketSettingsError(
+    output: AVCapturePhotoOutput,
+    photoSampleBuffer: any,
+    previewPhotoSampleBuffer: any,
+    resolvedSettings: AVCaptureResolvedPhotoSettings,
+    bracketSettings: AVCaptureBracketedStillImageSettings,
+    error: NSError
+  ): void;
+
+  captureOutputDidFinishProcessingRawPhotoSampleBufferPreviewPhotoSampleBufferResolvedSettingsBracketSettingsError(
+    output: AVCapturePhotoOutput,
+    rawSampleBuffer: any,
+    previewPhotoSampleBuffer: any,
+    resolvedSettings: AVCaptureResolvedPhotoSettings,
+    bracketSettings: AVCaptureBracketedStillImageSettings,
+    error: NSError
+  ): void;
+
+  captureOutputDidFinishRecordingLivePhotoMovieForEventualFileAtURLResolvedSettings(output: AVCapturePhotoOutput, outputFileURL: NSURL, resolvedSettings: AVCaptureResolvedPhotoSettings): void;
+
   captureOutputDidOutputSampleBufferFromConnection(output: AVCaptureOutput, sampleBuffer: any, connection: AVCaptureConnection): void;
+
+  captureOutputWillBeginCaptureForResolvedSettings(output: AVCapturePhotoOutput, resolvedSettings: AVCaptureResolvedPhotoSettings): void;
+
+  captureOutputWillCapturePhotoForResolvedSettings(output: AVCapturePhotoOutput, resolvedSettings: AVCaptureResolvedPhotoSettings): void;
 
   capturePhotoAsyncronouslyWithCompletionHandler(completionHandler: (p1: boolean) => void): void;
 
   changeFlashSettingsWithDeviceMode(device: AVCaptureDevice, mode: AVCaptureFlashMode): void;
+
+  changeTorchSettingsWithDeviceMode(device: AVCaptureDevice, mode: AVCaptureTorchMode): void;
 
   class(): typeof NSObject;
 
@@ -243,11 +286,13 @@ declare class SwiftyCamViewController
 
   getImageOrientationForCamera(forCamera: CameraSelection): UIImageOrientation;
 
-  getNumberOfCameras(): Int;
+  getNumberOfCameras(): number;
 
   getPreviewLayerOrientation(): AVCaptureVideoOrientation;
 
   getVideoOrientation(): AVCaptureVideoOrientation;
+
+  getZoom(): number;
 
   handleApplicationDidBecomeActive(notification: NSNotification): void;
 
@@ -288,6 +333,8 @@ declare class SwiftyCamViewController
   setBackgroundAudioPreference(): void;
 
   setMaxiumVideoDuration(): number;
+
+  setZoomWithValue(value: number): void;
 
   startVideoRecording(): void;
 
