@@ -297,18 +297,20 @@ export class DemoModel extends DemoSharedCamera {
             console.log('current options', currentOptions);
             this.cam.takePicture(currentOptions);
             */
-            //Or use custom options instead:
-            const customOptions: ICameraOptions = {
-              confirmPhotos: true,
-              saveToGallery: true,
-              maxDimension: 1000,
-              quality: 50,
-              autoSquareCrop: false,
-              confirmRetakeText: 'Hate it!',
-              confirmSaveText: 'Love it!',
-            };
-            console.log('current options', customOptions);
-            this.cam.takePicture(customOptions);
+            this.cam.takePicture();
+            //Or use custom options:
+            // const customOptions: ICameraOptions = {
+            //   confirmPhotos: true,
+            //   saveToGallery: true,
+            //   maxDimension: 1000,
+            //   quality: 50,
+            //   autoSquareCrop: true,
+            //   confirmRetakeText: 'Hate it!',
+            //   confirmSaveText: 'Love it!',
+            // };
+            // console.log('current options', customOptions);
+            // this.cam.takePicture(customOptions);
+            // NOTE: this.requestGalleryPermission(); should be called if you override saveToGallery in custom options to ensure permission exists before attempting save to Gallery for iOS
           } else alert('No permission for camera, cannot take a photo!');
         });
       } else alert('No permission for camera! Grant this permission in app settings first');

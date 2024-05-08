@@ -252,7 +252,15 @@ class FancyCamera : FrameLayout {
         cameraView.takePhoto()
     }
 
-    var quality: Quality
+    var videoQuality: Quality
+        get() {
+            return cameraView.videoQuality
+        }
+        set(value) {
+            cameraView.videoQuality = value
+        }
+        
+    var quality: Int
         get() {
             return cameraView.quality
         }

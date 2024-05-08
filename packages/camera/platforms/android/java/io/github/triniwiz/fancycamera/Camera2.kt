@@ -55,7 +55,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     private var surfaceRequest: SurfaceRequest? = null
     private var isStarted = false
     private var isRecording = false
-    private var file: File? = null
+    private var file: File? = null //used to store the captured photo/video in a file
     // private var isForceStopping = true
     private var mLock = Any()
     private var cameraManager: CameraManager? = null
@@ -344,6 +344,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     override var autoFocus: Boolean = true
     override var doubleTapCameraSwitch: Boolean = true
     override var saveToGallery: Boolean = false
+    override var quality: Int = 95
     override var maxAudioBitRate: Int = -1
     override var maxVideoBitrate: Int = -1
     override var maxVideoFrameRate: Int = -1
@@ -428,10 +429,10 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         }
     }
 
-    override var quality: Quality = Quality.MAX_720P
+    override var videoQuality: Quality = Quality.MAX_720P
         set(value) {
-            // Log.d("io.github.triniwiz.fancycamera", "current quality: " + field.value)
-            // Log.d("io.github.triniwiz.fancycamera", "set quality: " + value.value)
+            Log.d("io.github.triniwiz.fancycamera", "current videoQuality: " + field.value)
+            Log.d("io.github.triniwiz.fancycamera", "set videoQuality: " + value.value)
             if (!isRecording && field != value) {
 
                 field = value
@@ -627,8 +628,8 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         listener?.onReady()
     }
 
-    private fun getRecorderQuality(quality: Quality): androidx.camera.video.Quality {
-        return when (quality) {
+    private fun getRecorderQuality(videoQuality: Quality): androidx.camera.video.Quality {
+        return when (videoQuality) {
             Quality.MAX_480P -> androidx.camera.video.Quality.SD
             Quality.MAX_720P -> androidx.camera.video.Quality.HD
             Quality.MAX_1080P -> androidx.camera.video.Quality.FHD
@@ -655,7 +656,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                     Recorder.Builder()
                             .setQualitySelector(
                                     QualitySelector.from(
-                                            getRecorderQuality(quality),
+                                            getRecorderQuality(videoQuality),
                                             FallbackStrategy.lowerQualityOrHigherThan(
                                                     androidx.camera.video.Quality.SD
                                             )
@@ -1161,12 +1162,19 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             var offsetWidth = 0
             var offsetHeight = 0
             if (autoSquareCrop) {
+                Log.d(
+                    "io.github.triniwiz.fancycamera",
+                    "processImageProxy() autoSquareCrop set, resizing image "
+            )
                 if (originalWidth < originalHeight) {
                     offsetHeight = (originalHeight - originalWidth) / 2
                     originalHeight = originalWidth
-                } else {
+                } else if (originalWidth > originalHeight) {
                     offsetWidth = (originalWidth - originalHeight) / 2
                     originalWidth = originalHeight
+                } else {
+                    offsetHeight = originalHeight
+                    offsetWidth = originalWidth
                 }
             }
             val rotated =
@@ -1180,20 +1188,9 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                             false
                     )
             outputStream = FileOutputStream(file!!, false)
-            var override: Bitmap? = null
-            if (overridePhotoHeight > 0 && overridePhotoWidth > 0) {
-                override =
-                        Bitmap.createScaledBitmap(
-                                rotated,
-                                overridePhotoWidth,
-                                overridePhotoHeight,
-                                false
-                        )
-                override.compress(Bitmap.CompressFormat.JPEG, 92, outputStream)
-            } else {
-                rotated.compress(Bitmap.CompressFormat.JPEG, 92, outputStream)
-            }
-
+            
+            rotated.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+            
             val exif = ExifInterface(file!!.absolutePath)
 
             val now = System.currentTimeMillis()
@@ -1221,8 +1218,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             exif.saveAttributes()
 
             bm.recycle()
-            rotated.recycle()
-            override?.recycle()
+            rotated.recycle()            
         } catch (e: Exception) {
             isError = true
             listener?.onCameraError("Failed to save photo.", e)

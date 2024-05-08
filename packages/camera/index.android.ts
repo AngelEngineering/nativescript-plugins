@@ -55,7 +55,7 @@ export class NSCamera extends NSCameraBase {
   private _toggleCamBtn: android.widget.ImageButton = null; // reference to native toggle camera button
   private isButtonLongPressed = false;
   private _defaultCamera: CameraTypes;
-  _lastCameraOptions: ICameraOptions[];
+  public _lastCameraOptions: ICameraOptions[];
   // readonly _context; // can define this here to avoid TS warning if encountered, NS provides the context during lifecycle as part of ViewBase
 
   /**
@@ -128,6 +128,17 @@ export class NSCamera extends NSCameraBase {
   set doubleTapCameraSwitch(value: boolean) {
     if (this._camera) {
       this._camera.setDoubleTapCameraSwitch(value);
+    }
+  }
+
+  // @ts-ignore
+  get quality(): number {
+    return this._camera ? this._camera.getQuality() : 95;
+  }
+
+  set quality(value: number) {
+    if (this._camera) {
+      this._camera.setQuality(value);
     }
   }
 
@@ -286,6 +297,7 @@ export class NSCamera extends NSCameraBase {
         that.CLog('listenerImpl.onReady()');
         // not working here:
         // this.owner.camera.whiteBalance = WhiteBalance.Auto;
+        that.CLog(DEVICE_INFO_STRING);
       },
 
       onCameraCloseUI(): void {
@@ -317,29 +329,32 @@ export class NSCamera extends NSCameraBase {
         let saveToGallery;
         let maxDimension;
         let quality;
-        let shouldAutoSquareCrop = owner.autoSquareCrop;
+        let shouldAutoSquareCrop;
         if (options) {
-          //if we have options saved, use them. otherwise fall back on defaults set on plugin
-          confirmPic = options.confirmPhotos ? true : false;
+          //if we have options saved, refer to them. otherwise fall back on properties set on camera instance
+          //   only confirmPic and maxDimension are handled here, rest in native code
+          confirmPic = options.confirmPhotos ? options.confirmPhotos : owner.confirmPhotos;
           confirmPicRetakeText = options.confirmRetakeText ? options.confirmRetakeText : owner.confirmRetakeText;
           confirmPicSaveText = options.confirmSaveText ? options.confirmSaveText : owner.confirmSaveText;
-          saveToGallery = options.saveToGallery ? true : false;
-          maxDimension = options.maxDimension ? +options.maxDimension : null;
-          shouldAutoSquareCrop = !!options.autoSquareCrop;
-          quality = options.quality ? +options.quality : 95;
-        } else {
-          // otherwise, use xml property getters or their defaults
-          confirmPic = owner.confirmPhotos;
-          saveToGallery = owner.saveToGallery;
-          confirmPicRetakeText = owner.confirmRetakeText;
-          confirmPicSaveText = owner.confirmSaveText;
-          shouldAutoSquareCrop = owner.autoSquareCrop;
-          saveToGallery = owner.saveToGallery ? true : false;
-          maxDimension = owner.maxDimension ? +owner.maxDimension : null;
-          quality = owner.quality ? +owner.quality : 95;
+          saveToGallery = options.saveToGallery ? options.saveToGallery : owner.saveToGallery;
+          maxDimension = options.maxDimension ? +options.maxDimension : owner.maxDimension;
+          shouldAutoSquareCrop = options.autoSquareCrop ? options.autoSquareCrop : owner.autoSquareCrop;
+          quality = options.quality ? +options.quality : owner.quality;
         }
-
+        //  else {
+        //   // otherwise, use xml property getters or their defaults
+        //   confirmPic = owner.confirmPhotos;
+        //   saveToGallery = owner.saveToGallery;
+        //   confirmPicRetakeText = owner.confirmRetakeText;
+        //   confirmPicSaveText = owner.confirmSaveText;
+        //   shouldAutoSquareCrop = owner.autoSquareCrop;
+        //   saveToGallery = owner.saveToGallery ? true : false;
+        //   maxDimension = owner.maxDimension ? +owner.maxDimension : null;
+        //   quality = owner.quality ? +owner.quality : 95;
+        // }
+        that.CLog('onCameraPhotoUI has options', options);
         if (confirmPic === true) {
+          that.CLog('confirmPic set, showing confirmation dialog');
           owner.sendEvent(NSCamera.confirmScreenShownEvent);
           const result = await createImageConfirmationDialog(file.getAbsolutePath(), confirmPicRetakeText, confirmPicSaveText).catch(ex => {
             that.CError('Error in createImageConfirmationDialog', ex);
@@ -361,7 +376,12 @@ export class NSCamera extends NSCameraBase {
             if (!File.exists(outFilepath)) break;
           }
           //resize for maxDimension if option set
-          if (maxDimension && maxDimension > 0) source = source.resize(maxDimension);
+          if (maxDimension && maxDimension > 0) {
+            that.CLog('maxDimension set, resizing from H W', source.height, source.width);
+
+            source = source.resize(maxDimension);
+            that.CLog('resized to H W', source.height, source.width);
+          }
           const saved = source.saveToFile(outFilepath, 'jpg', quality);
           if (saved) {
             owner.sendEvent(NSCamera.photoCapturedEvent, outFilepath);
@@ -469,13 +489,13 @@ export class NSCamera extends NSCameraBase {
         confirmPhotos: options?.confirmPhotos ? options.confirmPhotos : this.confirmPhotos,
         confirmRetakeText: options?.confirmRetakeText ? options.confirmRetakeText : this.confirmRetakeText,
         confirmSaveText: options?.confirmSaveText ? options.confirmSaveText : this.confirmSaveText,
-        saveToGallery: options?.saveToGallery ? options.saveToGallery : this._camera.getSaveToGallery(),
+        saveToGallery: options?.saveToGallery ? options.saveToGallery : this.saveToGallery,
         maxDimension: options?.maxDimension ? +options.maxDimension : this.maxDimension,
-        autoSquareCrop: options?.autoSquareCrop ? options.autoSquareCrop : this._camera.getAutoSquareCrop(),
+        autoSquareCrop: options?.autoSquareCrop ? options.autoSquareCrop : this.autoSquareCrop,
         quality: options?.quality ? +options.quality : this.quality,
       };
-      // this.CLog('takePicture() options:', JSON.stringify(options));
-      //these two options need to be set on native side
+      this.CLog('takePicture() options:', JSON.stringify(options));
+      //these are the only two options need to be set on native side if they haven't been set already via properties
       this._camera.setSaveToGallery(!!options.saveToGallery);
       this._camera.setAutoSquareCrop(!!options.autoSquareCrop);
       //the rest of the options are used on NS side: confirmPhotos, confirmRetakeText, confirmSaveText, maxDimention and quality
@@ -529,7 +549,7 @@ export class NSCamera extends NSCameraBase {
       this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
       return CameraVideoQuality.MAX_720P;
     }
-    switch (this._camera.getQuality()) {
+    switch (this._camera.getVideoQuality()) {
       case io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'):
         return CameraVideoQuality.HIGHEST;
       case io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'):
@@ -557,28 +577,28 @@ export class NSCamera extends NSCameraBase {
     }
     switch (this.videoQuality) {
       case CameraVideoQuality.HIGHEST:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
         break;
       case CameraVideoQuality.LOWEST:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
         break;
       case CameraVideoQuality.MAX_2160P:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
         break;
       case CameraVideoQuality.MAX_1080P:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
         break;
       case CameraVideoQuality.MAX_720P:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
         break;
       case CameraVideoQuality.MAX_480P:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
         break;
       case CameraVideoQuality.QVGA:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
         break;
       default:
-        this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+        this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
         break;
     }
   }
@@ -612,28 +632,28 @@ export class NSCamera extends NSCameraBase {
       this._camera.setSaveToGallery(!!options.saveToGallery);
       switch (options.videoQuality) {
         case CameraVideoQuality.HIGHEST:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
           break;
         case CameraVideoQuality.LOWEST:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
           break;
         case CameraVideoQuality.MAX_2160P:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
           break;
         case CameraVideoQuality.MAX_1080P:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
           break;
         case CameraVideoQuality.MAX_720P:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
           break;
         case CameraVideoQuality.MAX_480P:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
           break;
         case CameraVideoQuality.QVGA:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
           break;
         default:
-          this._camera.setQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
           break;
       }
       // -1 uses profile value;
@@ -1447,4 +1467,9 @@ export function createDateTimeStamp() {
     date.getMinutes().toString() +
     date.getSeconds().toString();
   return result;
+}
+
+export function getUniqueId(): string {
+  const id = java.util.UUID.randomUUID().toString();
+  return id;
 }

@@ -43,7 +43,8 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     abstract var maxVideoBitrate: Int
     abstract var maxVideoFrameRate: Int
     abstract var disableHEVC: Boolean
-    abstract var quality: Quality
+    abstract var videoQuality: Quality
+    abstract var quality:Int
     abstract val db: Double
     abstract val amplitude: Double
     abstract val amplitudeEMA: Double

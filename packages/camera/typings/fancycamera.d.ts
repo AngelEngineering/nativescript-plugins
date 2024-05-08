@@ -17,13 +17,13 @@ declare module io {
           public getDisableHEVC(): boolean;
           public getAutoFocus(): boolean;
           public setAllowExifRotation(param0: boolean): void;
-          public getQuality(): io.github.triniwiz.fancycamera.Quality;
           public getMaxAudioBitRate(): number;
           public startPreview(): void;
           public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
           public getWhiteBalance(): io.github.triniwiz.fancycamera.WhiteBalance;
           public setAutoSquareCrop(param0: boolean): void;
           public setRotation(param0: io.github.triniwiz.fancycamera.CameraOrientation): void;
+          public getVideoQuality(): io.github.triniwiz.fancycamera.Quality;
           public getAutoSquareCrop(): boolean;
           public setWhiteBalance(param0: io.github.triniwiz.fancycamera.WhiteBalance): void;
           public getPictureSize(): string;
@@ -31,7 +31,6 @@ declare module io {
           public startRecording(): void;
           public setDisableHEVC(param0: boolean): void;
           public getNumberOfCameras(): number;
-          public setQuality(param0: io.github.triniwiz.fancycamera.Quality): void;
           public getSupportedRatios(): androidNative.Array<string>;
           public setZoom(param0: number): void;
           public release(): void;
@@ -49,6 +48,7 @@ declare module io {
           public stopPreview(): void;
           public setRetrieveLatestImage(param0: boolean): void;
           public setPictureSize(param0: string): void;
+          public setQuality(param0: number): void;
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
           public getMaxZoomRatio(): number;
           public setDb(param0: number): void;
@@ -56,11 +56,13 @@ declare module io {
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
           public setZoomRatio(param0: number): void;
           public getMaxVideoBitrate(): number;
+          public getQuality(): number;
           public setFlashMode(param0: io.github.triniwiz.fancycamera.CameraFlashMode): void;
           public setStoredZoomRatio(param0: number): void;
           public getMaxVideoFrameRate(): number;
           public takePhoto(): void;
           public getPreviewSurface(): any;
+          public setVideoQuality(param0: io.github.triniwiz.fancycamera.Quality): void;
           public getAmplitude(): number;
           public getZoom(): number;
           public getAvailablePictureSizes(param0: string): androidNative.Array<io.github.triniwiz.fancycamera.Size>;
@@ -115,10 +117,10 @@ declare module io {
           public setAutoSquareCrop(param0: boolean): void;
           public startDurationTimer$camera_release(): void;
           public setRotation(param0: io.github.triniwiz.fancycamera.CameraOrientation): void;
+          public getVideoQuality(): io.github.triniwiz.fancycamera.Quality;
           public setOverridePhotoHeight(param0: number): void;
           public incrementCurrentFrame$camera_release(): void;
           public getSaveToGallery(): boolean;
-          public setQuality(param0: io.github.triniwiz.fancycamera.Quality): void;
           public getSupportedRatios(): androidNative.Array<string>;
           public hasCameraPermission(): boolean;
           public setSaveToGallery(param0: boolean): void;
@@ -130,6 +132,7 @@ declare module io {
           public setLatestImage$camera_release(param0: globalAndroid.graphics.Bitmap): void;
           public setRetrieveLatestImage(param0: boolean): void;
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
+          public setQuality(param0: number): void;
           public isGettingAudioLevels$camera_release(): boolean;
           public setCurrentFrame$camera_release(param0: number): void;
           public getProcessEveryNthFrame(): number;
@@ -143,6 +146,7 @@ declare module io {
           public setFlashMode(param0: io.github.triniwiz.fancycamera.CameraFlashMode): void;
           public getMaxVideoFrameRate(): number;
           public takePhoto(): void;
+          public setVideoQuality(param0: io.github.triniwiz.fancycamera.Quality): void;
           public getVIDEO_RECORDER_PERMISSIONS$camera_release(): androidNative.Array<string>;
           public getAvailablePictureSizes(param0: string): androidNative.Array<io.github.triniwiz.fancycamera.Size>;
           public setAutoFocus(param0: boolean): void;
@@ -168,7 +172,6 @@ declare module io {
           public toggleFlash(): void;
           public getDisableHEVC(): boolean;
           public getMTimer$camera_release(): java.util.Timer;
-          public getQuality(): io.github.triniwiz.fancycamera.Quality;
           public requestCameraPermission(): void;
           public getMaxAudioBitRate(): number;
           public getWhiteBalance(): io.github.triniwiz.fancycamera.WhiteBalance;
@@ -204,6 +207,7 @@ declare module io {
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
           public setZoomRatio(param0: number): void;
           public hasPermission(): boolean;
+          public getQuality(): number;
           public getMTimerTask$camera_release(): java.util.TimerTask;
           public getPreviewSurface(): any;
           public getAmplitude(): number;
@@ -422,7 +426,6 @@ declare module io {
           public getDisableHEVC(): boolean;
           public getAutoFocus(): boolean;
           public setAllowExifRotation(param0: boolean): void;
-          public getQuality(): io.github.triniwiz.fancycamera.Quality;
           public requestCameraPermission(): void;
           public getMaxAudioBitRate(): number;
           public startPreview(): void;
@@ -433,6 +436,7 @@ declare module io {
           public hasStoragePermission(): boolean;
           public setAutoSquareCrop(param0: boolean): void;
           public setOverridePhotoHeight(param0: number): void;
+          public getVideoQuality(): io.github.triniwiz.fancycamera.Quality;
           public getAutoSquareCrop(): boolean;
           public getOverridePhotoWidth(): number;
           public setWhiteBalance(param0: io.github.triniwiz.fancycamera.WhiteBalance): void;
@@ -442,7 +446,6 @@ declare module io {
           public setDisableHEVC(param0: boolean): void;
           public getLatestImage(): globalAndroid.graphics.Bitmap;
           public getNumberOfCameras(): number;
-          public setQuality(param0: io.github.triniwiz.fancycamera.Quality): void;
           public static getForceV1(): boolean;
           public setZoom(param0: number): void;
           public requestPermission(): void;
@@ -460,6 +463,7 @@ declare module io {
           public setRetrieveLatestImage(param0: boolean): void;
           public setPictureSize(param0: string): void;
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
+          public setQuality(param0: number): void;
           public setEnableAudio(param0: boolean): void;
           public getProcessEveryNthFrame(): number;
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
@@ -470,9 +474,11 @@ declare module io {
           public requestAudioPermission(): void;
           public hasAudioPermission(): boolean;
           public getMaxVideoBitrate(): number;
+          public getQuality(): number;
           public setFlashMode(param0: io.github.triniwiz.fancycamera.CameraFlashMode): void;
           public getMaxVideoFrameRate(): number;
           public takePhoto(): void;
+          public setVideoQuality(param0: io.github.triniwiz.fancycamera.Quality): void;
           public getZoom(): number;
           public getAvailablePictureSizes(param0: string): androidNative.Array<io.github.triniwiz.fancycamera.Size>;
           public setAutoFocus(param0: boolean): void;

@@ -10,9 +10,9 @@
  **********************************************************************************/
 
 import { Color, ImageAsset, View, File, Screen, Frame, Application, ImageSource, path, knownFolders } from '@nativescript/core';
+import { layout } from '@nativescript/core/utils/layout-helper';
 import { NSCameraBase, CameraTypes, CameraVideoQuality, ICameraOptions, IVideoOptions } from './common';
 import { iOSNativeHelper } from '@nativescript/core/utils';
-
 export * from './common';
 export { CameraVideoQuality, WhiteBalance } from './common';
 
@@ -98,6 +98,7 @@ export class MySwifty extends SwiftyCamViewController {
   };
   private _owner: WeakRef<NSCamera>;
   private _snapPicOptions: ICameraOptions;
+  public _lastCameraOptions: ICameraOptions[];
   private _enableVideo: boolean;
   private _disablePhoto: boolean;
   private _videoOptions: IVideoOptions;
@@ -289,6 +290,13 @@ export class MySwifty extends SwiftyCamViewController {
 
   public snapPicture(options?: ICameraOptions) {
     if (options) {
+      options.confirmPhotos = options.confirmPhotos ? options.confirmPhotos : this._owner.get().confirmPhotos;
+      options.confirmRetakeText = options.confirmRetakeText ? options.confirmRetakeText : this._owner.get().confirmRetakeText;
+      options.confirmSaveText = options.confirmSaveText ? options.confirmSaveText : this._owner.get().confirmSaveText;
+      options.saveToGallery = options.saveToGallery ? options.saveToGallery : this._owner.get().saveToGallery;
+      options.autoSquareCrop = options.autoSquareCrop ? options.autoSquareCrop : this._owner.get().autoSquareCrop;
+      options.maxDimension = options.maxDimension ? options.maxDimension : this._owner.get().maxDimension;
+      options.quality = options.quality ? options.quality : this._owner.get().quality;
       this._snapPicOptions = options;
     } else {
       this._snapPicOptions = {
@@ -403,8 +411,9 @@ export class MySwifty extends SwiftyCamViewController {
   //handler when an image is returned from native camera code
   public tookPhoto(photo: UIImage) {
     this._photoToSave = photo;
-    if (!this._snapPicOptions)
-      this._snapPicOptions = {
+    let options: ICameraOptions = this._snapPicOptions;
+    if (!options)
+      options = {
         confirmPhotos: this._owner.get().confirmPhotos,
         confirmRetakeText: this._owner.get().confirmRetakeText,
         confirmSaveText: this._owner.get().confirmSaveText,
@@ -413,28 +422,44 @@ export class MySwifty extends SwiftyCamViewController {
         maxDimension: this._owner.get().maxDimension,
         quality: this._owner.get().quality,
       };
-
+    else {
+      options = {
+        confirmPhotos: options?.confirmPhotos ? options.confirmPhotos : this._owner.get().confirmPhotos,
+        confirmRetakeText: options?.confirmRetakeText ? options.confirmRetakeText : this._owner.get().confirmRetakeText,
+        confirmSaveText: options?.confirmSaveText ? options.confirmSaveText : this._owner.get().confirmSaveText,
+        saveToGallery: options?.saveToGallery ? options.saveToGallery : this._owner.get().saveToGallery,
+        maxDimension: options?.maxDimension ? +options.maxDimension : this._owner.get().maxDimension,
+        autoSquareCrop: options?.autoSquareCrop ? options.autoSquareCrop : this._owner.get().autoSquareCrop,
+        quality: options?.quality ? +options.quality : this._owner.get().quality,
+      };
+    }
+    this._owner.get().CLog('tookPhoto() options:', JSON.stringify(options));
+    //iOS only handles autoSquareCrop and confirmPhotos after photo has been returned by native code
     if (this._snapPicOptions && this._snapPicOptions.autoSquareCrop) {
+      this._owner.get().CLog('autoSquareCrop set, cropping image');
       const width = photo.size.width;
       const height = photo.size.height;
       let originalWidth = width;
       let originalHeight = height;
+      this._owner.get().CLog('Original height: ' + originalHeight + ' width: ' + originalWidth);
       let x = 0;
       let y = 0;
       if (originalWidth < originalHeight) {
         x = (originalHeight - originalWidth) / 2;
         originalHeight = originalWidth;
-      } else {
+      } else if (originalWidth > originalHeight) {
         y = (originalWidth - originalHeight) / 2;
         originalWidth = originalHeight;
       }
       const rect: any = CGRectMake(x, y, originalWidth, originalHeight);
       const ref = CGImageCreateWithImageInRect(photo.CGImage, rect);
       this._photoToSave = UIImage.imageWithCGImageScaleOrientation(ref, photo.scale, photo.imageOrientation);
+      this._owner.get().CLog('After Crop, height: ' + this._photoToSave.size.height + ' width: ' + this._photoToSave.size.width);
       CGImageRelease(ref);
     }
 
     if (this._snapPicOptions && this._snapPicOptions.confirmPhotos) {
+      this._owner.get().CLog('confirmPic set, showing confirmation dialog');
       // show the confirmation
       const width = this.view.bounds.size.width;
       const height = this.view.bounds.size.height;
@@ -484,7 +509,8 @@ export class MySwifty extends SwiftyCamViewController {
         const maxDimension = +this._snapPicOptions.maxDimension;
         const quality = +this._snapPicOptions.quality;
         if (maxDimension && maxDimension > 0) {
-          source = source.resize(maxDimension);
+          //Note: iOS will default to DIPs for these so resizing will not be exact unless we convert
+          source = source.resize(layout.toDeviceIndependentPixels(maxDimension));
         }
 
         const saved = source.saveToFile(outFilepath, 'jpg', quality);
@@ -1401,3 +1427,7 @@ const drawCircle = function (color: string) {
   iconColor.setFill();
   bezier2Path.fill();
 };
+
+export function getUniqueId(): string {
+  return NSUUID.new().UUIDString;
+}

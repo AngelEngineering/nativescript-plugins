@@ -23,8 +23,8 @@
           id="nscamera"
           debug="true"
           enableVideo="true"
-          defaultCamera="front"
           disablePhoto="false"
+          defaultCamera="front"
           showCaptureIcon="true"
           showToggleIcon="true"
           showFlashIcon="true"
@@ -32,17 +32,14 @@
           insetButtonsPercent="0.02"
           shouldLockRotation="false"
           confirmPhotos="true"
-          saveToGallery="false"
+          saveToGallery="true"
           autoSquareCrop="false"
           confirmRetakeText="nah"
           confirmSaveText="yeah"
-          maxDimension="800"
-          quality="90"
-          doubleTapCameraSwitch="false"
+          maxDimension="1000"
+          quality="95"
+          doubleTapCameraSwitch="true"
           videoQuality="1080p">
-          <!-- 
-              iOS only properties: doubleTapCameraSwitch='true'  
-          -->
         </Cam:NSCamera>
 
 
