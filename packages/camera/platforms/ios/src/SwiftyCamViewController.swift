@@ -916,7 +916,8 @@ import UIKit
       NSLog("setZoom called with ")
       NSLog("%f", value)
       NSLog("%f", zoomScale)
-      videoDevice?.videoZoomFactor = zoomScale
+//      videoDevice?.videoZoomFactor = zoomScale
+        videoDevice?.ramp(toVideoZoomFactor: zoomScale, withRate: 4.0)
 
       // Call Delegate function with current zoom scale
       DispatchQueue.main.async {
