@@ -846,7 +846,9 @@ export class NSCamera extends NSCameraBase {
   set zoom(value: number) {
     console.log('set zoom', value);
     if (this._swifty) {
-      this._swifty.setZoomWithValue(value);
+      if (this._swifty.currentCamera == CameraSelection.Front) {
+        console.warn('iOS front cameras do not support zoom');
+      } else this._swifty.setZoomWithValue(value);
     } else console.error('no native camera to set zoom');
   }
 
