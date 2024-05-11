@@ -11,12 +11,22 @@ import java.io.File
 import java.lang.Exception
 
 interface CameraEventListener {
-    fun onReady()
-    fun onCameraOpen()
-    fun onCameraClose()
-    fun onCameraPhoto(file: File?)
-    fun onCameraVideo(file: File?)
-    fun onCameraError(message: String, ex: Exception)
-    fun onCameraVideoStart()
-    fun onCameraVideoStop()
+  fun onReady()
+
+  fun onCameraOpen()
+
+  fun onCameraClose()
+
+  fun onCameraPhoto(file: File?)
+
+  fun onCameraVideo(file: File?)
+
+  fun onCameraError(
+    message: String,
+    ex: Exception,
+  )
+
+  fun onCameraVideoStart()
+
+  fun onCameraVideoStop()
 }
