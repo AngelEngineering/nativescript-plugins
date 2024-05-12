@@ -24,6 +24,8 @@
           tap="{{ viewDemo }}" />
         <Button text="videoplayer"
           tap="{{ viewDemo }}" />
+        <Button text="transcoder"
+          tap="{{ viewDemo }}"/>
       </StackLayout>
     </ScrollView>
   </StackLayout>
