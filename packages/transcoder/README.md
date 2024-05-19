@@ -89,13 +89,14 @@ You can listen to these events by attaching the `on` listener to the `transcoder
 
 ## Options 
 ```typescript
-export interface VideoConfig {
-  quality?: '480p' | '720p' | '1080p'; 
+export interface VideoConfig {  
+  height?: number;
+  width?: number;
+  force?: boolean; // force transcoding to allow transcoding to the same or higher quality
   frameRate?: number; // iOS only
   audioChannels?: number; // iOS only
   audioSampleRate?: number; // iOS only
   audioBitRate?: number; // iOS only
-  force?: boolean; // force transcoding to allow transcoding to the same or higher quality
 }
 ```
 
@@ -111,9 +112,10 @@ The transcoder plugin also contains some utilities to help you when working with
 | getVideoCodec(videoPath: string)      | Returns the video codec if found | string | ✅ | ✅ |
 | getAudioCodec(videoPath: string)      | Returns the audio codec if found | string | ✅ | ✅ |
 | getVideoDuration(videoPath: string)      | Returns the duration of the video in milliseconds | number | ✅ | ✅ |
+
 ## Troubleshooting
 
-Logs are turned off by default. If you want to view the logs as the video is being processed, you can turn them on by setting the log level to `verbose` before starting the transcode process.
+Logs are turned off by default. If you want to view the logs as the video is being processed, you can turn them on by setting the log level to `verbose` before starting the transcode process. This will slow down transcoding due to frequent events and console output. 
 
 ```typescript
 
