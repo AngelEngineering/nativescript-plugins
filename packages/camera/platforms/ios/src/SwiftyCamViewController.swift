@@ -137,6 +137,8 @@ import UIKit
 
   // MARK: Private Variable Declarations
 
+  private var enableVideo: Bool = false
+
   /// Variable for storing current zoom scale
   @objc public var zoomScale: CGFloat = CGFloat(1.0)
 
@@ -410,6 +412,24 @@ import UIKit
   }
 
   // MARK: Public Functions
+
+  @objc public func getEnableVideo() -> Bool {
+    return enableVideo
+  }
+
+  @objc public func setEnableVideo(value: Bool) {
+    if enableVideo != value {
+      if !value && isRecording {
+        NSLOG("currently recording, cannot change to photo mode")
+      } else {
+        enableVideo = value
+        //TODO: handle mode change
+        NSLog("Changing mode")
+      }
+    } else {
+      NSLog("Same value for enableVideo, ignoring")
+    }
+  }
 
   /**
     Capture photo from current session
@@ -916,8 +936,8 @@ import UIKit
       NSLog("setZoom called with ")
       NSLog("%f", value)
       NSLog("%f", zoomScale)
-//      videoDevice?.videoZoomFactor = zoomScale
-        videoDevice?.ramp(toVideoZoomFactor: zoomScale, withRate: 4.0)
+      //      videoDevice?.videoZoomFactor = zoomScale
+      videoDevice?.ramp(toVideoZoomFactor: zoomScale, withRate: 4.0)
 
       // Call Delegate function with current zoom scale
       DispatchQueue.main.async {

@@ -51,8 +51,8 @@ This nativescript camera plugin works on Android (API 26+) and Apple (iOS 12+) d
 * 🔍 Customizable output photo dimensions and quality (saved as jpeg)
 
 ## Future Features
-* ⏯️ Customizable video codec and dimensions
-* 🌓 Video Confirmation flag and UI
+* ⏯️ H265 codec option for video, and custom dimensions for video/photo capture
+* 🌓 Video Confirmation flag and UI (you can use [@angelengineering/videoplayer](packages/videoplayer/README.md) for your own confirmation flow for now)
 * ⚡ Additional options for more control over Camera and Photo/Video capture
 
 ------------------------------
@@ -70,12 +70,13 @@ import { NSCamera } from '@angelengineering/camera';
 ```javascript
 this.cam = new NSCamera();
 this.cam.id = "nscamera"
+// Decide if the camera should be in video or photo mode and set the enableVideo property.
 this.cam.enableVideo = true;
+// Set other options for the camera
 this.cam.confirmPhotos = true;
 this.cam.defaultCamera = 'front';
     ......
-//Check camera and microphone permissions first.
-//Then, add this.cam to a Layout as a child and voila!
+// Check camera and microphone permissions, then add `this.cam` to a Layout as a child view and voila!
 ```
 or
 ```xml
@@ -84,8 +85,7 @@ or
       <Cam:NSCamera height="{{ cameraHeight }}"
           id="nscamera"
           defaultCamera="front"
-          enableVideo="true"
-          disablePhoto="false"
+          enableVideo="true"          
           saveToGallery="true"
           showCaptureIcon="true"
           showToggleIcon="true"
@@ -210,8 +210,7 @@ If you want to use the `saveToGallery` flag then you will also need to add the f
 | **showToggleIcon**    | boolean | *true*       | If true the default camera toggle (front/back) icon button will show on the NSCamera layout.                            |
 | **showCaptureIcon**   | boolean | *true*       | If true the default capture (take picture) icon/button will show on the NSCamera layout.                                |
 | **showGalleryIcon**   | boolean | *true*       | If true the choose from gallery/library icon/button will show on the NSCamera layout.                                   |
-| **enableVideo**       | boolean | *false*       | If true the Camera instance can record video and will affect camera UX and main camera button icon used.                                      |
-| **disablePhoto**       | boolean | *false*       | If true the Camera instance UI will only allow video mode operation. if enableVideo is false and disablePhoto is true, the main camera button will not trigger any actions.                                       |
+| **enableVideo**       | boolean | *false*       | If true the Camera instance will be in Video mode, otherwise in Photo mode.                                      |
 | **defaultCamera** | `'front'` or `'rear'` | *'rear'*         | Which camera to use on launch.  `'front'` or `'rear'`.                                                  |
 | **shouldLockRotation**| boolean | *true*  | If true, locks the device orientation while recording video|
 | **doubleTapCameraSwitch** | boolean | *true*  | Enable/disable double tap gesture to switch camera.  |
@@ -239,10 +238,10 @@ If you want to use the `saveToGallery` flag then you will also need to add the f
 | **isCameraAvailable()**                      | Returns true if the device has at least one camera.                                                                                                             |
 | **toggleFlash()**                            | Toggles the flash mode on the active camera.                                                                                                                    |
 | **toggleCamera()**                           | Toggles the active camera on the device.                                                                                                                        |
-| **takePicture(opts?: ICameraOptions)**      | Takes a picture of the current camera preview. When the image file is saved, `photoCapturedEvent` event will be emitted with its path .                                                                                                       |
+| **takePicture(opts?: ICameraOptions)**      | Takes a picture of the current camera preview. When the image file is saved, `photoCapturedEvent` event will be emitted with its path . NOTE: this only works in Photo Mode.                                                                                                      |
 | **getFlashMode(): string**                   | Android: various strings possible: https://developer.android.com/reference/android/hardware/Camera.Parameters.html#getFlashMode() iOS: either `'on'` or `'off'` |
-| **record(opts?: IVideoOptions)**             | Starts recording a video.                                                                                                                                       |
-| **stop()**                                   | Stops the video recording. When the video file is ready, the `videoRecordingReadyEvent` event will be emitted with its path.                                                                   |
+| **record(opts?: IVideoOptions)**             | Starts recording a video.       NOTE: this only works in Video Mode.                                                                                                                                   |
+| **stop()**                                   | Stops the video recording. When the video file is ready, the `videoRecordingReadyEvent` event will be emitted with its path.     NOTE: this only works in Video Mode.                                                                 |
 | **hasTorch()**                                          | Returns true if the active camera has a torch mode for video recording. *Note: Android will just return hasFlash()*                                                                                                |
 | **hasFlash()**                                          | Returns true if the active camera has a flash mode for taking photo. More info in Caveats section below.                                                                                                 |
 | **getNumberOfCameras()**                                | Returns the number of cameras on the device.   *NOTE: this should be called after the cameraReadyEvent has been received to ensure the plugin has initialized and has access to camera hardware*                                                                                                     |
@@ -307,8 +306,6 @@ export enum CameraVideoQuality {
 *Pinch to Zoom* - for iOS this is currently only supported for rear cameras. Support for front cameras may be added in the future.
 
 *Main Camera Button* - for both platforms, the main camera button supports both tap and long-press gestures when in video recording mode. Tap to start/stop recording, or long-press the button to record until you stop pressing the button. In photo mode, long-presses are ignored.
-
-*Camera preview mode* - If enableVideo is false and disablePhoto is true, the camera plugin will only operate in camera preview mode. In this mode, neither the main camera button or the flash buttons will be rendered even if those options are enabled. 
 
 *Device Sleep* - Developers should handle disabling device sleep during video recording to avoid having the device/app suspend while using the camera plugin. 
 

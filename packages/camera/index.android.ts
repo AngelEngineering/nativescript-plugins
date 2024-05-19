@@ -49,6 +49,7 @@ export class NSCamera extends NSCameraBase {
 
   private isRecording = false;
   private _videoQuality: CameraVideoQuality = CameraVideoQuality.MAX_720P;
+  private _enableVideo: boolean = false;
   private _nativeView: android.widget.RelativeLayout;
   private _flashBtn: android.widget.ImageButton = null; // reference to native flash button
   private _takePicBtn: android.widget.ImageButton = null; // reference to native take picture button
@@ -78,8 +79,26 @@ export class NSCamera extends NSCameraBase {
     return this.enableVideo === true;
   }
 
-  private isPhotoDisabled() {
-    return this.disablePhoto === true;
+  //@ts-ignore
+  get enableVideo(): boolean {
+    return this._camera ? this._camera.getEnableVideo() : this._enableVideo;
+  }
+
+  set enableVideo(value: boolean) {
+    console.log('set enableVideo', value);
+    if (this._camera) {
+      if (value != this.camera.getEnableVideo()) {
+        console.log('Changing modes, setting enableVideo to', value);
+        this._camera.setEnableVideo(value);
+        //if we are currently recording video and changing to photo mode, this will be ignored
+        if (this._camera.getCameraRecording() && !value) {
+          console.warn('Currently recording, cannot change to photo mode!');
+        }
+      } else console.log('same mode, ignoring');
+    } else {
+      console.warn("No camera instance yet, can't set enableVideo directly");
+    }
+    this._enableVideo = value;
   }
 
   // @ts-ignore
@@ -268,7 +287,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   private _onLayoutChangeFn(args) {
-    const size = this.getActualSize();
+    // const size = this.getActualSize();
     this._initDefaultButtons();
   }
 
@@ -441,7 +460,6 @@ export class NSCamera extends NSCameraBase {
     this._camera.setListener(listener);
     this.cameraId = this._cameraId;
     this.enableVideo = this.isVideoEnabled();
-    this.disablePhoto = this.isPhotoDisabled();
     this.isRecording = false;
     this._camera.setDoubleTapCameraSwitch(this.doubleTapCameraSwitch);
     this.updateQuality();
@@ -482,6 +500,10 @@ export class NSCamera extends NSCameraBase {
    * Takes a picture using the camera preview
    */
   public takePicture(options?: ICameraOptions): void {
+    if (this.enableVideo) {
+      console.error('in Video mode, change to photo mode to take a picture!');
+      return null;
+    }
     if (this._camera) {
       // Use options if passed, otherwise use the current values set on plugin via XML or code,
       //   or fall back on plugin defaults if no properties set by user before now.
@@ -608,6 +630,10 @@ export class NSCamera extends NSCameraBase {
    * @param options IVideoOptions
    */
   public async record(options?: IVideoOptions): Promise<void> {
+    if (!this.enableVideo) {
+      console.error('in Photo mode, change to video mode to record!');
+      return null;
+    }
     if (this.isRecording) {
       this.CLog('Currently recording, cannot call record()');
       return;
@@ -688,6 +714,10 @@ export class NSCamera extends NSCameraBase {
    * Stop camera recording and update UI
    */
   public stopRecording(): void {
+    if (!this.enableVideo) {
+      console.error('in Photo mode, stop is not available');
+      return null;
+    }
     if (!this.isRecording) {
       this.CLog('not currently recording, cannot call stopRecording()');
       return;
@@ -826,10 +856,6 @@ export class NSCamera extends NSCameraBase {
   }
 
   private _initFlashButton(): void {
-    if (!this.enableVideo && this.disablePhoto) {
-      console.warn('Neither photo or video mode enabled, not showing flash button');
-      return;
-    }
     this._flashBtn = createImageButton();
     // set correct flash icon on button
     this._ensureCorrectFlashIcon();
@@ -913,15 +939,13 @@ export class NSCamera extends NSCameraBase {
       shape.setCornerRadius(96);
       shape.setAlpha(0);
       this._takePicBtn.setBackgroundDrawable(shape);
-    } else if (!this.disablePhoto) {
+    } else {
       //if we're in camera photo mode, show the takePhoto icon
       this._takePicBtn = createImageButton();
       const takePicDrawable = getImageDrawable(this.takePicIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
       const shape = createTransparentCircleDrawable();
       this._takePicBtn.setBackgroundDrawable(shape); // set the transparent background
-    } else {
-      console.warn('Neither photo or video mode enabled, not showing button');
     }
 
     const ref = new WeakRef(this);
@@ -949,15 +973,13 @@ export class NSCamera extends NSCameraBase {
                 owner.isRecording = true;
               }
             }
-          } else if (!this.disablePhoto) {
+          } else {
             //Photo Capture
             if (!this.isButtonLongPressed && pEvent.getAction() == android.view.MotionEvent.ACTION_DOWN) {
               if (owner) {
                 owner.takePicture();
               }
             }
-          } else {
-            this.CLog('neither photo or video enabled, ignoring tap');
           }
           return false;
         },

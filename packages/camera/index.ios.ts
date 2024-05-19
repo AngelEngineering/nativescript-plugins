@@ -126,13 +126,9 @@ export class MySwifty extends SwiftyCamViewController {
     this._swiftyDelegate = null;
   }
 
-  public set enableVideo(value: boolean) {
-    this._enableVideo = value;
-  }
-
-  public set disablePhoto(value: boolean) {
-    this._disablePhoto = value;
-  }
+  // public set enableVideo(value: boolean) {
+  //   this._enableVideo = value;
+  // }
 
   viewDidLoad() {
     super.viewDidLoad();
@@ -149,10 +145,6 @@ export class MySwifty extends SwiftyCamViewController {
     this.cameraDelegate = this._swiftyDelegate;
 
     if (this._owner.get().showCaptureIcon) {
-      if (!this._owner.get().enableVideo && this._owner.get().disablePhoto) {
-        console.warn('Neither photo or video mode enabled, not showing camera button');
-        return;
-      }
       if (this._cameraBtn) this._cameraBtn.removeFromSuperview();
       this._cameraBtn = SwiftyCamButton.alloc().init();
       this._cameraBtn.delegate = this;
@@ -187,10 +179,6 @@ export class MySwifty extends SwiftyCamViewController {
     }
 
     if (this._owner.get().showFlashIcon) {
-      if (!this._owner.get().enableVideo && this._owner.get().disablePhoto) {
-        console.warn('Neither photo or video mode enabled, not showing flash button');
-        return;
-      }
       this._flashBtnHandler();
       this.flashEnabled = this._flashEnabled;
     }
@@ -291,6 +279,10 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public snapPicture(options?: ICameraOptions) {
+    if (this._enableVideo) {
+      console.error('in Video mode, change to photo mode to take a picture!');
+      return null;
+    }
     if (options) {
       options.confirmPhotos = options.confirmPhotos ? options.confirmPhotos : this._owner.get().confirmPhotos;
       options.confirmRetakeText = options.confirmRetakeText ? options.confirmRetakeText : this._owner.get().confirmRetakeText;
@@ -316,6 +308,10 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public recordVideo(options?: IVideoOptions) {
+    if (!this._enableVideo) {
+      console.error('in Photo mode, change to video mode to take a picture!');
+      return null;
+    }
     options = {
       saveToGallery: options?.saveToGallery ? options.saveToGallery : this._owner.get().saveToGallery,
       videoQuality: options?.videoQuality ? options.videoQuality : this._owner.get().videoQuality,
@@ -578,12 +574,9 @@ export class MySwifty extends SwiftyCamViewController {
         if (this._owner.get().shouldLockRotation) this.disableRotation();
         this._owner.get().record();
       }
-    } else if (!this._disablePhoto) {
+    } else {
       this._owner.get().takePicture();
     }
-    // else {
-    // console.warn('neither photo or video enabled, ignoring tap');
-    // }
   }
 
   /// Called When UILongPressGestureRecognizer enters UIGestureRecognizerState.began
@@ -767,17 +760,40 @@ export class NSCamera extends NSCameraBase {
     this._detectDevice(); //TODO: is this still useful?
   }
 
+  // @ts-ignore
+  get enableVideo(): boolean {
+    if (this._swifty) {
+      return this._swifty.getEnableVideo();
+    } else {
+      console.warn('No native camera instance, returning local value', this.enableVideo);
+      return this.enableVideo;
+    }
+  }
+
+  set enableVideo(value: boolean) {
+    console.log('set enableVideo', value);
+    if (this._swifty) {
+      if (this._swifty.getEnableVideo() == value) {
+        console.warn('already in mode, ignoring', value);
+      } else {
+        this._swifty.setEnableVideoWithValue(value);
+        console.warn('Changing mode', value);
+        if (this._swifty.isRecording && !value) {
+          console.warn('Currently recording, cannot change mode!');
+        }
+      }
+    } else {
+      console.error('no native camera to set enableVideo');
+    }
+    this.enableVideo = value;
+  }
+
   private isVideoEnabled() {
     return this.enableVideo === true; //|| NSCamera.enableVideo;
   }
 
-  private isPhotoDisabled() {
-    return this.disablePhoto === true; //|| NSCamera.disablePhoto;
-  }
-
   createNativeView() {
-    this._swifty.enableVideo = this.isVideoEnabled();
-    this._swifty.disablePhoto = this.isPhotoDisabled();
+    this._swifty.setEnableVideoWithValue(this.isVideoEnabled());
     this._swifty.view.autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
     return this._swifty.view;
   }

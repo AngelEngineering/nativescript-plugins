@@ -15,20 +15,13 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public debug = false;
 
   /**
-   * Video Support (off by default)
-   * users should set this in a component constructor before their view creates the component
-   * and can reset it before different using in different views if they want to go back/forth
-   * between photo/camera and video/camera
+   * Video Mode (off by default). If false, then plugin will operate in photo mode.
+   * Users should set this in a component constructor before their view creates the component
+   * and can reset it before using it in different views if they want to go back/forth
+   * between photo-camera and video-camera
    */
   @GetSetProperty()
   public enableVideo = false;
-
-  /*
-   * Disable Photo Support (off by default)
-   * useful if you wish to only use this plugin as a camera preview by also disabling video
-   */
-  @GetSetProperty()
-  public disablePhoto = false;
 
   /**
    * Default camera: (default to 'rear')

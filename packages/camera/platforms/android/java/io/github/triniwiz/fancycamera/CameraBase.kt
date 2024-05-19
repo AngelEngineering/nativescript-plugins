@@ -83,6 +83,7 @@ abstract class CameraBase
     abstract var enableTapToFocus: Boolean
     abstract var zoom: Float
     abstract var zoomRatio: Float
+    abstract var enableVideo: Boolean // Either in Photo mode or Video mode
 
     internal fun resetCurrentFrame() {
       if (isProcessingEveryNthFrame()) {

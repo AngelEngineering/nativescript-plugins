@@ -15,12 +15,6 @@ export declare class NSCamera extends ContentView {
   public enableVideo: boolean;
 
   /**
-   * Disable Photo Support (off by default)
-   * If you want to record video, and use tap to start and stop recording, set this to true
-   */
-  public disablePhoto: boolean;
-
-  /**
    * Default camera: (default to 'rear')
    * Can be set before initialization or after to select which camera the plugin should use currently
    */

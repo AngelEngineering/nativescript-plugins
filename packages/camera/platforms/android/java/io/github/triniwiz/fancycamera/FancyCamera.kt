@@ -32,6 +32,14 @@ class FancyCamera : FrameLayout {
   private var mEMA = 0.0
   private lateinit var cameraView: CameraBase
 
+  var enableVideo: Boolean
+    get() {
+      return cameraView.enableVideo
+    }
+    set(value) {
+      cameraView.enableVideo = value
+    }
+
   var enableAudio: Boolean
     get() {
       return cameraView.enableAudio
@@ -119,6 +127,11 @@ class FancyCamera : FrameLayout {
   val hasFlash: Boolean
     get() {
       return cameraView.hasFlash()
+    }
+
+  val cameraRecording: Boolean
+    get() {
+      return cameraView.cameraRecording()
     }
 
   var flashMode: CameraFlashMode

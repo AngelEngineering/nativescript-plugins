@@ -40,8 +40,8 @@ export class DemoModel extends DemoSharedCamera {
     //Notes on properties that affect camera instance
     //[ Both Platforms ]
     // this.cam.doubleTapCameraSwitch = false; //default is true so double taps on view will switch camera
-    //this.cam.enableVideo = true;//defaults to false. Enable to true for video mode
-    //this.cam.disablePhoto = true;//defaults to false. Set to true and enableVideo to true, and camera button gestures ignored
+    //this.cam.enableVideo = true; //defaults to false. Enable to true for video mode
+
     //CURRENTLY UNSUPPORTED:
     // console.log('getAvailablePictureSizes', this.cam.getAvailablePictureSizes('1:1'));//not currently supported/working
 
@@ -176,6 +176,8 @@ export class DemoModel extends DemoSharedCamera {
 
   // called by custom button on demo page
   public async recordDemoVideo() {
+    this.cam.zoom = 0.5;
+    return;
     try {
       let canRecord = true;
       //recheck audio and video permissions
@@ -211,6 +213,8 @@ export class DemoModel extends DemoSharedCamera {
 
   // called by custom button on demo page
   public stopRecordingDemoVideo() {
+    this.cam.zoom = 1.0;
+    return;
     try {
       this.cam.stop();
     } catch (err) {
@@ -255,6 +259,8 @@ export class DemoModel extends DemoSharedCamera {
 
   // called by custom button on demo page
   public toggleFlashOnCam() {
+    this.cam.zoom = 0;
+    return;
     console.log('toggleFlashOnCam()');
     this.cam.toggleFlash();
     console.log('Flash is now: ', this.cam.getFlashMode());

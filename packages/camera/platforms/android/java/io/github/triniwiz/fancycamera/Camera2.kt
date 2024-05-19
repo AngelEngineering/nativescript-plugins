@@ -67,6 +67,39 @@ class Camera2
     private var firstTime: Boolean = true
     override var enablePinchZoom: Boolean = true
     override var enableTapToFocus: Boolean = true
+    // override var enableVideo: Boolean = false
+
+    override var enableVideo: Boolean = false
+      set(value) {
+        if (value != field) {
+          field = value
+          if (value) {
+            // TODO: change to video mode
+            Log.d(
+              "io.github.triniwiz.fancycamera",
+              "Changing to video mode",
+            )
+          } else {
+            if (isRecording) {
+              Log.d(
+                "io.github.triniwiz.fancycamera",
+                "Currently recording!! Cannot change to photo mode!!",
+              )
+            } else {
+              // TODO: change to photo mode
+              Log.d(
+                "io.github.triniwiz.fancycamera",
+                "Changing to photo mode",
+              )
+            }
+          }
+        } else {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "same value for enableVideo, ignoring",
+          )
+        }
+      }
 
     override var retrieveLatestImage: Boolean = false
       set(value) {
