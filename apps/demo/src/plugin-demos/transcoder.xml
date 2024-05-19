@@ -18,8 +18,6 @@
           tap="{{ pickVideoGallery }}"/>
         <Button text="480p"
           tap="{{ processVideo480 }}"/>
-        <Button text="480p [FR 5] (iOS only)"
-          tap="{{ processVideo480FR5 }}"/>
         <Button text="720p"
           tap="{{ processVideo720 }}"/>
         <Button text="1080p"

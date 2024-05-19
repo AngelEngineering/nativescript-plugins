@@ -22,7 +22,7 @@ export class Transcoder extends TranscoderCommon {
 
       // If the input resolution is lower or the same as the target resolution, transcoding will just eat up time and create a bigger file, which is not usual purpose.
       //    If the user wants to do it anyway, pass the force flag.
-      if (!videoConfig.force && !allowedTranscodingResolution.includes(videoConfig.quality)) {
+      if (!videoConfig.force && !allowedTranscodingResolution.includes(videoConfig.height + '')) {
         return reject(
           'Transcoding to the same or higher resolution is not allowed by default. If you want to do this intentionally, pass in { force: true } as part of the vidoeConfig object to bypass this check.'
         );
@@ -30,21 +30,40 @@ export class Transcoder extends TranscoderCommon {
       const emit = (event: string, data: any) => {
         this.notify({ eventName: event, object: this, data });
       };
-      let height: number;
-      switch (videoConfig.quality) {
-        case '480p':
-          height = 480;
-          break;
-        case '720p':
-          height = 720;
-          break;
-        case '1080p':
-          height = 1080;
-          break;
+
+      let height: number, width: number;
+      const originalResolution = this.getVideoResolution(inputPath);
+      if (!videoConfig.height && !videoConfig.width) {
+        height = 720; //default to a height of 720 and scaled width if nothing set
       }
+      if (videoConfig.width && !videoConfig.height) {
+        //calculate the width based on desired height
+        const targetWidth: number = videoConfig.width;
+        const ratio = targetWidth / originalResolution.width;
+        const targetHeight = Math.round(originalResolution.height * ratio);
+        width = targetWidth;
+        height = targetHeight;
+      } else if (videoConfig.height && !videoConfig.width) {
+        //calculate the width based on desired height
+        const targetHeight: number = videoConfig.height;
+        const ratio = targetHeight / originalResolution.height;
+        const targetWidth = Math.round(originalResolution.width * ratio);
+        width = targetWidth;
+        height = targetHeight;
+      }
+      //both set
+      else {
+        width = videoConfig.width;
+        height = videoConfig.height;
+      }
+      this.log(`Transcoding to height: ${height} width: ${width}`);
+
       const audioProcessors = new com.google.common.collect.ImmutableList.Builder<androidx.media3.common.audio.AudioProcessor>().build();
-      const videoEffects = com.google.common.collect.ImmutableList.of(androidx.media3.effect.Presentation.createForHeight(height));
+      const videoEffects = com.google.common.collect.ImmutableList.of(androidx.media3.effect.Presentation.createForWidthAndHeight(width, height, 1));
+      //if you only want to select a height and have media3 handle the width, use the following instead
+      // const videoEffects = com.google.common.collect.ImmutableList.of(androidx.media3.effect.Presentation.createForHeight(height));
       const inputMediaItem: androidx.media3.common.MediaItem = androidx.media3.common.MediaItem.fromUri(inputPath);
+
       const editedMediaItem: androidx.media3.transformer.EditedMediaItem = new androidx.media3.transformer.EditedMediaItem.Builder(inputMediaItem)
         //@ts-ignore
         .setEffects(new androidx.media3.transformer.Effects(/* audioProcessors= */ audioProcessors, /* videoEffects= */ videoEffects))
@@ -93,6 +112,7 @@ export class Transcoder extends TranscoderCommon {
         .addListener(listener)
         .build();
       transformer.start(editedMediaItem, outputPath);
+      emit(TranscoderCommon.TRANSCODING_STARTED, null);
       const progressHolder: androidx.media3.transformer.ProgressHolder = new androidx.media3.transformer.ProgressHolder();
       const progressUpdater = setInterval(() => {
         transformer.getProgress(progressHolder);

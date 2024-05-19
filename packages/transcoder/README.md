@@ -4,13 +4,13 @@
 
 [![npm](https://img.shields.io/npm/v/@angelengineering/audio-recorder?style=flat-square)](https://www.npmjs.com/package/@angelengineering/transcoder)
 
-This plugin provides video transcoding functionality for Android API 21+ and iOS 4+ and supports modifying the video's resolution, frame rate (iOS only).
-The plugin is currently able to transcode a video to a height of 480, 720 or 1080, with the width scaled in the same ratio (based on the original video dimensions). 
+This plugin provides basic video transcoding functionality for Android API 21+ and iOS 4+ and supports modifying the video's resolution on both platforms. iOS supports a few extra options such as AVNumberOfChannelsKey, AVSampleRateKey and AVEncoderBitRateKey.
 
-Note: Not all video/audio codecs/formats are supported, so the transcode may fail. This is particularly true on Android, where the device and OS version dictate what is actually supported when using the plugin. 
+The plugin is currently only for scaling a video to a user-specified height and/or width. If only one dimension is passed,  the other will be scaled in the same ratio (based on the original video dimensions). If neither is specified, the transcoder will use a height of 720 with a scaled width based on the input video. 
 
+Note: Only available system video/audio codecs/formats are supported, so the transcode will fail immediately for unsupported inputs. It may also fail during transcode if the video file has corrupted frame data. 
 
-For both Android and iOS, the transcoded video files will be saved as an MP4 file using h264 and AAC encoding. 
+For both Android and iOS, the transcoded video files will be saved as an MP4 file using h264 and AAC encoding for maximum compatibility. 
 
 ## Installation
 
@@ -34,7 +34,7 @@ The best way to understand how to use the plugin is to study the demo app includ
 import { NativescriptTranscoder } from '@angelengineering/transcoder';
 ```
 
-2. Transcode a video to a height of 480, 720 or 1080, with the width scaled in the same ratio (based on the original video dimensions). (the example below uses a filepicker, but you can use a video recoding from the camera or another source)
+2. Transcode a video to a specific height and/or width (the example below uses a filepicker, but you can use a video recording file from the camera or another source) 
 
 ```typescript
 
@@ -55,8 +55,9 @@ selectAndTranscodeVideo(): void {
         inputFile.path,
         outputPath,
           {
-              quality: '720p'  // or '1080p' or '480p'
-          }//VideoConfig options
+              height: 720,                
+              //width: 1080,  //you can also set specific width, both or neither
+          }//:VideoConfig options
       ).then(transcodedFile => {
         // do something with the transcoded file
       })
@@ -69,17 +70,17 @@ selectAndTranscodeVideo(): void {
 The following events are emitted during the transcoding process:
 
 - `TRANSCODING_STARTED` - emitted at the beginning of the transcoding process
-- `TRANSCODING_PROGRESS` - emitted over time with the percentage (0 to 1) completed
-- `TRANSCODING_COMPLETE` - emitted after a successful transcoding process (the `transcode` function will return the transcoded file)
-- `TRANSCODING_ERROR` - emitted when the transcoding process emits an error (in event data payload as `error`, and the `transcode` function will return a rejected promise at this point)
-- `TRANSCODING_CANCELLED` - emitted when the transcoding process is cancelled (the `transcode` function will return a rejected promise at this point) (iOS only(
+- `TRANSCODING_PROGRESS` - emitted over time with the percentage (0 to 1) completed. Event data with percentage in `progress`
+- `TRANSCODING_COMPLETE` - emitted after a successful transcoding process, Event data with transcoded file path in `output`
+- `TRANSCODING_ERROR` - emitted when the transcoding process emits an error. Event data with error string in `error`
+
 
 You can listen to these events by attaching the `on` listener to the `transcoder`
 
 ```typescript
   const transcoder = new NativescriptTranscoder()
   transcoder.on(NativescriptTranscoder.TRANSCODING_PROGRESS, (payload: MessageData) => {
-      // you'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
+      // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
       executeOnMainThread(() => {
         progressBar.value = payload.data.progress * 100;
       });
@@ -126,7 +127,7 @@ startTranscoding(): void {
   
 ## Acknowledgements
 
-This plugin is based on [react-native-transcode](https://github.com/selsamman/react-native-transcode) for iOS. For Android, this uses the AndroidX [Media3 Transformer](https://developer.android.com/media/media3/transformer) libraries
+This plugin is based on [NextLevelSessionExporter](https://github.com/NextLevel/NextLevelSessionExporter) for iOS. For Android, this uses the AndroidX [Media3 Transformer](https://developer.android.com/media/media3/transformer) libraries
 
 
 ## License

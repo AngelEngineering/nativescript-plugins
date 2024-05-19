@@ -19,12 +19,75 @@ export class DemoModel extends DemoSharedTranscoder {
   pickedFile: File | undefined = undefined;
   transcoder: Transcoder;
   count = 0;
+  timeStarted = 0;
 
   constructor() {
     super();
     this.transcoder = new Transcoder();
     //Note: enabling logging may slow down encoding due to frequent event handling and console output
     this.transcoder.setLogLevel('verbose');
+    this.transcoder.on(Transcoder.TRANSCODING_STARTED, (payload: MessageData) => {
+      console.log('Transcoding started');
+    });
+    this.transcoder.on(Transcoder.TRANSCODING_PROGRESS, (payload: MessageData) => {
+      executeOnMainThread(() => {
+        // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
+        const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
+        progressBar.value = 0;
+        progressBar.value = payload.data.progress * 100;
+        console.log('progress', payload.data.progress);
+      });
+    });
+    this.transcoder.on(Transcoder.TRANSCODING_ERROR, (payload: MessageData) => {
+      executeOnMainThread(() => {
+        // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
+        const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
+        progressBar.value = 0;
+        console.error('Error during transcode, reason was:', payload.data.error);
+        alert('Error during transcode, reason was: ' + payload.data.error);
+      });
+    });
+    this.transcoder.on(Transcoder.TRANSCODING_COMPLETE, (payload: MessageData) => {
+      executeOnMainThread(() => {
+        // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
+        console.log('complete, output file:', payload.data.output);
+        /*
+				//NOTE: we do the rest of this in the promise result from the transcode call, though you can do it on this event instead
+        const transcodedFile = File.fromPath(payload.data.output);
+        const timeTaken = (new Date().getTime() - this.timeStarted) / 1000;
+
+        console.log('[PROCCESSING COMPLETED]', transcodedFile.path);
+        console.log('[Original Size]', this.transcoder.getVideoSizeString(this.pickedFile.path));
+        const originalResolution = this.transcoder.getVideoResolution(this.pickedFile.path);
+        console.log('[Original Resolution]', `${originalResolution.width}x${originalResolution.height}`);
+        console.log('[Original Duration]', this.transcoder.getVideoDuration(this.pickedFile.path));
+        console.log('[Transcoded Size]', this.transcoder.getVideoSizeString(transcodedFile.path));
+        console.log('[Percentage Reduced]', `${(((this.pickedFile.size - transcodedFile.size) / this.pickedFile.size) * 100).toFixed(2)}%`);
+        const resolution = this.transcoder.getVideoResolution(transcodedFile.path);
+        console.log('[Transcoded Resolution]', `${resolution.width}x${resolution.height}`);
+        console.log('[Transcoded Duration]', this.transcoder.getVideoDuration(transcodedFile.path));
+        console.log('[Time Taken]', `${timeTaken} seconds`);
+
+        const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as VideoPlayer;
+        video.visibility = 'collapsed';
+        const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');
+        outputDetailsLabel.visibility = 'collapsed';
+        video.visibility = 'visible';
+        video.opacity = 1;
+        video.src = transcodedFile.path;
+        video.loop = true;
+        video.controls = true;
+        video.play();
+        console.log('loaded viddo in player from ', transcodedFile.path, video.src);
+
+        outputDetailsLabel.visibility = 'visible';
+        outputDetailsLabel.text = `Output Size: ${this.transcoder.getVideoSizeString(transcodedFile.path)}`;
+        outputDetailsLabel.textWrap = true;
+        outputDetailsLabel.fontSize = 16;
+        outputDetailsLabel.color = new Color('#ffffff');
+				*/
+      });
+    });
   }
 
   //Pick video from device files
@@ -95,22 +158,18 @@ export class DemoModel extends DemoSharedTranscoder {
   }
 
   processVideo480() {
-    this.processVideo('480p');
-  }
-
-  processVideo480FR5() {
-    this.processVideo('480p', 5);
+    this.processVideo(480);
   }
 
   processVideo720() {
-    this.processVideo('720p');
+    this.processVideo(720);
   }
 
   processVideo1080() {
-    this.processVideo('1080p');
+    this.processVideo(1080);
   }
 
-  processVideo(quality: '480p' | '720p' | '1080p', frameRate?: number) {
+  processVideo(height: number, frameRate?: number) {
     if (!this.pickedFile) {
       const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');
       console.error('No file selected to process');
@@ -127,40 +186,25 @@ export class DemoModel extends DemoSharedTranscoder {
       const file = File.fromPath(tempPath);
       file.removeSync();
     }
-    console.log('[PROCESSING STARTED] quality: ' + quality + (frameRate ? ' frameRate:' + frameRate : ''));
-    const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as VideoPlayer;
-    video.visibility = 'collapsed';
+    console.log('[PROCESSING STARTED] height: ' + height + (frameRate ? ' frameRate:' + frameRate : ''));
+
+    this.timeStarted = new Date().getTime();
     const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');
-    outputDetailsLabel.visibility = 'collapsed';
-    const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
-    progressBar.value = 0;
-    this.transcoder.on(Transcoder.TRANSCODING_PROGRESS, (payload: MessageData) => {
-      executeOnMainThread(() => {
-        progressBar.value = payload.data.progress * 100;
-      });
-    });
-    const timeStarted = new Date().getTime();
+
     this.transcoder
-      .transcode(
-        this.pickedFile.path,
-        tempPath,
-        isAndroid
-          ? {
-              quality: quality,
-              // force: true,  // set to true if you want to force transocding to the same or higher resolution
-            }
-          : {
-              quality: quality,
-              frameRate: frameRate || 30,
-              // force: true,  // set to true if you want to force transocding to the same or higher resolution
-            }
-      )
+      .transcode(this.pickedFile.path, tempPath, {
+        height, //allow the plugin to resize to the appropriate width to keep input video aspect ratio
+        //width:1280, // you can also set your own width though but distortions will occur if aspect ratio is not maintained
+        force: true, //set this to allow transcoding to higher resolutions
+      })
       .then(transcodedFile => {
         if (!transcodedFile) {
           console.error('transcode did not return a file, error occurred!');
           return;
         }
-        const timeTaken = (new Date().getTime() - timeStarted) / 1000;
+        const timeTaken = (new Date().getTime() - this.timeStarted) / 1000;
+        const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
+
         progressBar.value = 100;
         console.log('[PROCCESSING COMPLETED]', transcodedFile.path);
         console.log('[Original Size]', this.transcoder.getVideoSizeString(this.pickedFile.path));
@@ -173,12 +217,15 @@ export class DemoModel extends DemoSharedTranscoder {
         console.log('[Transcoded Resolution]', `${resolution.width}x${resolution.height}`);
         console.log('[Transcoded Duration]', this.transcoder.getVideoDuration(tempPath));
         console.log('[Time Taken]', `${timeTaken} seconds`);
+
+        const video = Frame.topmost().currentPage.getViewById('nativeVideoPlayer') as VideoPlayer;
         video.visibility = 'visible';
         video.opacity = 1;
         video.src = tempPath;
         video.loop = true;
         video.controls = true;
         video.play();
+
         outputDetailsLabel.visibility = 'visible';
         outputDetailsLabel.text = `Output Size: ${this.transcoder.getVideoSizeString(transcodedFile.path)}`;
         outputDetailsLabel.textWrap = true;

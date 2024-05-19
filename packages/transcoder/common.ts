@@ -26,19 +26,19 @@ export class TranscoderCommon extends Observable {
   public static TRANSCODING_PROGRESS = 'transcoding-progress';
   public static TRANSCODING_COMPLETE = 'transcoding-complete';
   public static TRANSCODING_ERROR = 'transcoding-error';
-  public static TRANSCODING_CANCELLED = 'transcoding-cancelled';
 
+  //Default resolutions for 16:9 movie aspect formats
   private resolutionMap = {
-    '1080p': {
+    '1080': {
       width: 1920.0,
       height: 1080.0,
     },
-    '720p': {
+    '720': {
       width: 1280.0,
       height: 720.0,
     },
-    '480p': {
-      width: 640.0,
+    '480': {
+      width: 854.0,
       height: 480.0,
     },
   };
@@ -239,33 +239,13 @@ export class TranscoderCommon extends Observable {
 export type LogLevel = 'none' | 'verbose';
 
 export interface VideoConfig {
-  quality?: '480p' | '720p' | '1080p'; // 480p is iOS only
+  width?: number;
+  height?: number;
   frameRate?: number; // iOS only
   audioChannels?: number; // iOS only
   audioSampleRate?: number; // iOS only
   audioBitRate?: number; // iOS only
   force?: boolean; // force transcoding to allow transcoding to the same or higher quality
-}
-
-export interface Asset {
-  name: string; // used for referencing the asset later
-  path: string;
-  type: 'audio' | 'video' | 'videoAudio';
-}
-
-export interface Segment {
-  // name: string; // used for referencing the asset later
-  duration?: number;
-  tracks: Track[];
-}
-
-export interface Track {
-  id?: number;
-  type?: 'audio' | 'video' | 'videoAudio';
-  asset: string; // asset name
-  filter?: 'Mute' | 'FadeOut';
-  seek?: number;
-  duration?: number;
 }
 
 export type MessageData = EventData & { data: { progress?: number; error?: any; output?: string } };

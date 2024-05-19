@@ -15,7 +15,7 @@ export declare class Transcoder extends TranscoderCommon {
    * @param inputPath string
    * @param outputPath string
    * @param videoConfig VideoConfig
-   * @returns Promise<File>
+   * @returns {Promise<File>}
    *
    */
   transcode(inputPath: string, outputPath: string, videoConfig?: VideoConfig): Promise<File>;
