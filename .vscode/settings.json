@@ -10,6 +10,12 @@
   ],
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": "active",
+  "[kotlin]": {
+    "editor.defaultFormatter": "cstef.kotlin-formatter"
+  },
+  "[kotlinscript]": {
+    "editor.defaultFormatter": "cstef.kotlin-formatter"
+  },
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -43,9 +49,6 @@
   },
   "lldb.library": "/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/LLDB",
   "lldb.launch.expressions": "native",
-  "[kotlin]": {
-    "editor.defaultFormatter": "fwcd.kotlin"
-  },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
