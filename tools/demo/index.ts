@@ -5,4 +5,5 @@ export * from './downloader';
 export * from './filepicker';
 export * from './flashlight';
 export * from './sleepcontrol';
+export * from './transcoder';
 export * from './videoplayer';

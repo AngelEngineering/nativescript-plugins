@@ -4,6 +4,7 @@
 - [@angelengineering/filepicker](packages/filepicker/README.md)
 - [@angelengineering/flashlight](packages/flashlight/README.md)
 - [@angelengineering/sleepcontrol](packages/sleepcontrol/README.md)
+- [@angelengineering/transcoder](packages/transcoder/README.md)
 - [@angelengineering/videoplayer](packages/videoplayer/README.md)
 
 # Overview

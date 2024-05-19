@@ -1,0 +1,38 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd"
+  xmlns:Video="@angelengineering/videoplayer"
+  navigatingTo="navigatingTo">
+  <Page.actionBar>
+    <ActionBar title="Video Processing Basic"
+      icon="">
+    </ActionBar>
+  </Page.actionBar>
+  <StackLayout>
+    <!-- asset gathering -->
+    <ScrollView class="h-full">
+      <StackLayout class="p-20">
+        <Button text="Pick Video (Files)"
+          tap="{{ pickVideo }}"/>
+        <Button text="Pick Video (Gallery)"
+          id="ios-gallery-button"
+          visibility="collapse"
+          tap="{{ pickVideoGallery }}"/>
+        <Button text="480p"
+          tap="{{ processVideo480 }}"/>
+        <Button text="720p"
+          tap="{{ processVideo720 }}"/>
+        <Button text="1080p"
+          tap="{{ processVideo1080 }}"/>
+        <Progress id="transcodingProgress"
+          maxValue="100"/>
+        <Video:VideoPlayer id="nativeVideoPlayer"
+          controls="true"
+          loop="true"
+          autoplay="false"
+          height="280"
+          opacity="0" />
+        <Label id="outputDetails"
+          marginTop="20" />
+      </StackLayout>
+    </ScrollView>
+  </StackLayout>
+</Page>

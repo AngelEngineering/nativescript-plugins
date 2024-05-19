@@ -49,6 +49,9 @@
       ],
       "@angelengineering/videoplayer": [
         "packages/videoplayer/index.d.ts"
+      ],
+      "@angelengineering/transcoder": [
+        "packages/transcoder/index.d.ts"
       ]
     }
   },

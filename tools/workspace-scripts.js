@@ -92,6 +92,13 @@ module.exports = {
           description: '@angelengineering/videoplayer: Build',
         },
       },
+      // @angelengineering/transcoder
+      'transcoder': {
+        build: {
+          script: 'nx run transcoder:build.all',
+          description: '@angelengineering/transcoder: Build',
+        },
+      },
       'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
@@ -129,6 +136,10 @@ module.exports = {
       'videoplayer': {
         script: 'nx run videoplayer:focus',
         description: 'Focus on @angelengineering/videoplayer',
+      },
+      'transcoder': {
+        script: 'nx run transcoder:focus',
+        description: 'Focus on @angelengineering/transcoder',
       },
       reset: {
         script: 'nx g @angelengineering/plugin-tools:focus-packages',

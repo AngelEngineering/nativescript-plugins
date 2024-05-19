@@ -1,3 +1,4 @@
+/* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { isIOS, alert, EventData, Page, path, Frame, File, knownFolders, isAndroid } from '@nativescript/core';
 import { DemoSharedVideoplayer } from '@demo/shared';
 import { VideoPlayer } from '@angelengineering/videoplayer';
