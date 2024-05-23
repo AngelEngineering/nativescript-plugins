@@ -64,7 +64,8 @@ class Camera2
     private var pendingAutoFocus = false
     private var lastZoomRatio = 1.0f
     private var autoFocusTimer: Timer? = null
-    private var firstTime: Boolean = true
+
+    // private var firstTime: Boolean = true
     override var enablePinchZoom: Boolean = true
     override var enableTapToFocus: Boolean = true
     // override var enableVideo: Boolean = false
@@ -91,6 +92,7 @@ class Camera2
                 "io.github.triniwiz.fancycamera",
                 "Changing to photo mode",
               )
+              displayRatio = "4:3" // this should trigger camera refresh
             }
           }
         } else {
@@ -98,6 +100,7 @@ class Camera2
             "io.github.triniwiz.fancycamera",
             "same value for enableVideo, ignoring",
           )
+          displayRatio = "16:9"
         }
       }
 
@@ -184,6 +187,7 @@ class Camera2
       set(value) {
         if (!isRecording) {
           field = value
+          safeUnbindAll()
           refreshCamera()
         }
       }
@@ -199,6 +203,7 @@ class Camera2
             else -> return
           }
         if (!isRecording) {
+          safeUnbindAll()
           refreshCamera()
         }
       }
@@ -747,7 +752,7 @@ class Camera2
 
       initPreview()
 
-      initVideoCapture()
+      if (enableVideo) initVideoCapture()
 
       handleZoom()
 
@@ -783,7 +788,7 @@ class Camera2
         }
       }
 
-      updateImageCapture(true)
+      if (!enableVideo) updateImageCapture(true)
 
       if (flashMode == CameraFlashMode.TORCH && camera?.cameraInfo?.hasFlashUnit() == true) {
         camera?.cameraControl?.enableTorch(true)
@@ -875,27 +880,30 @@ class Camera2
           )
           File(context.getExternalFilesDir(null), fileName)
         }
-
+      Log.d(
+        "io.github.triniwiz.fancycamera",
+        "Saving to file:" + fileName,
+      )
       try {
         // on some cameras, the first time we attempt this it fails due to too many bindings,
         // although subsequent attempst work.
         // the following sections do fix this, but introduces a slight delay while
         // camera/preview is refreshed
         // and rebound.
-        if (firstTime) {
-          safeUnbindAll()
-          initPreview()
-          firstTime = false
-        }
+        // if (firstTime) {
+        //   safeUnbindAll()
+        //   initPreview()
+        //   firstTime = false
+        // }
 
         if (videoCapture == null) {
           initVideoCapture()
         }
 
         cameraProvider?.let {
-          if (it.isBound(imageCapture!!)) {
-            it.unbind(imageCapture!!)
-          }
+          // if (it.isBound(imageCapture!!)) {
+          //   it.unbind(imageCapture!!)
+          // }
 
           if (!it.isBound(videoCapture!!)) {
             it.bindToLifecycle(
@@ -921,11 +929,18 @@ class Camera2
         if (enableAudio) {
           pending?.withAudioEnabled()
         }
-
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "startRecording() starting recording",
+        )
         recording =
           pending?.start(ContextCompat.getMainExecutor(context)) { event ->
             when (event) {
               is VideoRecordEvent.Start -> {
+                Log.d(
+                  "io.github.triniwiz.fancycamera",
+                  "VideoRecordEvent.Start",
+                )
                 isRecording = true
                 if (flashMode == CameraFlashMode.ON) {
                   camera?.cameraControl?.enableTorch(true)
@@ -934,6 +949,10 @@ class Camera2
                 listener?.onCameraVideoStart()
               }
               is VideoRecordEvent.Finalize -> {
+                Log.d(
+                  "io.github.triniwiz.fancycamera",
+                  "VideoRecordEvent.Finalize",
+                )
                 isRecording = false
                 stopDurationTimer()
 
@@ -1038,13 +1057,18 @@ class Camera2
                       )
                     }
                   }
-
+                  Log.d(
+                    "io.github.triniwiz.fancycamera",
+                    "calling listener with file",
+                  )
                   listener?.onCameraVideo(file)
                 }
               }
             }
           }
       } catch (e: Exception) {
+        listener?.onCameraError("Failed to record video.", e)
+        Log.d("io.github.triniwiz.fancycamera", "ERROR in startRecording() ", e)
         isRecording = false
         stopDurationTimer()
         if (file != null) {
@@ -1059,8 +1083,6 @@ class Camera2
           }
         }
         // isForceStopping = false
-        listener?.onCameraError("Failed to record video.", e)
-        Log.d("io.github.triniwiz.fancycamera", "ERROR in startRecording() ", e)
       }
     }
 

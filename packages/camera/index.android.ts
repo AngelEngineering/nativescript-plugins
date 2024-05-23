@@ -47,7 +47,15 @@ export class NSCamera extends NSCameraBase {
   @GetSetProperty()
   public insetButtonsPercent = 0.1;
 
-  private isRecording = false;
+  private _isRecording = false;
+  public get isRecording() {
+    return this._isRecording;
+  }
+  public set isRecording(val: boolean) {
+    this._isRecording = val;
+    console.log('set isRecording: ' + val);
+  }
+
   private _videoQuality: CameraVideoQuality = CameraVideoQuality.MAX_720P;
   private _enableVideo: boolean = false;
   private _nativeView: android.widget.RelativeLayout;
@@ -93,7 +101,43 @@ export class NSCamera extends NSCameraBase {
         //if we are currently recording video and changing to photo mode, this will be ignored
         if (this._camera.getCameraRecording() && !value) {
           console.warn('Currently recording, cannot change to photo mode!');
+        } else if (value) {
+          console.log('changing to video mode');
+          // this._camera.setRatio('16:9');
+          const takePicDrawable = getImageDrawable(this.takeVideoIcon);
+          this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+        } else {
+          console.log('changing to photo mode');
+          // this._camera.setRatio('4:3');
+          const takePicDrawable = getImageDrawable(this.takePicIcon);
+          this._takePicBtn.setImageResource(takePicDrawable); // set the icon
         }
+        // switch (this.videoQuality) {
+        //   case CameraVideoQuality.HIGHEST:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
+        //     break;
+        //   case CameraVideoQuality.LOWEST:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
+        //     break;
+        //   case CameraVideoQuality.MAX_2160P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
+        //     break;
+        //   case CameraVideoQuality.MAX_1080P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
+        //     break;
+        //   case CameraVideoQuality.MAX_720P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+        //     break;
+        //   case CameraVideoQuality.MAX_480P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
+        //     break;
+        //   case CameraVideoQuality.QVGA:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
+        //     break;
+        //   default:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+        //     break;
+        // }
       } else console.log('same mode, ignoring');
     } else {
       console.warn("No camera instance yet, can't set enableVideo directly");
@@ -326,15 +370,17 @@ export class NSCamera extends NSCameraBase {
       onCameraError(message: string, ex: java.lang.Exception): void {
         that.CError('listenerImpl.onCameraError:', message, ex.getMessage());
         const owner: NSCamera = this.owner ? this.owner.get() : null;
+        console.log('owner', owner, owner.isRecording);
         if (owner) {
           if (owner.isRecording) {
-            owner.isRecording = false;
+            console.log('was recording video, stopping');
+            // owner.isRecording = false;
             owner.stopRecording();
-          }
+          } else console.log("wasn't recording");
           owner._lastCameraOptions.shift(); //remove the last set of options used
           owner.sendEvent(NSCamera.errorEvent, ex, message);
         } else {
-          that.CError('!!! No owner reference found when handling onCameraError event');
+          console.error('!!! No owner reference found when handling onCameraError event');
         }
       },
 
@@ -423,14 +469,15 @@ export class NSCamera extends NSCameraBase {
             owner._togglingCamera = true;
           } else {
             owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera);
-            owner.isRecording = false;
+            // owner.isRecording = false;
           }
         }
       },
       onCameraVideoStartUI(): void {
         const owner: NSCamera = this.owner ? this.owner.get() : null;
         if (owner) {
-          owner.isRecording = true;
+          // owner.isRecording = true;
+          console.log('starting recording', owner, owner.isRecording);
           owner.sendEvent(NSCamera.videoRecordingStartedEvent, owner.camera);
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoStartUI event');
@@ -439,8 +486,9 @@ export class NSCamera extends NSCameraBase {
       onCameraVideoStopUI(): void {
         const owner: NSCamera = this.owner ? this.owner.get() : null;
         if (owner) {
-          owner.isRecording = true;
+          // owner.isRecording = true;
           owner.sendEvent(NSCamera.videoRecordingFinishedEvent, owner.camera);
+          console.log('stopped recording', owner, owner.isRecording);
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoStopUI event');
         }
@@ -449,7 +497,8 @@ export class NSCamera extends NSCameraBase {
         const owner: NSCamera = this.owner ? this.owner.get() : null;
         if (owner) {
           owner.sendEvent(NSCamera.videoRecordingReadyEvent, event.getAbsolutePath());
-          owner.isRecording = false;
+          // owner.isRecording = false;
+          console.log('recording ready', owner, owner.isRecording);
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoUI event');
         }
@@ -655,6 +704,7 @@ export class NSCamera extends NSCameraBase {
     else this._camera.setSaveToGallery(false);
 
     if (this._camera) {
+      this.isRecording = true;
       this._camera.setSaveToGallery(!!options.saveToGallery);
       switch (options.videoQuality) {
         case CameraVideoQuality.HIGHEST:
@@ -695,8 +745,10 @@ export class NSCamera extends NSCameraBase {
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
       //Hide the flash button while recording since we cannot turn it on/off during recording
       this._flashBtn.setVisibility(android.view.View.GONE);
+      console.log('starting native recording');
       this._camera.startRecording();
-      this.isRecording = true;
+
+      console.log('camera isRecording?', this.isRecording);
     } else {
       this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
       return;
@@ -723,11 +775,13 @@ export class NSCamera extends NSCameraBase {
       return;
     }
     if (this._camera) {
-      // this.CLog(`*** stopping mediaRecorder ***`);
+      this.CLog(`*** updating UI ***`);
       const takePicDrawable = getImageDrawable(this.takeVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+      console.log('stopping native recording');
       this._camera.stopRecording();
       //show the flash button again if supported
+      console.log('checking flash button');
       this._ensureCorrectFlashIcon();
       this.isRecording = false;
       if (this.shouldLockRotation) {
@@ -959,19 +1013,21 @@ export class NSCamera extends NSCameraBase {
             //check if we're currently doing a long click for snapchat style recording UI
             if (pEvent.getAction() == android.view.MotionEvent.ACTION_UP) {
               if (this.isButtonLongPressed) {
+                console.log('handling longpress action up, calling stop()');
                 //Note: if scrollview moves with this view inside, this will trigger false positives
                 this.isButtonLongPressed = false;
                 this.stop();
-                owner.isRecording = false;
+                // owner.isRecording = false;
                 return false;
               } else {
                 return true;
               }
             } else if (pEvent.getAction() == android.view.MotionEvent.ACTION_DOWN) {
               if (!this.isButtonLongPressed && !owner.isRecording) {
+                console.log('handling longpress action up, calling record()');
                 this.record();
-                owner.isRecording = true;
-              }
+                // owner.isRecording = true;
+              } else console.log('nothing to do?', this.isButtonLongPressed, owner.isRecording);
             }
           } else {
             //Photo Capture
