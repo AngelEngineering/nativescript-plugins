@@ -12,7 +12,7 @@ export type CameraTypes = 'front' | 'rear';
 
 export abstract class NSCameraBase extends ContentView implements NSCameraDefinition {
   @GetSetProperty()
-  public debug = false;
+  public debug = true;
 
   /**
    * Video Mode (off by default). If false, then plugin will operate in photo mode.
@@ -75,8 +75,13 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public static confirmScreenDismissedEvent = 'confirmScreenDismissedEvent';
 
   /**
-   * @default 4:3
-   * *ANDROID ONLY*  A string to represent the camera preview aspect ratio e.g 4:3, 1:1 ,16:9 to check if the device supports the ratio use {@link getGetSupportedRatios}
+   * @default "4:3"
+   * *ANDROID ONLY*  A string to represent the camera preview aspect ratio. Currently they are grouped as:
+    1.0F -> key = "1:1"
+    1.2F..1.2222222F -> key = "6:5"
+    1.3F..1.3333334F -> key = "4:3"
+    1.77F..1.7777778F -> key = "16:9"
+    1.5F -> key = "3:2"
    */
   @GetSetProperty()
   public ratio: string;
@@ -96,24 +101,16 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
 
   /**
    *  *ANDROID ONLY* A string representing the size of picture {@link takePicture} will output. Available sizes can be fetched using {@link getAvailablePictureSizes}
+   *   the plugin will try to find the closes match or default to highest available currently
    */
   @GetSetProperty()
-  public pictureSize = '768x1024';
+  public pictureSize = '3648x2736';
 
   /**
    * @param ratio string
    * @returns returns an array of supported picture sizes supported by the current camera
-   * NOTE: not currently working
    */
   getAvailablePictureSizes(ratio: string): string[] {
-    return [];
-  }
-
-  /**
-   * @returns retuns an array of strings representing the preview sizes supported by the current device.
-   * NOTE: not currently working
-   */
-  getGetSupportedRatios(): string[] {
     return [];
   }
 
@@ -187,13 +184,6 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
    */
   @GetSetProperty()
   public quality = 95;
-
-  /**
-   * Maximum dimension among width/height to use for the saved photo image. Default is 1200 max dimension
-   * NOTE: this only applies to photos, videos not supported yet
-   */
-  @GetSetProperty()
-  public maxDimension = 1200;
 
   /**
    * If true the default flash toggle icon/button will show on the NSCamera layout. Default is true.
@@ -472,7 +462,6 @@ export interface ICameraOptions {
   confirmPhotos?: boolean;
   saveToGallery?: boolean;
   quality?: number;
-  maxDimension?: number;
   autoSquareCrop?: boolean;
   confirmRetakeText?: string;
   confirmSaveText?: string;

@@ -32,7 +32,6 @@ declare module io {
           public startRecording(): void;
           public setDisableHEVC(param0: boolean): void;
           public getNumberOfCameras(): number;
-          public getSupportedRatios(): androidNative.Array<string>;
           public setZoom(param0: number): void;
           public release(): void;
           public setSaveToGallery(param0: boolean): void;
@@ -124,7 +123,6 @@ declare module io {
           public setOverridePhotoHeight(param0: number): void;
           public incrementCurrentFrame$camera_release(): void;
           public getSaveToGallery(): boolean;
-          public getSupportedRatios(): androidNative.Array<string>;
           public hasCameraPermission(): boolean;
           public setSaveToGallery(param0: boolean): void;
           public setAudioLevelsEnabled(param0: boolean): void;
@@ -475,7 +473,6 @@ declare module io {
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
           public getDoubleTapCameraSwitch(): boolean;
           public hasPermission(): boolean;
-          public getGetSupportedRatios(): androidNative.Array<string>;
           public getDuration(): number;
           public requestAudioPermission(): void;
           public hasAudioPermission(): boolean;

@@ -194,7 +194,6 @@ export class MySwifty extends SwiftyCamViewController {
       confirmSaveText: this._owner.get().confirmSaveText,
       saveToGallery: this._owner.get().saveToGallery,
       autoSquareCrop: this._owner.get().autoSquareCrop,
-      maxDimension: this._owner.get().maxDimension,
       quality: this._owner.get().quality,
     };
 
@@ -289,7 +288,6 @@ export class MySwifty extends SwiftyCamViewController {
       options.confirmSaveText = options.confirmSaveText ? options.confirmSaveText : this._owner.get().confirmSaveText;
       options.saveToGallery = options.saveToGallery ? options.saveToGallery : this._owner.get().saveToGallery;
       options.autoSquareCrop = options.autoSquareCrop ? options.autoSquareCrop : this._owner.get().autoSquareCrop;
-      options.maxDimension = options.maxDimension ? options.maxDimension : this._owner.get().maxDimension;
       options.quality = options.quality ? options.quality : this._owner.get().quality;
       this._snapPicOptions = options;
     } else {
@@ -300,7 +298,6 @@ export class MySwifty extends SwiftyCamViewController {
         confirmSaveText: this._owner.get().confirmSaveText,
         saveToGallery: this._owner.get().saveToGallery,
         autoSquareCrop: this._owner.get().autoSquareCrop,
-        maxDimension: this._owner.get().maxDimension,
         quality: this._owner.get().quality,
       };
     }
@@ -417,7 +414,6 @@ export class MySwifty extends SwiftyCamViewController {
         confirmSaveText: this._owner.get().confirmSaveText,
         saveToGallery: this._owner.get().saveToGallery,
         autoSquareCrop: this._owner.get().autoSquareCrop,
-        maxDimension: this._owner.get().maxDimension,
         quality: this._owner.get().quality,
       };
     else {
@@ -426,7 +422,6 @@ export class MySwifty extends SwiftyCamViewController {
         confirmRetakeText: options?.confirmRetakeText ? options.confirmRetakeText : this._owner.get().confirmRetakeText,
         confirmSaveText: options?.confirmSaveText ? options.confirmSaveText : this._owner.get().confirmSaveText,
         saveToGallery: options?.saveToGallery ? options.saveToGallery : this._owner.get().saveToGallery,
-        maxDimension: options?.maxDimension ? +options.maxDimension : this._owner.get().maxDimension,
         autoSquareCrop: options?.autoSquareCrop ? options.autoSquareCrop : this._owner.get().autoSquareCrop,
         quality: options?.quality ? +options.quality : this._owner.get().quality,
       };
@@ -504,13 +499,7 @@ export class MySwifty extends SwiftyCamViewController {
           outFilepath = path.join(knownFolders.documents().path, tempFileName);
           if (!File.exists(outFilepath)) break;
         }
-        const maxDimension = +this._snapPicOptions.maxDimension;
         const quality = +this._snapPicOptions.quality;
-        if (maxDimension && maxDimension > 0) {
-          //Note: iOS will default to DIPs for these so resizing will not be exact unless we convert
-          source = source.resize(layout.toDeviceIndependentPixels(maxDimension));
-        }
-
         const saved = source.saveToFile(outFilepath, 'jpg', quality);
         if (saved) {
           asset = new ImageAsset(outFilepath);
@@ -940,7 +929,6 @@ export class NSCamera extends NSCameraBase {
       confirmRetakeText: options?.confirmRetakeText ? options.confirmRetakeText : this.confirmRetakeText,
       confirmSaveText: options?.confirmSaveText ? options.confirmSaveText : this.confirmSaveText,
       saveToGallery: options?.saveToGallery ? options.saveToGallery : this.saveToGallery,
-      maxDimension: options?.maxDimension ? +options.maxDimension : this.maxDimension,
       autoSquareCrop: options?.autoSquareCrop ? options.autoSquareCrop : this.autoSquareCrop,
       quality: options?.quality ? +options.quality : this.quality,
     };

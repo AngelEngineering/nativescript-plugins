@@ -96,8 +96,7 @@ or
           insetButtonsPercent="0.02"
           shouldLockRotation="true"
           confirmRetakeText="nah"
-          confirmSaveText="yeah"
-          maxDimension="800"
+          confirmSaveText="yeah"          
           quality="90"
           debug="true">         
         </Cam:NSCamera>
@@ -267,8 +266,7 @@ Photo taking options
 export interface ICameraOptions {
   confirmPhotos?: boolean;
   saveToGallery?: boolean; //shared with video options
-  quality?: number;
-  maxDimension?: number;
+  quality?: number;  
   autoSquareCrop?: boolean;
   confirmRetakeText?: string;
   confirmSaveText?: string;

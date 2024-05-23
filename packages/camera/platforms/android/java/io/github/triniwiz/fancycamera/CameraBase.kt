@@ -73,8 +73,6 @@ abstract class CameraBase
 
     abstract fun toggleCamera()
 
-    abstract fun getSupportedRatios(): Array<String>
-
     abstract fun getAvailablePictureSizes(ratio: String): Array<Size>
 
     abstract var displayRatio: String

@@ -376,11 +376,6 @@ class FancyCamera : FrameLayout {
     }
   }
 
-  val getSupportedRatios: Array<String>
-    get() {
-      return cameraView.getSupportedRatios()
-    }
-
   fun getAvailablePictureSizes(ratio: String): Array<Size> {
     return cameraView.getAvailablePictureSizes(ratio)
   }

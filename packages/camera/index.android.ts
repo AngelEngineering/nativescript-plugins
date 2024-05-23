@@ -279,33 +279,33 @@ export class NSCamera extends NSCameraBase {
     return WhiteBalance.Auto;
   }
 
+  /* 
+  These are the ratios possible from the plugin
+  1.0F -> key = "1:1"
+  in 1.2F..1.2222222F -> key = "6:5"
+  in 1.3F..1.3333334F -> key = "4:3"
+  in 1.77F..1.7777778F -> key = "16:9"
+  1.5F -> key = "3:2"
+  */
+  //sizes returned are WxH, highest to lowest
   getAvailablePictureSizes(ratio: string): string[] {
     const sizes = [];
     if (this._camera && typeof ratio === 'string') {
-      const nativeSizes: any = this._camera.getAvailablePictureSizes(ratio);
-      for (const size of nativeSizes) {
+      const nativeSizes: androidNative.Array<io.github.triniwiz.fancycamera.Size> = this._camera.getAvailablePictureSizes(ratio);
+      if (!nativeSizes) return sizes;
+      for (let i = 0; i < nativeSizes.length; i++) {
+        let size = nativeSizes[i];
         sizes.push(`${size.getWidth()}x${size.getHeight()}`);
       }
     }
     return sizes;
   }
 
-  getGetSupportedRatios(): string[] {
-    const ratios = [];
-    if (this._camera) {
-      const nativeRatios: any = this._camera.getGetSupportedRatios();
-      for (const ratio of nativeRatios) {
-        ratios.push(ratio);
-      }
-    }
-    return ratios;
-  }
-
   // @ts-ignore
   set pictureSize(value: string) {
     if (this._camera) {
       this._camera.setPictureSize(value);
-    }
+    } else console.log('set pictureSize() camera not ready yet!');
   }
 
   get pictureSize(): string {
@@ -392,17 +392,15 @@ export class NSCamera extends NSCameraBase {
         let confirmPicRetakeText;
         let confirmPicSaveText;
         let saveToGallery;
-        let maxDimension;
         let quality;
         let shouldAutoSquareCrop;
         if (options) {
           //if we have options saved, refer to them. otherwise fall back on properties set on camera instance
-          //   only confirmPic and maxDimension are handled here, rest in native code
+          //   only confirmPic is handled here, rest in native code
           confirmPic = options.confirmPhotos ? options.confirmPhotos : owner.confirmPhotos;
           confirmPicRetakeText = options.confirmRetakeText ? options.confirmRetakeText : owner.confirmRetakeText;
           confirmPicSaveText = options.confirmSaveText ? options.confirmSaveText : owner.confirmSaveText;
           saveToGallery = options.saveToGallery ? options.saveToGallery : owner.saveToGallery;
-          maxDimension = options.maxDimension ? +options.maxDimension : owner.maxDimension;
           shouldAutoSquareCrop = options.autoSquareCrop ? options.autoSquareCrop : owner.autoSquareCrop;
           quality = options.quality ? +options.quality : owner.quality;
         }
@@ -414,7 +412,6 @@ export class NSCamera extends NSCameraBase {
         //   confirmPicSaveText = owner.confirmSaveText;
         //   shouldAutoSquareCrop = owner.autoSquareCrop;
         //   saveToGallery = owner.saveToGallery ? true : false;
-        //   maxDimension = owner.maxDimension ? +owner.maxDimension : null;
         //   quality = owner.quality ? +owner.quality : 95;
         // }
         that.CLog('onCameraPhotoUI has options', options);
@@ -440,13 +437,7 @@ export class NSCamera extends NSCameraBase {
             outFilepath = path.join(knownFolders.documents().path, tempFileName);
             if (!File.exists(outFilepath)) break;
           }
-          //resize for maxDimension if option set
-          if (maxDimension && maxDimension > 0) {
-            that.CLog('maxDimension set, resizing from H W', source.height, source.width);
 
-            source = source.resize(maxDimension);
-            that.CLog('resized to H W', source.height, source.width);
-          }
           const saved = source.saveToFile(outFilepath, 'jpg', quality);
           if (saved) {
             owner.sendEvent(NSCamera.photoCapturedEvent, outFilepath);
@@ -468,7 +459,7 @@ export class NSCamera extends NSCameraBase {
             owner._ensureCorrectFlashIcon();
             owner._togglingCamera = true;
           } else {
-            owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera);
+            setTimeout(() => owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera), 500);
             // owner.isRecording = false;
           }
         }
@@ -561,7 +552,6 @@ export class NSCamera extends NSCameraBase {
         confirmRetakeText: options?.confirmRetakeText ? options.confirmRetakeText : this.confirmRetakeText,
         confirmSaveText: options?.confirmSaveText ? options.confirmSaveText : this.confirmSaveText,
         saveToGallery: options?.saveToGallery ? options.saveToGallery : this.saveToGallery,
-        maxDimension: options?.maxDimension ? +options.maxDimension : this.maxDimension,
         autoSquareCrop: options?.autoSquareCrop ? options.autoSquareCrop : this.autoSquareCrop,
         quality: options?.quality ? +options.quality : this.quality,
       };

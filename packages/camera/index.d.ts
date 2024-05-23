@@ -71,9 +71,15 @@ export declare class NSCamera extends ContentView {
   public static cameraReadyEvent: string;
 
   /**
-   * @default 4:3
-   * *ANDROID ONLY*  A string to represent the camera preview aspect ratio e.g 4:3, 1:1 ,16:9 to check if the device supports the ratio use {@link getGetSupportedRatios}
+   * @default "4:3"
+   * *ANDROID ONLY*  A string to represent the camera preview aspect ratio. Currently they are grouped as:
+    1.0F -> key = "1:1"
+    1.2F..1.2222222F -> key = "6:5"
+    1.3F..1.3333334F -> key = "4:3"
+    1.77F..1.7777778F -> key = "16:9"
+    1.5F -> key = "3:2"
    */
+
   ratio: string;
 
   /**
@@ -98,13 +104,6 @@ export declare class NSCamera extends ContentView {
    * @returns returns an array of supported picture sizes supported by the current camera
    */
   getAvailablePictureSizes(ratio: string): string[];
-
-  /**
-   * *ANDROID ONLY*
-   * NOTE: not currently working
-   * @returns retuns an array of strings representing the preview sizes supported by the current device.
-   */
-  getGetSupportedRatios(): string[];
 
   /*
    * Logging functions controlled by debug property
@@ -193,11 +192,6 @@ export declare class NSCamera extends ContentView {
    * NOTE: this only applies to photos, videos not supported yet
    */
   quality: number;
-
-  /**
-   * Max dimensions among height/width to use for the saved photo image.
-   */
-  maxDimension: number;
 
   /**
    * *ANDROID ONLY* - allows setting a custom app_resource drawable icon for the Toggle Flash button icon when flash is on (enabled).
@@ -319,7 +313,6 @@ export interface ICameraOptions {
   confirmPhotos?: boolean;
   saveToGallery?: boolean;
   quality?: number;
-  maxDimension?: number;
   autoSquareCrop?: boolean;
   confirmRetakeText?: string;
   confirmSaveText?: string;

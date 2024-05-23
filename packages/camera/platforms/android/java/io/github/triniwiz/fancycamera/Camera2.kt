@@ -1490,10 +1490,6 @@ class Camera2
       }
     }
 
-    override fun getSupportedRatios(): Array<String> {
-      return cachedPreviewRatioSizeMap.keys.toTypedArray()
-    }
-
     override fun getAvailablePictureSizes(ratio: String): Array<Size> {
       return cachedPictureRatioSizeMap[ratio]?.toTypedArray() ?: arrayOf()
     }
