@@ -24,8 +24,8 @@ const FLASH_MODE_ON = 'on';
 const FLASH_MODE_OFF = 'off';
 const CAMERA_FACING_FRONT = 1; // front camera
 const CAMERA_FACING_BACK = 0; // rear camera
-const CAMERA_PHOTO_MODE = 0;
-const CAMERA_VIDEO_MODE = 1;
+// const CAMERA_PHOTO_MODE = 0;
+// const CAMERA_VIDEO_MODE = 1;
 const DEVICE_INFO_STRING = () => `device: ${Device.manufacturer} ${Device.model} on SDK: ${Device.sdkVersion}`;
 
 export class NSCamera extends NSCameraBase {
@@ -59,7 +59,8 @@ export class NSCamera extends NSCameraBase {
   }
 
   private _videoQuality: CameraVideoQuality = CameraVideoQuality.HIGHEST;
-  private _enableVideo: number = CAMERA_PHOTO_MODE; //either CAMERA_PHOTO_MODE or CAMERA_VIDEO_MODE
+  // private _enableVideo: number = CAMERA_PHOTO_MODE; //either CAMERA_PHOTO_MODE or CAMERA_VIDEO_MODE
+  private _enableVideo = false;
   private _nativeView: android.widget.RelativeLayout;
   private _flashBtn: android.widget.ImageButton = null; // reference to native flash button
   private _takePicBtn: android.widget.ImageButton = null; // reference to native take picture button
@@ -145,7 +146,17 @@ export class NSCamera extends NSCameraBase {
   // }
 
   isVideoEnabled(): boolean {
-    return this._camera.getEnableVideo() == (io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO') as any);
+    if (this._camera) {
+      if (this._enableVideo != !!this._camera.getEnableVideo()) {
+        console.warn('!!!!!! isVideoEnabled() this._enableVideo !== this._camera.getEnableVideo()', this._enableVideo, !!this._camera.getEnableVideo());
+        // this._enableVideo = !!this._camera.getEnableVideo();
+      }
+      return !!this._camera.getEnableVideo();
+    } else {
+      return this._enableVideo;
+    }
+
+    // return this._camera ? this._camera.getEnableVideo() : this._enableVideo;
   }
 
   updateModeUI(): void {
@@ -167,28 +178,38 @@ export class NSCamera extends NSCameraBase {
 
   //@ts-ignore
   get enableVideo(): boolean {
-    console.log('get enableVideo() current mode from: ', this._camera.getEnableVideo());
+    console.log('get enableVideo() current mode from camera is: ', !!this._camera.getEnableVideo());
     if (this._camera) {
-      console.log('get enableVideo() have a camera, checking native mode', this._camera.getEnableVideo());
-      return this._camera.getEnableVideo() == (io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO') as any);
+      console.log('get enableVideo() have a camera, checking native mode', !!this._camera.getEnableVideo());
+      return !!this._camera.getEnableVideo();
     }
-    console.log('get enableVideo() no camera yet,  returning this._enableVideo === CAMERA_VIDEO_MODE', this._enableVideo, this._enableVideo === CAMERA_VIDEO_MODE);
-    return this._enableVideo === CAMERA_VIDEO_MODE;
+    console.log('get enableVideo() no camera yet,  returning this._enableVideo', this._enableVideo);
+    return !!this._enableVideo;
   }
 
   set enableVideo(value: boolean) {
     try {
       this.CLog('set enableVideo() ', value);
+      if (typeof value !== 'boolean') {
+        console.error('set enableVideo() value is not a boolean!', value);
+      }
+      if (typeof value === 'string') {
+        value = value === 'true';
+      }
       if (this._camera) {
+        console.log('have a camera, checking enableVideo: ', this._camera.getEnableVideo(), typeof this._camera.getEnableVideo());
+        // if (
         // if(value == (io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO') as any)){
-        if (value && this._camera.getEnableVideo() !== io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO')) {
-          console.log('setEnableVideo to VIDEO');
-          this._camera.setEnableVideo(io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO'));
+        if (value && !this._camera.getEnableVideo()) {
+          console.log('setEnableVideo to VIDEO', io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO'));
+          // this._camera.setEnableVideo(value);
+          this._camera.setVideoMode();
           this.updateModeUI();
           this._camera.updateMode();
-        } else if (!value && this._camera.getEnableVideo() === io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO')) {
-          console.log('setEnableVideo to PHOTO');
-          this._camera.setEnableVideo(io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO'));
+        } else if (!value && this._camera.getEnableVideo()) {
+          console.log('setEnableVideo to PHOTO', io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO'));
+          // this._camera.setEnableVideo(value);
+          this._camera.setPhotoMode();
           this.updateModeUI();
           this._camera.updateMode();
         } else {
@@ -197,7 +218,7 @@ export class NSCamera extends NSCameraBase {
       } else {
         this.CLog('No camera instance yet, enableVideo preference saved for when camera is ready');
       }
-      this._enableVideo = value === true ? CAMERA_VIDEO_MODE : CAMERA_PHOTO_MODE;
+      this._enableVideo = value; // === true ? CAMERA_VIDEO_MODE : CAMERA_PHOTO_MODE;
       console.log('set enableVideo() this._enableVideo: ', this._enableVideo, 'value', value);
     } catch (err) {
       console.error('set enableVideo() error!', err);
@@ -376,8 +397,16 @@ export class NSCamera extends NSCameraBase {
     this._nativeView = new android.widget.RelativeLayout(this._context);
     this._camera = new io.github.triniwiz.fancycamera.FancyCamera(this._context);
     try {
-      console.log('createNativeView() this._camera.setEnableVideo()', this._enableVideo, this._enableVideo == CAMERA_VIDEO_MODE);
-      this._camera.setEnableVideo(this._enableVideo == CAMERA_VIDEO_MODE ? io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO') : io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO')); //sets initial mode for android camera plugin
+      console.log('createNativeView() this._camera.setEnableVideo() using', this._enableVideo, typeof this._enableVideo);
+      if (!!this._enableVideo) {
+        console.log('setting video mode');
+        this._camera.setVideoMode();
+      } else {
+        console.log('setting photo mode');
+        this._camera.setPhotoMode();
+      }
+      // this._camera.setEnableVideo(!!this._enableVideo ? true : false); //sets initial mode for android camera plugin
+      console.log('set to this._enableVideo ', this._enableVideo);
     } catch (err) {
       console.error(err);
     }

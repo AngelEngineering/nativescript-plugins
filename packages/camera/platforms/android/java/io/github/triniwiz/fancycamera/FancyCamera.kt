@@ -186,7 +186,8 @@ class FancyCamera : FrameLayout {
       cameraView.position = value
     }
 
-  var enableVideo: CameraMode = CameraMode.PHOTO
+  var enableVideo: Boolean = false
+    // CameraMode = CameraMode.PHOTO
     get() {
       return cameraView.enableVideo
     }
@@ -307,6 +308,14 @@ class FancyCamera : FrameLayout {
 
   fun updateMode() {
     cameraView.updateMode()
+  }
+
+  fun setPhotoMode() {
+    cameraView.setPhotoMode()
+  }
+
+  fun setVideoMode() {
+    cameraView.setVideoMode()
   }
 
   // private var isForceStopping: Boolean = false

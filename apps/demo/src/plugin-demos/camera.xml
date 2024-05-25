@@ -18,13 +18,14 @@
           <Label text="You can include the camera as part of a page or let the camera take up the entire page layout. You can also add layout containers inside the NSCamera to overlay view elements over the camera preview."
             textWrap="true" />
         </StackLayout>
-
+        <Label id="cameraMode"
+          class="p-10"
+          text="Photo Mode"/>
         <Cam:NSCamera height="{{ cameraHeight }}"
           id="nscamera"
           debug="true"
           enableVideo="true"
-          disablePhoto="false"
-          defaultCamera="front"
+          defaultCamera="rear"
           showCaptureIcon="true"
           showToggleIcon="true"
           showFlashIcon="true"
@@ -36,10 +37,9 @@
           autoSquareCrop="false"
           confirmRetakeText="nah"
           confirmSaveText="yeah"
-          maxDimension="1000"
           quality="95"
           doubleTapCameraSwitch="true"
-          videoQuality="1080p">
+          videoQuality="480p">
         </Cam:NSCamera>
 
 
@@ -47,7 +47,19 @@
           <Label text="The buttons below are using the public methods for the NSCamera."
             textWrap="true" />
         </StackLayout>
-
+        <GridLayout rows="auto, auto, auto, auto"
+          columns="*, *">
+          <Button text="Photo Mode"
+            tap="{{ changePhotoMode }}"
+            row="0"
+            col="0"
+            class="btn btn-primary" />
+          <Button text="Video Mode"
+            tap="{{ changeVideoMode }}"
+            row="0"
+            col="1"
+            class="btn btn-primary" />
+        </GridLayout>
         <GridLayout rows="auto, auto, auto, auto"
           columns="*, *">
           <Button text="Record Video"

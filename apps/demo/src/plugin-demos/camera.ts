@@ -1,5 +1,23 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
-import { EventData, Page, alert, Frame, Screen, Image, File, isIOS, isAndroid, Button, path, knownFolders, Device, ImageSource, Application, OrientationChangedEventData } from '@nativescript/core';
+import {
+  EventData,
+  Page,
+  alert,
+  Frame,
+  Screen,
+  Image,
+  File,
+  isIOS,
+  isAndroid,
+  Button,
+  path,
+  knownFolders,
+  Device,
+  ImageSource,
+  Application,
+  OrientationChangedEventData,
+  Label,
+} from '@nativescript/core';
 import { DemoSharedCamera } from '@demo/shared';
 import { NSCamera, CameraVideoQuality, ICameraOptions } from '@angelengineering/camera';
 import { ObservableProperty } from './observable-property';
@@ -42,9 +60,6 @@ export class DemoModel extends DemoSharedCamera {
     // this.cam.doubleTapCameraSwitch = false; //default is true so double taps on view will switch camera
     //this.cam.enableVideo = true; //defaults to false. Enable to true for video mode
 
-    //CURRENTLY UNSUPPORTED:
-    // console.log('getAvailablePictureSizes', this.cam.getAvailablePictureSizes('1:1'));//not currently supported/working
-
     //[ Android only ]
     if (isAndroid) {
       // this.cam.autoFocus = false; // defaults to true so camera will auto focus before capturing image
@@ -73,9 +88,9 @@ export class DemoModel extends DemoSharedCamera {
     this.cam.on(NSCamera.toggleCameraEvent, (args: any) => {
       console.log(`toggleCameraEvent: ${args}`);
       console.log('current camera has flash?', this.cam.hasFlash());
-      console.log(' toggling doubleTapCameraSwitch from:', this.cam.doubleTapCameraSwitch);
-      this.cam.doubleTapCameraSwitch = !this.cam.doubleTapCameraSwitch;
-      console.log(' tp doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
+      // console.log(' toggling doubleTapCameraSwitch from:', this.cam.doubleTapCameraSwitch);
+      // this.cam.doubleTapCameraSwitch = !this.cam.doubleTapCameraSwitch;
+      // console.log(' tp doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
     });
 
     this.cam.on(NSCamera.photoCapturedEvent, async (args: any) => {
@@ -120,7 +135,7 @@ export class DemoModel extends DemoSharedCamera {
     });
 
     this.cam.on(NSCamera.videoRecordingFinishedEvent, (args: any) => {
-      console.log(`videoRecordingFinishedEvent:`, args);
+      console.log(`videoRecordingFinishedEvent:`);
     });
 
     this.cam.on(NSCamera.cameraReadyEvent, (args: any) => {
@@ -129,30 +144,27 @@ export class DemoModel extends DemoSharedCamera {
         console.log('saveToGallery set true, checking permissions');
         this.requestGalleryPermission();
       }
+
+      //getNumberOfCameras()
       console.log(' number of cameras:', this.cam.getNumberOfCameras());
 
-      //doubleTapCameraSwitch
-      console.log(' current doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
       //zoom
       console.log(' current zoom:', this.cam.zoom);
 
       //whiteBalance - Android only and read-only for now, setting this will cause instability
       console.log(' current whiteBalance:', this.cam.whiteBalance);
 
-      //pictureSize
-      console.log(' current pictureSize:', this.cam.pictureSize);
+      //ratio
+      console.log(' current ratio:', this.cam.ratio);
 
-      //maxDimension, ensure this is working properly
-      console.log(' current maxDimension:', this.cam.maxDimension);
-
-      //autoSquareCrop, ensure this is working both alone and when used with maxDimension
+      //autoSquareCrop
       console.log(' current autoSquareCrop:', this.cam.autoSquareCrop);
 
-      //doubleTapCameraSwitch - try to add this to Android
+      //doubleTapCameraSwitch
       console.log(' current doubleTapCameraSwitch:', this.cam.doubleTapCameraSwitch);
 
-      //getAvailablePictureSizes fix this for both
-      console.log(' available picture Resolutions:', this.cam.getAvailablePictureSizes(null));
+      //enableVideo
+      console.log(' video enabled?:', this.cam.enableVideo);
     });
     this._counter = 1;
   }
@@ -174,10 +186,24 @@ export class DemoModel extends DemoSharedCamera {
     }
   }
 
+  public changePhotoMode() {
+    const modeLabel = Frame.topmost().currentPage.getViewById('cameraMode') as Label;
+    modeLabel.text = 'Photo Mode';
+    this.cam.enableVideo = false;
+    console.log('Changed to Photo Mode');
+    return;
+  }
+
+  public changeVideoMode() {
+    const modeLabel = Frame.topmost().currentPage.getViewById('cameraMode') as Label;
+    modeLabel.text = 'Video Mode';
+    this.cam.enableVideo = true;
+    console.log('Changed to Video Mode');
+    return;
+  }
+
   // called by custom button on demo page
   public async recordDemoVideo() {
-    this.cam.zoom = 0.5;
-    return;
     try {
       let canRecord = true;
       //recheck audio and video permissions
@@ -198,7 +224,7 @@ export class DemoModel extends DemoSharedCamera {
         return;
       }
 
-      this.cam.videoQuality = CameraVideoQuality.MAX_1080P;
+      // this.cam.videoQuality = CameraVideoQuality.MAX_1080P;
       this.cam.record({
         saveToGallery: true,
         videoQuality: CameraVideoQuality.MAX_2160P,
@@ -213,8 +239,6 @@ export class DemoModel extends DemoSharedCamera {
 
   // called by custom button on demo page
   public stopRecordingDemoVideo() {
-    this.cam.zoom = 1.0;
-    return;
     try {
       this.cam.stop();
     } catch (err) {
@@ -259,8 +283,6 @@ export class DemoModel extends DemoSharedCamera {
 
   // called by custom button on demo page
   public toggleFlashOnCam() {
-    this.cam.zoom = 0;
-    return;
     console.log('toggleFlashOnCam()');
     this.cam.toggleFlash();
     console.log('Flash is now: ', this.cam.getFlashMode());
@@ -293,8 +315,7 @@ export class DemoModel extends DemoSharedCamera {
             // NOTE: not really needed unless you want to override a property set in XML without changing the current plugin value
             let currentOptions: ICameraOptions = {
               confirmPhotos: this.cam.confirmPhotos,
-              saveToGallery: this.cam.saveToGallery,
-              maxDimension: this.cam.maxDimension,
+              saveToGallery: this.cam.saveToGallery,              
               quality: this.cam.quality,
               autoSquareCrop: this.cam.autoSquareCrop,
               confirmRetakeText: this.cam.confirmRetakeText,
@@ -308,7 +329,7 @@ export class DemoModel extends DemoSharedCamera {
             // const customOptions: ICameraOptions = {
             //   confirmPhotos: true,
             //   saveToGallery: true,
-            //   maxDimension: 1000,
+
             //   quality: 50,
             //   autoSquareCrop: true,
             //   confirmRetakeText: 'Hate it!',

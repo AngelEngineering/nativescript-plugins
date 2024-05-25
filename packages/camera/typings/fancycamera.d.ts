@@ -6,7 +6,7 @@ declare module io {
       export module fancycamera {
         export class Camera2 extends io.github.triniwiz.fancycamera.CameraBase {
           public static class: java.lang.Class<io.github.triniwiz.fancycamera.Camera2>;
-          public setEnableVideo(param0: io.github.triniwiz.fancycamera.CameraMode): void;
+          public setPhotoMode(): void;
           public getDisplayRatio(): string;
           public cameraRecording(): boolean;
           public setPause(param0: boolean): void;
@@ -24,6 +24,7 @@ declare module io {
           public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
           public getWhiteBalance(): io.github.triniwiz.fancycamera.WhiteBalance;
           public setAutoSquareCrop(param0: boolean): void;
+          public setEnableVideo(param0: boolean): void;
           public setRotation(param0: io.github.triniwiz.fancycamera.CameraOrientation): void;
           public getVideoQuality(): io.github.triniwiz.fancycamera.Quality;
           public getAutoSquareCrop(): boolean;
@@ -46,6 +47,7 @@ declare module io {
           public setMaxVideoBitrate(param0: number): void;
           public setAmplitudeEMA(param0: number): void;
           public getAmplitudeEMA(): number;
+          public getEnableVideo(): boolean;
           public stopPreview(): void;
           public setRetrieveLatestImage(param0: boolean): void;
           public setPictureSize(param0: string): void;
@@ -73,13 +75,13 @@ declare module io {
           public getStoredZoom(): number;
           public setDisplayRatio(param0: string): void;
           public getEnablePinchZoom(): boolean;
+          public setVideoMode(): void;
           public setStoredZoom(param0: number): void;
           public toggleCamera(): void;
           public setEnableTapToFocus(param0: boolean): void;
           public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet, param2: number);
           public stopRecording(): void;
           public getPause(): boolean;
-          public getEnableVideo(): io.github.triniwiz.fancycamera.CameraMode;
           public hasFlash(): boolean;
           public constructor(param0: globalAndroid.content.Context);
           public setMaxAudioBitRate(param0: number): void;
@@ -103,7 +105,7 @@ declare module io {
       export module fancycamera {
         export abstract class CameraBase {
           public static class: java.lang.Class<io.github.triniwiz.fancycamera.CameraBase>;
-          public setEnableVideo(param0: io.github.triniwiz.fancycamera.CameraMode): void;
+          public setPhotoMode(): void;
           public setPause(param0: boolean): void;
           public getAllowExifRotation(): boolean;
           public setCurrentOrientation(param0: number): void;
@@ -121,6 +123,7 @@ declare module io {
           public setAutoSquareCrop(param0: boolean): void;
           public startDurationTimer$camera_release(): void;
           public setRotation(param0: io.github.triniwiz.fancycamera.CameraOrientation): void;
+          public setEnableVideo(param0: boolean): void;
           public getVideoQuality(): io.github.triniwiz.fancycamera.Quality;
           public setOverridePhotoHeight(param0: number): void;
           public incrementCurrentFrame$camera_release(): void;
@@ -156,9 +159,9 @@ declare module io {
           public getEnableTapToFocus(): boolean;
           public setProcessEveryNthFrame(param0: number): void;
           public getEnablePinchZoom(): boolean;
+          public setVideoMode(): void;
           public setMTimerTask$camera_release(param0: java.util.TimerTask): void;
           public stopRecording(): void;
-          public getEnableVideo(): io.github.triniwiz.fancycamera.CameraMode;
           public setRecorder$camera_release(param0: globalAndroid.media.MediaRecorder): void;
           public hasFlash(): boolean;
           public constructor(param0: globalAndroid.content.Context);
@@ -202,6 +205,7 @@ declare module io {
           public setMDuration$camera_release(param0: number): void;
           public getAmplitudeEMA(): number;
           public getMainHandler$camera_release(): globalAndroid.os.Handler;
+          public getEnableVideo(): boolean;
           public stopPreview(): void;
           public getOverridePhotoHeight(): number;
           public setPictureSize(param0: string): void;
@@ -447,7 +451,7 @@ declare module io {
       export module fancycamera {
         export class FancyCamera {
           public static class: java.lang.Class<io.github.triniwiz.fancycamera.FancyCamera>;
-          public setEnableVideo(param0: io.github.triniwiz.fancycamera.CameraMode): void;
+          public setPhotoMode(): void;
           public setPause(param0: boolean): void;
           public getRetrieveLatestImage(): boolean;
           public getAllowExifRotation(): boolean;
@@ -468,6 +472,7 @@ declare module io {
           public setOverridePhotoWidth(param0: number): void;
           public hasStoragePermission(): boolean;
           public setAutoSquareCrop(param0: boolean): void;
+          public setEnableVideo(param0: boolean): void;
           public setOverridePhotoHeight(param0: number): void;
           public getVideoQuality(): io.github.triniwiz.fancycamera.Quality;
           public getAutoSquareCrop(): boolean;
@@ -491,6 +496,7 @@ declare module io {
           public stop(): void;
           public setMaxVideoBitrate(param0: number): void;
           public getRatio(): string;
+          public getEnableVideo(): boolean;
           public stopPreview(): void;
           public getOverridePhotoHeight(): number;
           public setRetrieveLatestImage(param0: boolean): void;
@@ -519,13 +525,13 @@ declare module io {
           public setProcessEveryNthFrame(param0: number): void;
           public requestStoragePermission(): void;
           public getEnablePinchZoom(): boolean;
+          public setVideoMode(): void;
           public getCameraRecording(): boolean;
           public setRatio(param0: string): void;
           public toggleCamera(): void;
           public setEnableTapToFocus(param0: boolean): void;
           public stopRecording(): void;
           public getPause(): boolean;
-          public getEnableVideo(): io.github.triniwiz.fancycamera.CameraMode;
           public setCameraOrientation(param0: io.github.triniwiz.fancycamera.CameraOrientation): void;
           public constructor(param0: globalAndroid.content.Context);
           public getEnableAudio(): boolean;

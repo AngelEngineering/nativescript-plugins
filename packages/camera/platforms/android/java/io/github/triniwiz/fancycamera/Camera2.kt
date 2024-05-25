@@ -68,7 +68,43 @@ class Camera2
     private var firstTime: Boolean = true
     override var enablePinchZoom: Boolean = true
     override var enableTapToFocus: Boolean = true
-    override var enableVideo: CameraMode = CameraMode.PHOTO
+
+    // override var enableVideo: Boolean = false
+    override fun setVideoMode() {
+      enableVideo = true
+      displayRatio = "16:9"
+      Log.d(
+        "io.github.triniwiz.fancycamera",
+        "setVideoMode() enableVideo set to " + enableVideo.toString(),
+      )
+    }
+
+    override fun setPhotoMode() {
+      enableVideo = false
+      displayRatio = "4:3"
+      Log.d(
+        "io.github.triniwiz.fancycamera",
+        "setPhotoMode() enableVideo set to " + enableVideo.toString(),
+      )
+    }
+
+    override var enableVideo: Boolean = false
+      get() {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "enableVideo get " + field.toString(),
+        )
+        return field
+      }
+      set(value) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "enableVideo set " + value.toString(),
+        )
+        field = value
+        // cameraView.enableVideo = value
+      }
+    // CameraMode = CameraMode.PHOTO
     // set(value) {
     //   if (value == CameraMode.PHOTO) {
     //     displayRatio = "4:3"
@@ -370,6 +406,19 @@ class Camera2
         },
         ContextCompat.getMainExecutor(context),
       )
+      if (enableVideo) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "init, enableVideo is TRUE",
+        )
+      } else {
+        if (enableVideo) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "init, enableVideo is FALSE",
+          )
+        }
+      }
     }
 
     private fun handleAutoFocus() {
@@ -758,7 +807,7 @@ class Camera2
 
       initPreview()
 
-      if (enableVideo == CameraMode.VIDEO) {
+      if (enableVideo) {
         Log.d("io.github.triniwiz.fancycamera", "refreshCamera() video mode enabled, initVideoCapture()")
         initVideoCapture()
       }
@@ -797,7 +846,7 @@ class Camera2
         }
       }
 
-      if (enableVideo == CameraMode.PHOTO) {
+      if (!enableVideo) {
         Log.d("io.github.triniwiz.fancycamera", "refreshCamera() photo mode enabled, updateImageCapture()")
         updateImageCapture(true)
       }

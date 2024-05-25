@@ -515,3 +515,9 @@ export const doubleTapCameraSwitchProperty = new Property<NSCameraBase, boolean>
   valueConverter: booleanConverter,
 });
 doubleTapCameraSwitchProperty.register(NSCameraBase);
+
+export const enableVideoProperty = new Property<NSCameraBase, boolean>({
+  name: 'enableVideo',
+  valueConverter: booleanConverter,
+});
+enableVideoProperty.register(NSCameraBase);
