@@ -40,7 +40,6 @@ abstract class CameraBase
     abstract var doubleTapCameraSwitch: Boolean
     abstract var enableVideo: Boolean
 
-    // CameraMode // Either in Photo mode or Video mode
     abstract var saveToGallery: Boolean
     abstract var maxAudioBitRate: Int
     abstract var maxVideoBitrate: Int

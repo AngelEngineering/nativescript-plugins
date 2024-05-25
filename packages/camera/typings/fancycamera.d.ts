@@ -345,29 +345,6 @@ declare module io {
   export module github {
     export module triniwiz {
       export module fancycamera {
-        export class CameraMode {
-          public static class: java.lang.Class<io.github.triniwiz.fancycamera.CameraMode>;
-          public static PHOTO: io.github.triniwiz.fancycamera.CameraMode;
-          public static VIDEO: io.github.triniwiz.fancycamera.CameraMode;
-          public getValue(): number;
-          public static valueOf(param0: string): io.github.triniwiz.fancycamera.CameraMode;
-          public static values(): androidNative.Array<io.github.triniwiz.fancycamera.CameraMode>;
-        }
-        export module CameraMode {
-          export class Companion {
-            public static class: java.lang.Class<io.github.triniwiz.fancycamera.CameraMode.Companion>;
-            public from(param0: number): io.github.triniwiz.fancycamera.CameraMode;
-          }
-        }
-      }
-    }
-  }
-}
-
-declare module io {
-  export module github {
-    export module triniwiz {
-      export module fancycamera {
         export class CameraOrientation {
           public static class: java.lang.Class<io.github.triniwiz.fancycamera.CameraOrientation>;
           public static UNKNOWN: io.github.triniwiz.fancycamera.CameraOrientation;

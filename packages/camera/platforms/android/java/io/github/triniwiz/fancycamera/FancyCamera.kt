@@ -186,8 +186,7 @@ class FancyCamera : FrameLayout {
       cameraView.position = value
     }
 
-  var enableVideo: Boolean = false
-    // CameraMode = CameraMode.PHOTO
+  var enableVideo: Boolean = false    
     get() {
       return cameraView.enableVideo
     }

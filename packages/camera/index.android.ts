@@ -198,16 +198,14 @@ export class NSCamera extends NSCameraBase {
       }
       if (this._camera) {
         console.log('have a camera, checking enableVideo: ', this._camera.getEnableVideo(), typeof this._camera.getEnableVideo());
-        // if (
-        // if(value == (io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO') as any)){
         if (value && !this._camera.getEnableVideo()) {
-          console.log('setEnableVideo to VIDEO', io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO'));
+          console.log('setEnableVideo to VIDEO');
           // this._camera.setEnableVideo(value);
           this._camera.setVideoMode();
           this.updateModeUI();
           this._camera.updateMode();
         } else if (!value && this._camera.getEnableVideo()) {
-          console.log('setEnableVideo to PHOTO', io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO'));
+          console.log('setEnableVideo to PHOTO');
           // this._camera.setEnableVideo(value);
           this._camera.setPhotoMode();
           this.updateModeUI();

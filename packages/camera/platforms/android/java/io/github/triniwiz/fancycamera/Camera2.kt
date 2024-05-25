@@ -104,14 +104,6 @@ class Camera2
         field = value
         // cameraView.enableVideo = value
       }
-    // CameraMode = CameraMode.PHOTO
-    // set(value) {
-    //   if (value == CameraMode.PHOTO) {
-    //     displayRatio = "4:3"
-    //   } else {
-    //     displayRatio = "16:9"
-    //   }
-    // }
     // override var enableVideo: Boolean = false
     //   set(value) {
     //     if (value != field) {
