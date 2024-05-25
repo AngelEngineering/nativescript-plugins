@@ -905,6 +905,10 @@ class Camera2
           "io.github.triniwiz.fancycamera",
           "ERROR! Need mic and camera to start recording! Returning",
         )
+        listener?.onCameraError(
+          "Missing camera or audio permissions",
+          Exception("Missing camera or audio permissions"),
+        )
         return
       }
       deInitListener()

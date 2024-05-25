@@ -162,14 +162,23 @@ export class NSCamera extends NSCameraBase {
   updateModeUI(): void {
     if (this.isVideoEnabled()) {
       console.log('updating UI to video mode');
+      //check permission just in case
+      if (!this._camera.hasPermission()) {
+        console.error('missing permission(s), requesting');
+        this._camera.requestPermission();
+        if (!this.camera.hasPermission()) {
+          console.error('not enough permission for video mode!');
+          return;
+        }
+      }
       // this._camera.setRatio('16:9');
       const takePicDrawable = getImageDrawable(this.takeVideoIcon);
-      this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+      this._takePicBtn?.setImageResource(takePicDrawable); // set the icon
     } else {
       console.log('updating UI to photo mode');
       // this._camera.setRatio('4:3');
       const takePicDrawable = getImageDrawable(this.takePicIcon);
-      this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+      this._takePicBtn?.setImageResource(takePicDrawable); // set the icon
     }
     this._ensureCorrectFlashIcon();
     // this._initTakePicButton();
@@ -425,14 +434,34 @@ export class NSCamera extends NSCameraBase {
 
   private _permissionListenerFn(args) {
     if (this._camera) {
-      if (this._camera.hasCameraPermission() || this._camera.hasPermission()) {
+      if ((!this.enableVideo && this._camera.hasCameraPermission()) || (this.enableVideo && this._camera.hasPermission())) {
         this._camera.startPreview();
+      } else {
+        //we need permissions to start the preview
+        console.error('Required permissions not granted yet, cannot show camera view!');
+        this._camera.stopPreview();
       }
     }
   }
 
   initNativeView() {
     console.log('initNativeView()');
+    if ((!this.enableVideo && !this._camera.hasCameraPermission()) || (this.enableVideo && !this._camera.hasPermission())) {
+      console.error('missing permissions!!!!!!');
+      if (this.enableVideo) {
+        this._camera.requestPermission();
+        // if (!this._camera.hasPermission()) {
+        //   console.error('premission request failed!');
+        //   return;
+        // }
+      } else if (!this.enableVideo) {
+        this._camera.requestCameraPermission();
+        // if (!this._camera.hasCameraPermission()) {
+        //   console.error('premission request failed!');
+        //   return;
+        // }
+      }
+    }
     const that = this;
     super.initNativeView();
     this.on(View.layoutChangedEvent, this._onLayoutChangeListener);
