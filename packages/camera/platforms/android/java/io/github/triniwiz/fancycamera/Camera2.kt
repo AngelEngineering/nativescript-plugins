@@ -65,44 +65,54 @@ class Camera2
     private var lastZoomRatio = 1.0f
     private var autoFocusTimer: Timer? = null
 
-    // private var firstTime: Boolean = true
+    private var firstTime: Boolean = true
     override var enablePinchZoom: Boolean = true
     override var enableTapToFocus: Boolean = true
+    override var enableVideo: CameraMode = CameraMode.PHOTO
+    // set(value) {
+    //   if (value == CameraMode.PHOTO) {
+    //     displayRatio = "4:3"
+    //   } else {
+    //     displayRatio = "16:9"
+    //   }
+    // }
     // override var enableVideo: Boolean = false
+    //   set(value) {
+    //     if (value != field) {
+    //       field = value
+    //       if (value) {
+    //         Log.d(
+    //           "io.github.triniwiz.fancycamera",
+    //           "Changing to video ratio 16:9",
+    //         )
+    //         displayRatio = "16:9"
+    //       } else {
 
-    override var enableVideo: Boolean = false
-      set(value) {
-        if (value != field) {
-          field = value
-          if (value) {
-            // TODO: change to video mode
-            Log.d(
-              "io.github.triniwiz.fancycamera",
-              "Changing to video mode",
-            )
-          } else {
-            if (isRecording) {
-              Log.d(
-                "io.github.triniwiz.fancycamera",
-                "Currently recording!! Cannot change to photo mode!!",
-              )
-            } else {
-              // TODO: change to photo mode
-              Log.d(
-                "io.github.triniwiz.fancycamera",
-                "Changing to photo mode",
-              )
-              displayRatio = "4:3" // this should trigger camera refresh
-            }
-          }
-        } else {
-          Log.d(
-            "io.github.triniwiz.fancycamera",
-            "same value for enableVideo, ignoring",
-          )
-          displayRatio = "16:9"
-        }
+    //         Log.d(
+    //           "io.github.triniwiz.fancycamera",
+    //           "Changing to photo ratio 4:3",
+    //         )
+    //         displayRatio = "4:3"
+    //       }
+    //     } else {
+    //       Log.d(
+    //         "io.github.triniwiz.fancycamera",
+    //         "same value for enableVideo, ignoring",
+    //       )
+    //     }
+    //   }
+
+    override fun updateMode() {
+      Log.d(
+        "io.github.triniwiz.fancycamera",
+        "updateMode()",
+      )
+
+      if (isStarted) {
+        safeUnbindAll()
+        refreshCamera()
       }
+    }
 
     override var retrieveLatestImage: Boolean = false
       set(value) {
@@ -202,12 +212,8 @@ class Camera2
             "4:3" -> value
             else -> return
           }
-        if (!isRecording) {
-          safeUnbindAll()
-          refreshCamera()
-        }
       }
-    override var pictureSize: String = "768x1024"
+    override var pictureSize: String = "0x0"
       get() {
         if (field == "0x0") {
           val size = cachedPictureRatioSizeMap[displayRatio]?.get(0)
@@ -752,7 +758,10 @@ class Camera2
 
       initPreview()
 
-      if (enableVideo) initVideoCapture()
+      if (enableVideo == CameraMode.VIDEO) {
+        Log.d("io.github.triniwiz.fancycamera", "refreshCamera() video mode enabled, initVideoCapture()")
+        initVideoCapture()
+      }
 
       handleZoom()
 
@@ -788,7 +797,10 @@ class Camera2
         }
       }
 
-      if (!enableVideo) updateImageCapture(true)
+      if (enableVideo == CameraMode.PHOTO) {
+        Log.d("io.github.triniwiz.fancycamera", "refreshCamera() photo mode enabled, updateImageCapture()")
+        updateImageCapture(true)
+      }
 
       if (flashMode == CameraFlashMode.TORCH && camera?.cameraInfo?.hasFlashUnit() == true) {
         camera?.cameraControl?.enableTorch(true)
@@ -846,7 +858,7 @@ class Camera2
 
     @SuppressLint("RestrictedApi")
     override fun startRecording() {
-      // Log.d("io.github.triniwiz.fancycamera", "startRecording()")
+      Log.d("io.github.triniwiz.fancycamera", "startRecording()")
       if (!hasAudioPermission() || !hasCameraPermission()) {
         Log.d(
           "io.github.triniwiz.fancycamera",
@@ -890,11 +902,11 @@ class Camera2
         // the following sections do fix this, but introduces a slight delay while
         // camera/preview is refreshed
         // and rebound.
-        // if (firstTime) {
-        //   safeUnbindAll()
-        //   initPreview()
-        //   firstTime = false
-        // }
+        if (firstTime) {
+          safeUnbindAll()
+          initPreview()
+          firstTime = false
+        }
 
         if (videoCapture == null) {
           initVideoCapture()
@@ -1088,6 +1100,7 @@ class Camera2
 
     @SuppressLint("RestrictedApi")
     override fun stopRecording() {
+      Log.d("io.github.triniwiz.fancycamera", "stopRecording() ")
       try {
         if (flashMode == CameraFlashMode.ON) {
           camera?.cameraControl?.enableTorch(false)
@@ -1100,6 +1113,7 @@ class Camera2
     }
 
     override fun takePhoto() {
+      Log.d("io.github.triniwiz.fancycamera", "takePhoto() ")
       val df = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
       val today = Calendar.getInstance().time
       val fileName = "PIC_" + df.format(today) + ".jpg"
@@ -1488,6 +1502,11 @@ class Camera2
           )
         }
       }
+      listener?.onCameraToggle()
+      Log.d(
+        "io.github.triniwiz.fancycamera",
+        "Camera2.kt: listener?.onCameraToggle()",
+      )
     }
 
     override fun getAvailablePictureSizes(ratio: String): Array<Size> {

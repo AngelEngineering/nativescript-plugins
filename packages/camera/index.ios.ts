@@ -826,21 +826,7 @@ export class NSCamera extends NSCameraBase {
     }
   }
 
-  getAvailablePictureSizes(ratio?: string): string[] {
-    return ['3840x2160', '1920x1080', '1280x720', '640x480', '352x288', 'High', 'Medium', 'Low'];
-  }
-
   private _pictureQuality = 'High';
-
-  // @ts-ignore
-  set pictureSize(value: string) {
-    this._pictureQuality = value;
-    this._updateCameraQuality();
-  }
-
-  get pictureSize(): string {
-    return this._pictureQuality;
-  }
 
   // @ts-ignore
   get zoom(): number {

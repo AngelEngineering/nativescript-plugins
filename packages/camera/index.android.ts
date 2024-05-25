@@ -24,6 +24,8 @@ const FLASH_MODE_ON = 'on';
 const FLASH_MODE_OFF = 'off';
 const CAMERA_FACING_FRONT = 1; // front camera
 const CAMERA_FACING_BACK = 0; // rear camera
+const CAMERA_PHOTO_MODE = 0;
+const CAMERA_VIDEO_MODE = 1;
 const DEVICE_INFO_STRING = () => `device: ${Device.manufacturer} ${Device.model} on SDK: ${Device.sdkVersion}`;
 
 export class NSCamera extends NSCameraBase {
@@ -56,8 +58,8 @@ export class NSCamera extends NSCameraBase {
     console.log('set isRecording: ' + val);
   }
 
-  private _videoQuality: CameraVideoQuality = CameraVideoQuality.MAX_720P;
-  private _enableVideo: boolean = false;
+  private _videoQuality: CameraVideoQuality = CameraVideoQuality.HIGHEST;
+  private _enableVideo: number = CAMERA_PHOTO_MODE; //either CAMERA_PHOTO_MODE or CAMERA_VIDEO_MODE
   private _nativeView: android.widget.RelativeLayout;
   private _flashBtn: android.widget.ImageButton = null; // reference to native flash button
   private _takePicBtn: android.widget.ImageButton = null; // reference to native take picture button
@@ -83,85 +85,144 @@ export class NSCamera extends NSCameraBase {
     this._lastCameraOptions = [];
   }
 
-  private isVideoEnabled() {
-    return this.enableVideo === true;
+  //@ts-ignore
+  // get enableVideo(): boolean {
+  //   return this._camera ? this._camera.getEnableVideo() : this._enableVideo;
+  // }
+
+  // set enableVideo(value: boolean) {
+  //   console.log('set enableVideo', value);
+  //   if (this._camera) {
+  //     if (value != this.camera.getEnableVideo()) {
+  //       console.log('Changing modes, setting enableVideo to', value);
+  //       this._camera.setEnableVideo(value);
+  //       this._camera.updateMode();
+  //       //if we are currently recording video and changing to photo mode, this will be ignored
+  //       if (this._camera.getCameraRecording() && !value) {
+  //         console.warn('Currently recording, cannot change to photo mode!');
+  //       } else if (value) {
+  //         console.log('changing to video mode');
+  //         // this._camera.setRatio('16:9');
+  //         const takePicDrawable = getImageDrawable(this.takeVideoIcon);
+  //         this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+  //       } else {
+  //         console.log('changing to photo mode');
+  //         // this._camera.setRatio('4:3');
+  //         const takePicDrawable = getImageDrawable(this.takePicIcon);
+  //         this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+  //       }
+  //       // switch (this.videoQuality) {
+  //       //   case CameraVideoQuality.HIGHEST:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
+  //       //     break;
+  //       //   case CameraVideoQuality.LOWEST:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
+  //       //     break;
+  //       //   case CameraVideoQuality.MAX_2160P:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
+  //       //     break;
+  //       //   case CameraVideoQuality.MAX_1080P:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
+  //       //     break;
+  //       //   case CameraVideoQuality.MAX_720P:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+  //       //     break;
+  //       //   case CameraVideoQuality.MAX_480P:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
+  //       //     break;
+  //       //   case CameraVideoQuality.QVGA:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
+  //       //     break;
+  //       //   default:
+  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+  //       //     break;
+  //       // }
+  //     } else console.log('same mode, ignoring');
+  //   } else {
+  //     console.warn("No camera instance yet, can't set enableVideo directly");
+  //   }
+  //   this._enableVideo = value;
+  // }
+
+  isVideoEnabled(): boolean {
+    return this._camera.getEnableVideo() == (io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO') as any);
+  }
+
+  updateModeUI(): void {
+    if (this.isVideoEnabled()) {
+      console.log('updating UI to video mode');
+      // this._camera.setRatio('16:9');
+      const takePicDrawable = getImageDrawable(this.takeVideoIcon);
+      this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+    } else {
+      console.log('updating UI to photo mode');
+      // this._camera.setRatio('4:3');
+      const takePicDrawable = getImageDrawable(this.takePicIcon);
+      this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+    }
+    this._ensureCorrectFlashIcon();
+    // this._initTakePicButton();
+    console.log('done updating mode UI');
   }
 
   //@ts-ignore
   get enableVideo(): boolean {
-    return this._camera ? this._camera.getEnableVideo() : this._enableVideo;
+    console.log('get enableVideo() current mode from: ', this._camera.getEnableVideo());
+    if (this._camera) {
+      console.log('get enableVideo() have a camera, checking native mode', this._camera.getEnableVideo());
+      return this._camera.getEnableVideo() == (io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO') as any);
+    }
+    console.log('get enableVideo() no camera yet,  returning this._enableVideo === CAMERA_VIDEO_MODE', this._enableVideo, this._enableVideo === CAMERA_VIDEO_MODE);
+    return this._enableVideo === CAMERA_VIDEO_MODE;
   }
 
   set enableVideo(value: boolean) {
-    console.log('set enableVideo', value);
-    if (this._camera) {
-      if (value != this.camera.getEnableVideo()) {
-        console.log('Changing modes, setting enableVideo to', value);
-        this._camera.setEnableVideo(value);
-        //if we are currently recording video and changing to photo mode, this will be ignored
-        if (this._camera.getCameraRecording() && !value) {
-          console.warn('Currently recording, cannot change to photo mode!');
-        } else if (value) {
-          console.log('changing to video mode');
-          // this._camera.setRatio('16:9');
-          const takePicDrawable = getImageDrawable(this.takeVideoIcon);
-          this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+    try {
+      this.CLog('set enableVideo() ', value);
+      if (this._camera) {
+        // if(value == (io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO') as any)){
+        if (value && this._camera.getEnableVideo() !== io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO')) {
+          console.log('setEnableVideo to VIDEO');
+          this._camera.setEnableVideo(io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO'));
+          this.updateModeUI();
+          this._camera.updateMode();
+        } else if (!value && this._camera.getEnableVideo() === io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO')) {
+          console.log('setEnableVideo to PHOTO');
+          this._camera.setEnableVideo(io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO'));
+          this.updateModeUI();
+          this._camera.updateMode();
         } else {
-          console.log('changing to photo mode');
-          // this._camera.setRatio('4:3');
-          const takePicDrawable = getImageDrawable(this.takePicIcon);
-          this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+          console.log('same mode, ignoring enableVideo setter');
         }
-        // switch (this.videoQuality) {
-        //   case CameraVideoQuality.HIGHEST:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
-        //     break;
-        //   case CameraVideoQuality.LOWEST:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
-        //     break;
-        //   case CameraVideoQuality.MAX_2160P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
-        //     break;
-        //   case CameraVideoQuality.MAX_1080P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
-        //     break;
-        //   case CameraVideoQuality.MAX_720P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-        //     break;
-        //   case CameraVideoQuality.MAX_480P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
-        //     break;
-        //   case CameraVideoQuality.QVGA:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
-        //     break;
-        //   default:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-        //     break;
-        // }
-      } else console.log('same mode, ignoring');
-    } else {
-      console.warn("No camera instance yet, can't set enableVideo directly");
+      } else {
+        this.CLog('No camera instance yet, enableVideo preference saved for when camera is ready');
+      }
+      this._enableVideo = value === true ? CAMERA_VIDEO_MODE : CAMERA_PHOTO_MODE;
+      console.log('set enableVideo() this._enableVideo: ', this._enableVideo, 'value', value);
+    } catch (err) {
+      console.error('set enableVideo() error!', err);
     }
-    this._enableVideo = value;
   }
 
   // @ts-ignore
   get ratio(): string {
-    return this._camera ? this._camera.getRatio() : '4:3';
+    return this._camera ? this._camera.getRatio() : 'unknown';
   }
   set ratio(value: string) {
     if (this._camera) {
+      console.log('setting camera ratio to ', value);
       this._camera.setRatio(value);
     }
   }
 
   // @ts-ignore
   get videoQuality(): CameraVideoQuality {
-    // this.CLog('get current VideoQuality()', this._videoQuality);
+    this.CLog('get current VideoQuality()', this._videoQuality);
     return this._videoQuality;
   }
   set videoQuality(value: CameraVideoQuality) {
     this._videoQuality = value;
+    this.CLog('setting VideoQuality to ', this._videoQuality);
     if (this._camera) {
       //check if camera is ready yet, and update quality if so
       this.updateQuality();
@@ -301,17 +362,6 @@ export class NSCamera extends NSCameraBase {
     return sizes;
   }
 
-  // @ts-ignore
-  set pictureSize(value: string) {
-    if (this._camera) {
-      this._camera.setPictureSize(value);
-    } else console.log('set pictureSize() camera not ready yet!');
-  }
-
-  get pictureSize(): string {
-    return this._camera ? this._camera.getPictureSize() : '0x0';
-  }
-
   get camera(): io.github.triniwiz.fancycamera.FancyCamera {
     return this._camera;
   }
@@ -325,6 +375,13 @@ export class NSCamera extends NSCameraBase {
     Application.android.on('activityRequestPermissions', this._permissionListener);
     this._nativeView = new android.widget.RelativeLayout(this._context);
     this._camera = new io.github.triniwiz.fancycamera.FancyCamera(this._context);
+    try {
+      console.log('createNativeView() this._camera.setEnableVideo()', this._enableVideo, this._enableVideo == CAMERA_VIDEO_MODE);
+      this._camera.setEnableVideo(this._enableVideo == CAMERA_VIDEO_MODE ? io.github.triniwiz.fancycamera.CameraMode.valueOf('VIDEO') : io.github.triniwiz.fancycamera.CameraMode.valueOf('PHOTO')); //sets initial mode for android camera plugin
+    } catch (err) {
+      console.error(err);
+    }
+
     (this._camera as any).setLayoutParams(new android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
     this._nativeView.addView(this._camera as any);
     return this._nativeView;
@@ -348,7 +405,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   initNativeView() {
-    this.CLog('initNativeView()');
+    console.log('initNativeView()');
     const that = this;
     super.initNativeView();
     this.on(View.layoutChangedEvent, this._onLayoutChangeListener);
@@ -459,7 +516,13 @@ export class NSCamera extends NSCameraBase {
             owner._ensureCorrectFlashIcon();
             owner._togglingCamera = true;
           } else {
-            setTimeout(() => owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera), 500);
+            setTimeout(() => {
+              let sizes = owner.getAvailablePictureSizes('4:3');
+              console.log('getAvailablePictureSizes()', sizes);
+              owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera);
+              // owner.enableVideo = owner._enableVideo;
+              // owner.updateModeUI();
+            }, 500);
             // owner.isRecording = false;
           }
         }
@@ -494,15 +557,36 @@ export class NSCamera extends NSCameraBase {
           that.CError('!!! No owner reference found when handling onCameraVideoUI event');
         }
       },
+      onCameraToggleUI(): void {
+        const owner: NSCamera = this.owner ? this.owner.get() : null;
+        if (owner) {
+          owner.sendEvent(NSCamera.toggleCameraEvent, owner.camera);
+          // need to check flash mode when toggling...
+          // front cam may not have flash - and just ensure the correct icon shows
+          owner._ensureCorrectFlashIcon();
+          // try to set focus mode when camera gets toggled
+          owner._ensureFocusMode();
+          console.log('toggled camera', owner.cameraId, owner._cameraId, owner._camera.getPosition());
+        } else {
+          that.CError('!!! No owner reference found when handling onCameraVideoStopUI event');
+        }
+      },
     });
     const listener = new listenerImpl();
     listener.owner = new WeakRef(this);
     this._camera.setListener(listener);
     this.cameraId = this._cameraId;
-    this.enableVideo = this.isVideoEnabled();
     this.isRecording = false;
-    this._camera.setDoubleTapCameraSwitch(this.doubleTapCameraSwitch);
+    this._camera.setDoubleTapCameraSwitch(!!this.doubleTapCameraSwitch);
+    // try {
+    //   console.log('this._camera.setEnableVideo()', this._enableVideo);
+    //   this._camera.setEnableVideo(this._enableVideo); //sets initial mode for android camera plugin
+    //   // this.enableVideo = this._enableVideo;
+    // } catch (err) {
+    //   console.error(err);
+    // }
     this.updateQuality();
+    console.log('done with initNativeView()');
   }
 
   disposeNativeView() {
@@ -540,7 +624,7 @@ export class NSCamera extends NSCameraBase {
    * Takes a picture using the camera preview
    */
   public takePicture(options?: ICameraOptions): void {
-    if (this.enableVideo) {
+    if (this.isVideoEnabled()) {
       console.error('in Video mode, change to photo mode to take a picture!');
       return null;
     }
@@ -588,19 +672,19 @@ export class NSCamera extends NSCameraBase {
    */
   public toggleCamera(): void {
     if (this._camera) {
-      this._togglingCamera = true;
-      this._camera.toggleCamera();
       const camNumber = this.getNumberOfCameras();
       if (camNumber <= 1) {
         this.CLog(`Cannot switch camera, this Android Device only has ${camNumber} camera.`);
         return;
       }
-      this.sendEvent(NSCamera.toggleCameraEvent, this.camera);
-      // need to check flash mode when toggling...
-      // front cam may not have flash - and just ensure the correct icon shows
-      this._ensureCorrectFlashIcon();
-      // try to set focus mode when camera gets toggled
-      this._ensureFocusMode();
+      this._togglingCamera = true;
+      this._camera.toggleCamera();
+      // this.sendEvent(NSCamera.toggleCameraEvent, this.camera);
+      // // need to check flash mode when toggling...
+      // // front cam may not have flash - and just ensure the correct icon shows
+      // this._ensureCorrectFlashIcon();
+      // // try to set focus mode when camera gets toggled
+      // this._ensureFocusMode();
     }
   }
 
@@ -669,79 +753,83 @@ export class NSCamera extends NSCameraBase {
    * @param options IVideoOptions
    */
   public async record(options?: IVideoOptions): Promise<void> {
-    if (!this.enableVideo) {
-      console.error('in Photo mode, change to video mode to record!');
-      return null;
-    }
-    if (this.isRecording) {
-      this.CLog('Currently recording, cannot call record()');
-      return;
-    }
-
-    options = {
-      saveToGallery: options?.saveToGallery ? options.saveToGallery : this.saveToGallery,
-      videoQuality: options?.videoQuality ? options.videoQuality : this.videoQuality,
-      // videoHeight: options?.videoHeight ? options.videoHeight : this.videoHeight, //not supported yet
-      // videoWidth: options?.videoWidth ? options.videoWidth : this.videoWidth, //not supported yet
-      // disableHEVC: options?.disableHEVC ? options.disableHEVC : this.disableHEVC, //not supported yet
-      //if the following options are not specified, -1 will let Android select based on requested videoQuality
-      androidMaxVideoBitRate: options?.androidMaxVideoBitRate ? options.androidMaxVideoBitRate : -1,
-      androidMaxFrameRate: options?.androidMaxFrameRate ? options.androidMaxFrameRate : -1,
-      androidMaxAudioBitRate: options?.androidMaxAudioBitRate ? options.androidMaxAudioBitRate : -1,
-    };
-    this.CLog('record options', options);
-    if (options.saveToGallery) this._camera.setSaveToGallery(true);
-    else this._camera.setSaveToGallery(false);
-
-    if (this._camera) {
-      this.isRecording = true;
-      this._camera.setSaveToGallery(!!options.saveToGallery);
-      switch (options.videoQuality) {
-        case CameraVideoQuality.HIGHEST:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
-          break;
-        case CameraVideoQuality.LOWEST:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
-          break;
-        case CameraVideoQuality.MAX_2160P:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
-          break;
-        case CameraVideoQuality.MAX_1080P:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
-          break;
-        case CameraVideoQuality.MAX_720P:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-          break;
-        case CameraVideoQuality.MAX_480P:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
-          break;
-        case CameraVideoQuality.QVGA:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
-          break;
-        default:
-          this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-          break;
+    try {
+      if (!this.isVideoEnabled()) {
+        console.error('in Photo mode, change to video mode to record!');
+        return null;
       }
-      // -1 uses profile value;
-      this._camera.setMaxAudioBitRate(options.androidMaxAudioBitRate || -1);
-      this._camera.setMaxVideoBitrate(options.androidMaxVideoBitRate || -1);
-      this._camera.setMaxVideoFrameRate(options.androidMaxFrameRate || -1);
-
-      if (this.shouldLockRotation) {
-        this.disableRotationAndroid();
+      if (this.isRecording) {
+        this.CLog('Currently recording, cannot call record()');
+        return;
       }
 
-      const takePicDrawable = getImageDrawable(this.stopVideoIcon);
-      this._takePicBtn.setImageResource(takePicDrawable); // set the icon
-      //Hide the flash button while recording since we cannot turn it on/off during recording
-      this._flashBtn.setVisibility(android.view.View.GONE);
-      console.log('starting native recording');
-      this._camera.startRecording();
+      options = {
+        saveToGallery: options?.saveToGallery ? options.saveToGallery : this.saveToGallery,
+        videoQuality: options?.videoQuality ? options.videoQuality : this.videoQuality,
+        // videoHeight: options?.videoHeight ? options.videoHeight : this.videoHeight, //not supported yet
+        // videoWidth: options?.videoWidth ? options.videoWidth : this.videoWidth, //not supported yet
+        // disableHEVC: options?.disableHEVC ? options.disableHEVC : this.disableHEVC, //not supported yet
+        //if the following options are not specified, -1 will let Android select based on requested videoQuality
+        androidMaxVideoBitRate: options?.androidMaxVideoBitRate ? options.androidMaxVideoBitRate : -1,
+        androidMaxFrameRate: options?.androidMaxFrameRate ? options.androidMaxFrameRate : -1,
+        androidMaxAudioBitRate: options?.androidMaxAudioBitRate ? options.androidMaxAudioBitRate : -1,
+      };
+      this.CLog('record options', options);
+      // if (options.saveToGallery) this._camera.setSaveToGallery(true);
+      // else this._camera.setSaveToGallery(false);
 
-      console.log('camera isRecording?', this.isRecording);
-    } else {
-      this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
-      return;
+      if (this._camera) {
+        this.isRecording = true;
+        this._camera.setSaveToGallery(!!options.saveToGallery);
+        // switch (options.videoQuality) {
+        //   case CameraVideoQuality.HIGHEST:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
+        //     break;
+        //   case CameraVideoQuality.LOWEST:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
+        //     break;
+        //   case CameraVideoQuality.MAX_2160P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
+        //     break;
+        //   case CameraVideoQuality.MAX_1080P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
+        //     break;
+        //   case CameraVideoQuality.MAX_720P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+        //     break;
+        //   case CameraVideoQuality.MAX_480P:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
+        //     break;
+        //   case CameraVideoQuality.QVGA:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
+        //     break;
+        //   default:
+        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
+        //     break;
+        // }
+        // -1 uses profile value;
+        this._camera.setMaxAudioBitRate(options.androidMaxAudioBitRate || -1);
+        this._camera.setMaxVideoBitrate(options.androidMaxVideoBitRate || -1);
+        this._camera.setMaxVideoFrameRate(options.androidMaxFrameRate || -1);
+
+        if (this.shouldLockRotation) {
+          this.disableRotationAndroid();
+        }
+
+        const takePicDrawable = getImageDrawable(this.stopVideoIcon);
+        this._takePicBtn.setImageResource(takePicDrawable); // set the icon
+        //if we have a flash button, Hide it while recording since we cannot turn it on/off during recording
+        this._flashBtn?.setVisibility(android.view.View.GONE);
+        console.log('starting native recording');
+        this._camera.startRecording();
+
+        console.log('camera isRecording?', this.isRecording);
+      } else {
+        this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
+        return;
+      }
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -756,7 +844,7 @@ export class NSCamera extends NSCameraBase {
    * Stop camera recording and update UI
    */
   public stopRecording(): void {
-    if (!this.enableVideo) {
+    if (!this.isVideoEnabled()) {
       console.error('in Photo mode, stop is not available');
       return null;
     }
@@ -971,7 +1059,7 @@ export class NSCamera extends NSCameraBase {
   }
 
   private _initTakePicButton(): void {
-    if (this.enableVideo) {
+    if (this.isVideoEnabled()) {
       //video mode show a circle icon
       this._takePicBtn = new android.widget.ImageButton(Application.android.context) as android.widget.ImageButton;
       this._takePicBtn.setMaxHeight(48);
@@ -998,7 +1086,7 @@ export class NSCamera extends NSCameraBase {
       new android.view.View.OnTouchListener({
         onTouch: (argsView: android.view.View, pEvent: android.view.MotionEvent) => {
           const owner = ref.get();
-          if (this.enableVideo) {
+          if (this.isVideoEnabled()) {
             //Video mode
             //check if we're currently doing a long click for snapchat style recording UI
             if (pEvent.getAction() == android.view.MotionEvent.ACTION_UP) {
@@ -1035,7 +1123,7 @@ export class NSCamera extends NSCameraBase {
     this._takePicBtn.setOnLongClickListener(
       new android.view.View.OnLongClickListener({
         onLongClick: (argsView: android.view.View) => {
-          if (this.enableVideo) {
+          if (this.isVideoEnabled()) {
             this.isButtonLongPressed = true;
           }
           return false;

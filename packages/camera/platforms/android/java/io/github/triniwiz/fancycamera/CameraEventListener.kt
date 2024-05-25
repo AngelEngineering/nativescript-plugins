@@ -26,6 +26,8 @@ interface CameraEventListener {
     ex: Exception,
   )
 
+  fun onCameraToggle()
+
   fun onCameraVideoStart()
 
   fun onCameraVideoStop()

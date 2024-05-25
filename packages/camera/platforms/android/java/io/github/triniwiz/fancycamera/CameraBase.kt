@@ -38,6 +38,7 @@ abstract class CameraBase
     abstract var autoSquareCrop: Boolean
     abstract var autoFocus: Boolean
     abstract var doubleTapCameraSwitch: Boolean
+    abstract var enableVideo: CameraMode // Either in Photo mode or Video mode
     abstract var saveToGallery: Boolean
     abstract var maxAudioBitRate: Int
     abstract var maxVideoBitrate: Int
@@ -73,6 +74,8 @@ abstract class CameraBase
 
     abstract fun toggleCamera()
 
+    abstract fun updateMode()
+
     abstract fun getAvailablePictureSizes(ratio: String): Array<Size>
 
     abstract var displayRatio: String
@@ -81,7 +84,7 @@ abstract class CameraBase
     abstract var enableTapToFocus: Boolean
     abstract var zoom: Float
     abstract var zoomRatio: Float
-    abstract var enableVideo: Boolean // Either in Photo mode or Video mode
+    
 
     internal fun resetCurrentFrame() {
       if (isProcessingEveryNthFrame()) {

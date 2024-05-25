@@ -100,21 +100,6 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
   public whiteBalance: WhiteBalance | string = WhiteBalance.Auto;
 
   /**
-   *  *ANDROID ONLY* A string representing the size of picture {@link takePicture} will output. Available sizes can be fetched using {@link getAvailablePictureSizes}
-   *   the plugin will try to find the closes match or default to highest available currently
-   */
-  @GetSetProperty()
-  public pictureSize = '3648x2736';
-
-  /**
-   * @param ratio string
-   * @returns returns an array of supported picture sizes supported by the current camera
-   */
-  getAvailablePictureSizes(ratio: string): string[] {
-    return [];
-  }
-
-  /**
    * If true the default take picture event will present a confirmation dialog. Default is false.
    */
   @GetSetProperty()

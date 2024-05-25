@@ -93,18 +93,6 @@ export declare class NSCamera extends ContentView {
    */
   public whiteBalance: WhiteBalance | string;
 
-  /**
-   * A string representing the size of picture {@link takePicture} will output. Available sizes can be fetched using {@link getAvailablePictureSizes}
-   */
-  pictureSize: string;
-
-  /**
-   * NOTE: not currently working
-   * @param ratio string
-   * @returns returns an array of supported picture sizes supported by the current camera
-   */
-  getAvailablePictureSizes(ratio: string): string[];
-
   /*
    * Logging functions controlled by debug property
    */

@@ -31,6 +31,7 @@ abstract class CameraEventListenerUI : CameraEventListener {
                 (
                   msg.what != WHAT_CAMERA_CLOSE_EVENT ||
                     msg.what != WHAT_CAMERA_OPEN_EVENT ||
+                    msg.what != WHAT_CAMERA_TOGGLE_EVENT ||
                     msg.what != WHAT_CAMERA_VIDEO_START_EVENT
                 )
               ) {
@@ -54,6 +55,7 @@ abstract class CameraEventListenerUI : CameraEventListener {
                 WHAT_CAMERA_CLOSE_EVENT -> onCameraCloseUI()
                 WHAT_CAMERA_OPEN_EVENT -> onCameraOpenUI()
                 WHAT_READY_EVENT -> onReadyUI()
+                WHAT_CAMERA_TOGGLE_EVENT -> onCameraToggleUI()
                 WHAT_CAMERA_VIDEO_START_EVENT -> onCameraVideoStartUI()
                 WHAT_CAMERA_VIDEO_STOP_EVENT -> onCameraVideoStopUI()
                 WHAT_CAMERA_ERROR_EVENT -> {
@@ -137,6 +139,19 @@ abstract class CameraEventListenerUI : CameraEventListener {
     handler!!.sendMessage(message)
   }
 
+  override fun onCameraToggle() {
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      onCameraToggleUI()
+      return
+    }
+    ensureHandler()
+    val message = handler!!.obtainMessage()
+    message.what = WHAT_CAMERA_TOGGLE_EVENT
+    val bundle = Bundle()
+    message.data = bundle
+    handler!!.sendMessage(message)
+  }
+
   override fun onCameraVideoStart() {
     if (Looper.myLooper() == Looper.getMainLooper()) {
       onCameraVideoStartUI()
@@ -191,6 +206,8 @@ abstract class CameraEventListenerUI : CameraEventListener {
 
   abstract fun onCameraVideoUI(file: File?)
 
+  abstract fun onCameraToggleUI()
+
   abstract fun onCameraVideoStartUI()
 
   abstract fun onCameraVideoStopUI()
@@ -210,6 +227,7 @@ abstract class CameraEventListenerUI : CameraEventListener {
     private val WHAT_CAMERA_VIDEO_START_EVENT = 0x07
     private val WHAT_READY_EVENT = 0x08
     private val WHAT_CAMERA_VIDEO_STOP_EVENT = 0x09
+    private val WHAT_CAMERA_TOGGLE_EVENT = 0x0A
     private val MESSAGE = "message"
     private val TYPE = "type"
     private val FILE = "file"

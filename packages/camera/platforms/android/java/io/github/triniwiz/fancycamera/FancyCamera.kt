@@ -32,14 +32,6 @@ class FancyCamera : FrameLayout {
   private var mEMA = 0.0
   private lateinit var cameraView: CameraBase
 
-  var enableVideo: Boolean
-    get() {
-      return cameraView.enableVideo
-    }
-    set(value) {
-      cameraView.enableVideo = value
-    }
-
   var enableAudio: Boolean
     get() {
       return cameraView.enableAudio
@@ -194,6 +186,15 @@ class FancyCamera : FrameLayout {
       cameraView.position = value
     }
 
+  var enableVideo: CameraMode = CameraMode.PHOTO
+    get() {
+      return cameraView.enableVideo
+    }
+    set(value) {
+      field = value
+      cameraView.enableVideo = value
+    }
+
   // TODO(Find a purpose for this property, which is not being used, or remove it)
   var cameraOrientation: CameraOrientation
     get() {
@@ -304,6 +305,10 @@ class FancyCamera : FrameLayout {
     cameraView.startRecording()
   }
 
+  fun updateMode() {
+    cameraView.updateMode()
+  }
+
   // private var isForceStopping: Boolean = false
 
   var isAudioLevelsEnabled: Boolean
@@ -371,7 +376,7 @@ class FancyCamera : FrameLayout {
     permissions: Array<String>,
     grantResults: IntArray,
   ) {
-    if (hasPermission() || hasCameraPermission()) {
+    if (hasCameraPermission()) {
       startPreview()
     }
   }
