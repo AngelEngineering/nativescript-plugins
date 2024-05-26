@@ -491,10 +491,10 @@ export function GetSetProperty() {
   return (target, propertyKey: string) => {
     Object.defineProperty(target, propertyKey, {
       get: function () {
-        return this['_' + propertyKey];
+        return this['__' + propertyKey];
       },
       set: function (value) {
-        if (this['_' + propertyKey] === value) {
+        if (this['__' + propertyKey] === value) {
           return;
         }
         if (value === 'true') {
@@ -502,22 +502,10 @@ export function GetSetProperty() {
         } else if (value === 'false') {
           value = false;
         }
-        this['_' + propertyKey] = value;
+        this['__' + propertyKey] = value;
       },
       enumerable: true,
       configurable: true,
     });
   };
 }
-
-export const doubleTapCameraSwitchProperty = new Property<NSCameraBase, boolean>({
-  name: 'doubleTapCameraSwitch',
-  valueConverter: booleanConverter,
-});
-doubleTapCameraSwitchProperty.register(NSCameraBase);
-
-export const enableVideoProperty = new Property<NSCameraBase, boolean>({
-  name: 'enableVideo',
-  valueConverter: booleanConverter,
-});
-enableVideoProperty.register(NSCameraBase);
