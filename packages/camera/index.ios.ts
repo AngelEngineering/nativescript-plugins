@@ -73,6 +73,10 @@ export class SwiftyDelegate extends NSObject implements SwiftyCamViewControllerD
     this._owner.get().didFinishRecording(camera);
   }
 
+  swiftyCamDidError(swiftyCam: SwiftyCamViewController, error: string) {
+    this._owner.get().didError(error);
+  }
+
   swiftyCamDidFocusAtPoint(swiftyCam: SwiftyCamViewController, point: CGPoint) {}
 
   swiftyCamDidSwitchCurrentCamera(swiftyCam: SwiftyCamViewController, camera: CameraSelection) {
@@ -378,6 +382,10 @@ export class MySwifty extends SwiftyCamViewController {
     // console.log('didFinishRecording()');
     this._flashBtnHandler(); //restore flash icon if camera has flash support
     this._owner.get().sendEvent(NSCamera.videoRecordingFinishedEvent, camera);
+  }
+
+  public didError(error: string) {
+    this._owner.get().sendEvent(NSCamera.errorEvent, error);
   }
 
   public videoDidFinishSavingWithErrorContextInfo(path: string, error: NSError, contextInfo: any) {
@@ -723,6 +731,7 @@ export class NSCamera extends NSCameraBase {
   private _swifty: MySwifty;
   private _isIPhoneX: boolean;
   private _defaultCamera: CameraTypes = 'rear';
+  private _enableVideo: boolean;
 
   // @ts-ignore
   get defaultCamera() {
@@ -754,27 +763,35 @@ export class NSCamera extends NSCameraBase {
     if (this._swifty) {
       return this._swifty.getEnableVideo();
     } else {
-      console.warn('No native camera instance, returning local value', this.enableVideo);
-      return this.enableVideo;
+      console.warn('No native camera instance, returning local value', this._enableVideo);
+      return this._enableVideo;
     }
   }
 
   set enableVideo(value: boolean) {
-    console.log('set enableVideo', value);
-    if (this._swifty) {
-      if (this._swifty.getEnableVideo() == value) {
-        console.warn('already in mode, ignoring', value);
-      } else {
-        this._swifty.setEnableVideoWithValue(value);
-        console.warn('Changing mode', value);
-        if (this._swifty.isRecording && !value) {
-          console.warn('Currently recording, cannot change mode!');
-        }
+    try {
+      console.log('set enableVideo', value, typeof value);
+      if (typeof value != 'boolean') {
+        console.warn('Passing a non-boolean to set enableVideo!');
+        value = value === 'true';
       }
-    } else {
-      console.error('no native camera to set enableVideo');
+      if (this._swifty) {
+        if (this._swifty.getEnableVideo() == value) {
+          console.warn('already in mode, ignoring', this._swifty.getEnableVideo());
+        } else {
+          this._swifty.setEnableVideoWithValue(value);
+          console.warn('Changing mode', value);
+          if (this._swifty.isRecording && !value) {
+            console.warn('Currently recording, cannot change mode!');
+          }
+        }
+      } else {
+        console.error('no native camera to set enableVideo');
+      }
+    } catch (err) {
+      console.error('set enableVideo ERROR', err);
     }
-    this.enableVideo = value;
+    this._enableVideo = value;
   }
 
   private isVideoEnabled() {
@@ -836,6 +853,10 @@ export class NSCamera extends NSCameraBase {
   //iOS zoom starts at 1.0 to maxZoom for camera, so we will use the zoom float value to scale and the camera zoom between 1 - maxZoom
   set zoom(value: number) {
     console.log('set zoom', value);
+    if (typeof value !== 'number') {
+      console.warn('set zoom value is not a number! casting');
+      value = +value;
+    }
     if (this._swifty) {
       if (this._swifty.currentCamera == CameraSelection.Front) {
         console.warn('iOS front cameras do not support zoom');

@@ -258,6 +258,8 @@ declare class SwiftyCamViewController
 
   deviceDidRotate(): void;
 
+  didError(error: string): void;
+
   didFailToProcessVideo(error: NSError): void;
 
   didFinishProcessingVideoAt(url: NSURL): void;
@@ -361,6 +363,8 @@ interface SwiftyCamViewControllerDelegate {
   swiftyCamDidBeginRecordingVideo(swiftyCam: SwiftyCamViewController, camera: CameraSelection): void;
 
   swiftyCamDidChangeZoomLevel(swiftyCam: SwiftyCamViewController, zoom: number): void;
+
+  swiftyCamDidError(swiftyCam: SwiftyCamViewController, error: string): void;
 
   swiftyCamDidFinishProcessVideoAt(swiftyCam: SwiftyCamViewController, url: NSURL): void;
 
