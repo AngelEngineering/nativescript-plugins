@@ -67,8 +67,6 @@ export class DemoModel extends DemoSharedCamera {
        CURRENTLY UNSUPPORTED:
        ******/
       // this.cam.whiteBalance = 'twilight';//not currently supported to change whiteBalance, can read current whiteBalance
-      // this.cam.zoom = 0.4; //not currently supported to set the zoom, but can read zoom level float from 0.0-1.0
-      // this.cam.ratio = '1:1'; //not currently supported, camera defaults to size based on viewport dimensions
     }
 
     //[ iOS only ]
@@ -165,6 +163,9 @@ export class DemoModel extends DemoSharedCamera {
 
       //enableVideo
       console.log(' video enabled?:', this.cam.enableVideo);
+
+      //ensure the UI is correct if user has set an XML property for mode
+      this.refreshUI();
     });
     this._counter = 1;
   }
@@ -184,22 +185,25 @@ export class DemoModel extends DemoSharedCamera {
     } else {
       mergeButton.visibility = 'hidden';
     }
+    //check the mode and update
+    const modeLabel = Frame.topmost().getViewById('cameraMode') as Label;
+    if (this.cam.enableVideo) {
+      modeLabel.text = 'Video Mode';
+    } else {
+      modeLabel.text = 'Photo Mode';
+    }
   }
 
   public changePhotoMode() {
-    const modeLabel = Frame.topmost().currentPage.getViewById('cameraMode') as Label;
-    modeLabel.text = 'Photo Mode';
     this.cam.enableVideo = false;
     console.log('Changed to Photo Mode');
-    return;
+    this.refreshUI();
   }
 
   public changeVideoMode() {
-    const modeLabel = Frame.topmost().currentPage.getViewById('cameraMode') as Label;
-    modeLabel.text = 'Video Mode';
     this.cam.enableVideo = true;
     console.log('Changed to Video Mode');
-    return;
+    this.refreshUI();
   }
 
   // called by custom button on demo page

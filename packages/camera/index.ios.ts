@@ -204,9 +204,6 @@ export class MySwifty extends SwiftyCamViewController {
     this._videoOptions = {
       saveToGallery: this._owner.get().saveToGallery,
       videoQuality: this._owner.get().videoQuality,
-      // videoHeight: this._owner.get().videoHeight, //not currently supported
-      // videoWidth: this._owner.get().videoWidth,  //not currently supported
-      // disableHEVC: this._owner.get().disableHEVC,  //not currently supported
     };
 
     //update the session quality  based on current videoQuality
@@ -282,7 +279,7 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public snapPicture(options?: ICameraOptions) {
-    if (this._enableVideo) {
+    if (this._owner.get().enableVideo) {
       console.error('in Video mode, change to photo mode to take a picture!');
       return null;
     }
@@ -309,7 +306,7 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public recordVideo(options?: IVideoOptions) {
-    if (!this._enableVideo) {
+    if (!this._owner.get().enableVideo) {
       console.error('in Photo mode, change to video mode to take a picture!');
       return null;
     }
@@ -562,7 +559,8 @@ export class MySwifty extends SwiftyCamViewController {
    * SwiftyCamButtonDelegate handlers
    */
   public buttonWasTapped() {
-    if (this._enableVideo) {
+    if (this._owner.get().enableVideo) {
+      console.log('buttonWasTapped, video is enabled');
       if (this.isRecording) {
         if (this._owner.get().shouldLockRotation) this.enableRotation();
         this._owner.get().stop();
@@ -572,13 +570,14 @@ export class MySwifty extends SwiftyCamViewController {
         this._owner.get().record();
       }
     } else {
+      console.log('buttonWasTapped, photo is enabled');
       this._owner.get().takePicture();
     }
   }
 
   /// Called When UILongPressGestureRecognizer enters UIGestureRecognizerState.began
   public buttonDidBeginLongPress() {
-    if (this._enableVideo) {
+    if (this._owner.get().enableVideo) {
       if (this._owner.get().shouldLockRotation) this.disableRotation();
       this._owner.get().record();
     }
@@ -588,7 +587,7 @@ export class MySwifty extends SwiftyCamViewController {
 
   /// Called When UILongPressGestureRecognizer enters UIGestureRecognizerState.end
   public buttonDidEndLongPress() {
-    if (this._enableVideo) {
+    if (this._owner.get().enableVideo) {
       this._owner.get().stop();
       if (this._owner.get().shouldLockRotation) this.enableRotation();
     }
@@ -597,7 +596,7 @@ export class MySwifty extends SwiftyCamViewController {
 
   /// Called when the maximum duration is reached
   public longPressDidReachMaximumDuration() {
-    if (this._enableVideo) {
+    if (this._owner.get().enableVideo) {
       this._owner.get().stop();
       if (this._owner.get().shouldLockRotation) this.enableRotation();
     }
@@ -931,6 +930,11 @@ export class NSCamera extends NSCameraBase {
    * Snap photo and display confirm save
    */
   public takePicture(options?: ICameraOptions): void {
+    if (this._enableVideo) {
+      console.error('Not in photo mode, cannot take photo!');
+      return;
+    }
+
     options = {
       confirmPhotos: options?.confirmPhotos ? options.confirmPhotos : this.confirmPhotos,
       confirmRetakeText: options?.confirmRetakeText ? options.confirmRetakeText : this.confirmRetakeText,
@@ -947,6 +951,14 @@ export class NSCamera extends NSCameraBase {
    * Record video
    */
   public record(options?: IVideoOptions): Promise<any> {
+    if (!this._enableVideo) {
+      console.error('Not in video mode, cannot start recording!');
+      return;
+    }
+    if (this._swifty.isRecording) {
+      console.error('Currently recording video, stop before starting another recording!');
+      return;
+    }
     this._swifty.recordVideo(options);
     this._swifty._cameraBtn.changeToSquare();
     if (this.shouldLockRotation) this._swifty.disableRotation();
@@ -989,6 +1001,15 @@ export class NSCamera extends NSCameraBase {
    * Stop recording video
    */
   public stop(): void {
+    if (!this._enableVideo) {
+      console.error('Not in video mode, cannot stop recording!');
+      return;
+    }
+
+    if (!this._swifty.isRecording) {
+      console.error('Not recording video, ignoring stop request!');
+      return;
+    }
     this._swifty.stopVideoRecording();
     this._swifty._cameraBtn.changeToCircle();
     if (this.shouldLockRotation) this._swifty.enableRotation();
