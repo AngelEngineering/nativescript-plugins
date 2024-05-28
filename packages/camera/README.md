@@ -44,11 +44,10 @@ This nativescript camera plugin works on Android (API 26+) and Apple (iOS 12+) d
 * 👁️ Camera switching during video recording and option to lock device rotation while recording
 * 👌 Pinch to zoom in/out and tap to focus
 * 📱 Video merge utility
-* 🎞️ Built-in buttons for flash, camera switch, camera 
+* 🎞️ Built-in buttons for flash, camera switch, capture 
 * 📸 Flash/Torch control in both photo and video modes
 * ⏱️ Supports square-cropping photos and saving photos/videos to device Photos library
 * 🧩 Photo confirmation options with built-in UI to show preview
-* 🔍 Customizable output photo dimensions and quality (saved as jpeg)
 
 ## Future Features
 * ⏯️ H265 codec option for video, and custom dimensions for video/photo capture
@@ -106,7 +105,7 @@ or
 3. Hook into camera events to handle videos and photos capture events along with other useful events. 
 
 ```javascript
-this.cam.on(NSCamera.errorEvent, args => {
+    this.cam.on(NSCamera.errorEvent, args => {
       //handle error
     });
 
@@ -174,6 +173,7 @@ Ensure your AndroidMAnifest.xml has the following declarations.
 ```
 And in your application, make sure you request these permissions if you want to use the `saveToGallery` flag. You can see an example in `apps/demo/src/plugin-demos/camera.ts`. If this flag is set and no permission has been granted, a copy will not be saved to the Device Photos.
 
+For Android, if the camera is started in Photo mode, only camera permission will be requested/required. For Video mode, both camera and microphone permission will be required. 
 
 ### iOS Permissions
 Add the following to `app/App_Resources/iOS/Info.plist`:
@@ -193,6 +193,8 @@ If you want to use the `saveToGallery` flag then you will also need to add the f
 ```
 
 > **NOTE**: if you do use the perms plugin in a production app, make sure to read their README.md first, as using this plugin in production apps may require you to add all iOS Info.plist permission strings to avoid being rejected by automatic processing since the plugin includes code for all permission types.
+
+For iOS, both camera and microphone permissions are required for either Photo or Video mode. 
 
 ------------------------------
 
