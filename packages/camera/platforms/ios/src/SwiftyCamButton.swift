@@ -1,7 +1,7 @@
 /* Copyright (c) 2016, Andrew Walz
   2023 VoiceThread - Angel Dominguez
   2024, Angel Engineering - Angel Dominguez
-  
+
  Redistribution and use in source and binary forms, with or without modification,are permitted provided that the following conditions are met:
  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
@@ -92,10 +92,8 @@ import UIKit
   @objc fileprivate func LongPress(_ sender: UILongPressGestureRecognizer!) {
     if sender.state == UIGestureRecognizer.State.ended {
       invalidateTimer()
-      changeToCircle()
       self.delegate?.buttonDidEndLongPress()
     } else if sender.state == UIGestureRecognizer.State.began {
-      changeToSquare()
       self.delegate?.buttonDidBeginLongPress()
       startTimer()
     }
