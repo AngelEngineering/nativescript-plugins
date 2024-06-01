@@ -331,6 +331,7 @@ class Camera2
                 "ERROR! cannot access camera",
                 e,
               )
+              listener?.onCameraError("setupGestureListeners() Error", e)
             }
             return true
           }
@@ -435,7 +436,8 @@ class Camera2
               .build()
           val supported = camera?.cameraInfo?.isFocusMeteringSupported(action)
           camera?.cameraControl?.startFocusAndMetering(action)
-        } catch (_: CameraInfoUnavailableException) {
+        } catch (e: CameraInfoUnavailableException) {
+          listener?.onCameraError("handleAutoFocus() Error", e)
         }
       }
     }
@@ -459,7 +461,8 @@ class Camera2
         var count = 0
         try {
           count = cameraManager?.cameraIdList?.size ?: 0
-        } catch (_: CameraAccessException) {
+        } catch (e: CameraAccessException) {
+          listener?.onCameraError("handleAutoFocus() Error", e)
         }
         return count
       }
@@ -523,7 +526,8 @@ class Camera2
     private fun safeUnbindAll() {
       try {
         cameraProvider?.unbindAll()
-      } catch (_: Exception) {
+      } catch (e: Exception) {
+        listener?.onCameraError("handleAutoFocus() Error", e)
       } finally {
         if (isStarted) {
           listener?.onCameraClose()
@@ -614,6 +618,7 @@ class Camera2
             try {
               setTargetResolution(android.util.Size.parseSize(pictureSize))
             } catch (e: Exception) {
+              listener?.onCameraError("updateImageCapture() Error", e)
               setTargetAspectRatio(
                 when (displayRatio) {
                   "16:9" -> AspectRatio.RATIO_16_9
@@ -1112,6 +1117,7 @@ class Camera2
                         "io.github.triniwiz.fancycamera",
                         "Error while saving to Device Photos",
                       )
+                      listener?.onCameraError("startRecording() Error", e)
                     }
                   }
                   Log.d(
@@ -1154,6 +1160,7 @@ class Camera2
         listener?.onCameraVideoStop()
       } catch (e: Exception) {
         Log.d("io.github.triniwiz.fancycamera", "ERROR in stopRecording() ", e)
+        listener?.onCameraError("stopRecording() Error", e)
       }
     }
 
@@ -1430,6 +1437,7 @@ class Camera2
                 "io.github.triniwiz.fancycamera",
                 "Error while saving to Device Photos",
               )
+              listener?.onCameraError("processImageProxy() Error", e)
             }
             listener?.onCameraPhoto(file)
           } else {
@@ -1521,16 +1529,19 @@ class Camera2
 
           // rebind video to session
           cameraProvider?.let {
-            if (it.isBound(imageCapture!!)) {
-              it.unbind(imageCapture!!)
+            if (!enableVideo) {
+              if (it.isBound(imageCapture!!)) {
+                it.unbind(imageCapture!!)
+              }
             }
-
-            if (!it.isBound(videoCapture!!)) {
-              it.bindToLifecycle(
-                context as LifecycleOwner,
-                selectorFromPosition(),
-                videoCapture!!,
-              )
+            if (enableVideo) {
+              if (!it.isBound(videoCapture!!)) {
+                it.bindToLifecycle(
+                  context as LifecycleOwner,
+                  selectorFromPosition(),
+                  videoCapture!!,
+                )
+              }
             }
             if (!it.isBound(preview!!)) {
               it.bindToLifecycle(
@@ -1540,11 +1551,12 @@ class Camera2
               )
             }
           }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
           Log.d(
             "io.github.triniwiz.fancycamera",
             "Camera2.kt: toggleCamera() caught an error!",
           )
+          listener?.onCameraError("toggleCamera() Error", e)
         }
       }
       listener?.onCameraToggle()

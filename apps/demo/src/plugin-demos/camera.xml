@@ -39,7 +39,7 @@
           confirmSaveText="yeah"
           quality="95"
           doubleTapCameraSwitch="true"
-          videoQuality="480p">
+          videoQuality="720p">
         </Cam:NSCamera>
 
 
