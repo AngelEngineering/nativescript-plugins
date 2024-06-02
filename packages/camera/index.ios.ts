@@ -144,6 +144,9 @@ export class MySwifty extends SwiftyCamViewController {
     const doubleTapEnabled = this._owner.get().doubleTapCameraSwitch;
     this.doubleTapCameraSwitch = doubleTapEnabled;
 
+    const debugEnabled = this._owner.get().debug;
+    this.setDebugWithValue(debugEnabled);
+
     // retain delegate in javascript to ensure garbage collector does not get it
     this._swiftyDelegate = <any>SwiftyDelegate.initWithOwner(new WeakRef(this));
     this.cameraDelegate = this._swiftyDelegate;
@@ -234,6 +237,7 @@ export class MySwifty extends SwiftyCamViewController {
         break;
     }
     this.configureSessionQuality();
+
     this._owner.get().sendEvent(NSCamera.cameraReadyEvent, owner);
   }
 
@@ -755,6 +759,24 @@ export class NSCamera extends NSCameraBase {
     this._swifty = MySwifty.initWithOwner(new WeakRef(this), this.defaultCamera);
     this._swifty.shouldUseDeviceOrientation = NSCamera.useDeviceOrientation;
     this._detectDevice(); //TODO: is this still useful?
+  }
+
+  //Enable debug logging to iOS console
+  //@ts-ignore
+  set debug(value: boolean) {
+    if (typeof value != 'boolean') {
+      console.warn('Passing a non-boolean to set debug!');
+      value = value === 'true';
+    }
+    console.log('set debug', value);
+    if (this._swifty) {
+      this._swifty.setDebugWithValue(value);
+    }
+  }
+  get debug() {
+    if (this._swifty) {
+      return this._swifty.getDebug();
+    } else return this.debug;
   }
 
   // @ts-ignore

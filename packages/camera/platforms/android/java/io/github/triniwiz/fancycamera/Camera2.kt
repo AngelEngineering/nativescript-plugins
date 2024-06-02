@@ -69,38 +69,48 @@ class Camera2
     override var enablePinchZoom: Boolean = true
     override var enableTapToFocus: Boolean = true
 
+    override var debug: Boolean = false
+
     // override var enableVideo: Boolean = false
     override fun setVideoMode() {
       enableVideo = true
       displayRatio = "16:9"
-      Log.d(
-        "io.github.triniwiz.fancycamera",
-        "setVideoMode() enableVideo set to " + enableVideo.toString(),
-      )
+      if (debug) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "setVideoMode() enableVideo set to " + enableVideo.toString(),
+        )
+      }
     }
 
     override fun setPhotoMode() {
       enableVideo = false
       displayRatio = "4:3"
-      Log.d(
-        "io.github.triniwiz.fancycamera",
-        "setPhotoMode() enableVideo set to " + enableVideo.toString(),
-      )
+      if (debug) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "setPhotoMode() enableVideo set to " + enableVideo.toString(),
+        )
+      }
     }
 
     override var enableVideo: Boolean = false
       get() {
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "enableVideo get " + field.toString(),
-        )
+        if (debug) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "enableVideo get " + field.toString(),
+          )
+        }
         return field
       }
       set(value) {
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "enableVideo set " + value.toString(),
-        )
+        if (debug) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "enableVideo set " + value.toString(),
+          )
+        }
         field = value
         // cameraView.enableVideo = value
       }
@@ -131,11 +141,12 @@ class Camera2
     //   }
 
     override fun updateMode() {
-      Log.d(
-        "io.github.triniwiz.fancycamera",
-        "updateMode()",
-      )
-
+      if (debug) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "updateMode()",
+        )
+      }
       if (isStarted) {
         safeUnbindAll()
         refreshCamera()
@@ -326,11 +337,13 @@ class Camera2
                 5000,
               )
             } catch (e: CameraInfoUnavailableException) {
-              Log.d(
-                "io.github.triniwiz.fancycamera",
-                "ERROR! cannot access camera",
-                e,
-              )
+              if (debug) {
+                Log.d(
+                  "io.github.triniwiz.fancycamera",
+                  "ERROR! cannot access camera",
+                  e,
+                )
+              }
               listener?.onCameraError("setupGestureListeners() Error", e)
             }
             return true
@@ -400,16 +413,20 @@ class Camera2
         ContextCompat.getMainExecutor(context),
       )
       if (enableVideo) {
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "init, enableVideo is TRUE",
-        )
-      } else {
-        if (enableVideo) {
+        if (debug) {
           Log.d(
             "io.github.triniwiz.fancycamera",
-            "init, enableVideo is FALSE",
+            "init, enableVideo is TRUE",
           )
+        }
+      } else {
+        if (enableVideo) {
+          if (debug) {
+            Log.d(
+              "io.github.triniwiz.fancycamera",
+              "init, enableVideo is FALSE",
+            )
+          }
         }
       }
     }
@@ -446,6 +463,7 @@ class Camera2
     override var autoSquareCrop: Boolean = false
     override var autoFocus: Boolean = true
     override var doubleTapCameraSwitch: Boolean = true
+
     override var saveToGallery: Boolean = false
     override var quality: Int = 95
     override var maxAudioBitRate: Int = -1
@@ -537,8 +555,10 @@ class Camera2
 
     override var videoQuality: Quality = Quality.MAX_720P
       set(value) {
-        Log.d("io.github.triniwiz.fancycamera", "current videoQuality: " + field.value)
-        Log.d("io.github.triniwiz.fancycamera", "set videoQuality: " + value.value)
+        if (debug) {
+          Log.d("io.github.triniwiz.fancycamera", "current videoQuality: " + field.value)
+          Log.d("io.github.triniwiz.fancycamera", "set videoQuality: " + value.value)
+        }
         if (!isRecording && field != value) {
 
           field = value
@@ -750,10 +770,12 @@ class Camera2
     @SuppressLint("RestrictedApi")
     private fun initVideoCapture() {
       if (pause) {
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "initVideoCapture() pause set so returning early",
-        )
+        if (debug) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "initVideoCapture() pause set so returning early",
+          )
+        }
         return
       }
       if (hasCameraPermission() && hasAudioPermission()) {
@@ -777,17 +799,21 @@ class Camera2
             }
           }
       } else {
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "initVideoCapture() ERROR! missing permissions!",
-        )
+        if (debug) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "initVideoCapture() ERROR! missing permissions!",
+          )
+        }
       }
     }
 
     @SuppressLint("RestrictedApi", "UnsafeOptInUsageError")
     private fun refreshCamera() {
       if (pause) {
-        Log.d("io.github.triniwiz.fancycamera", "refreshCamera() pause set so returning early")
+        if (debug) {
+          Log.d("io.github.triniwiz.fancycamera", "refreshCamera() pause set so returning early")
+        }
         return
       }
       cancelAndDisposeFocusTimer()
@@ -804,7 +830,9 @@ class Camera2
       initPreview()
 
       if (enableVideo) {
-        Log.d("io.github.triniwiz.fancycamera", "refreshCamera() video mode enabled, initVideoCapture()")
+        if (debug) {
+          Log.d("io.github.triniwiz.fancycamera", "refreshCamera() video mode enabled, initVideoCapture()")
+        }
         initVideoCapture()
       }
 
@@ -843,7 +871,9 @@ class Camera2
       }
 
       if (!enableVideo) {
-        Log.d("io.github.triniwiz.fancycamera", "refreshCamera() photo mode enabled, updateImageCapture()")
+        if (debug) {
+          Log.d("io.github.triniwiz.fancycamera", "refreshCamera() photo mode enabled, updateImageCapture()")
+        }
         updateImageCapture(true)
       }
 
@@ -903,12 +933,16 @@ class Camera2
 
     @SuppressLint("RestrictedApi")
     override fun startRecording() {
-      Log.d("io.github.triniwiz.fancycamera", "startRecording()")
+      if (debug) {
+        Log.d("io.github.triniwiz.fancycamera", "startRecording()")
+      }
       if (!hasAudioPermission() || !hasCameraPermission()) {
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "ERROR! Need mic and camera to start recording! Returning",
-        )
+        if (debug) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "ERROR! Need mic and camera to start recording! Returning",
+          )
+        }
         listener?.onCameraError(
           "Missing camera or audio permissions",
           Exception("Missing camera or audio permissions"),
@@ -935,16 +969,20 @@ class Camera2
             File(externalDir, fileName)
           }
         } else {
-          Log.d(
-            "io.github.triniwiz.fancycamera",
-            "not saving to gallery, either saveToGallery not set or don't have Storage Permissions",
-          )
+          if (debug) {
+            Log.d(
+              "io.github.triniwiz.fancycamera",
+              "not saving to gallery, either saveToGallery not set or don't have Storage Permissions",
+            )
+          }
           File(context.getExternalFilesDir(null), fileName)
         }
-      Log.d(
-        "io.github.triniwiz.fancycamera",
-        "Saving to file:" + fileName,
-      )
+      if (debug) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "Saving to file:" + fileName,
+        )
+      }
       try {
         // on some cameras, the first time we attempt this it fails due to too many bindings,
         // although subsequent attempst work.
@@ -990,18 +1028,22 @@ class Camera2
         if (enableAudio) {
           pending?.withAudioEnabled()
         }
-        Log.d(
-          "io.github.triniwiz.fancycamera",
-          "startRecording() starting recording",
-        )
+        if (debug) {
+          Log.d(
+            "io.github.triniwiz.fancycamera",
+            "startRecording() starting recording",
+          )
+        }
         recording =
           pending?.start(ContextCompat.getMainExecutor(context)) { event ->
             when (event) {
               is VideoRecordEvent.Start -> {
-                Log.d(
-                  "io.github.triniwiz.fancycamera",
-                  "VideoRecordEvent.Start",
-                )
+                if (debug) {
+                  Log.d(
+                    "io.github.triniwiz.fancycamera",
+                    "VideoRecordEvent.Start",
+                  )
+                }
                 isRecording = true
                 if (flashMode == CameraFlashMode.ON) {
                   camera?.cameraControl?.enableTorch(true)
@@ -1010,10 +1052,12 @@ class Camera2
                 listener?.onCameraVideoStart()
               }
               is VideoRecordEvent.Finalize -> {
-                Log.d(
-                  "io.github.triniwiz.fancycamera",
-                  "VideoRecordEvent.Finalize",
-                )
+                if (debug) {
+                  Log.d(
+                    "io.github.triniwiz.fancycamera",
+                    "VideoRecordEvent.Finalize",
+                  )
+                }
                 isRecording = false
                 stopDurationTimer()
 
@@ -1026,11 +1070,13 @@ class Camera2
                       Exception()
                     }
                   listener?.onCameraError("${event.error}", e)
-                  Log.d(
-                    "io.github.triniwiz.fancycamera",
-                    "ERROR in startRecording() ",
-                    e,
-                  )
+                  if (debug) {
+                    Log.d(
+                      "io.github.triniwiz.fancycamera",
+                      "ERROR in startRecording() ",
+                      e,
+                    )
+                  }
                   ContextCompat.getMainExecutor(context).execute {
                     safeUnbindAll()
                   }
@@ -1112,17 +1158,21 @@ class Camera2
                         }
                       }
                     } catch (e: Exception) {
-                      Log.e(
-                        "io.github.triniwiz.fancycamera",
-                        "Error while saving to Device Photos",
-                      )
+                      if (debug) {
+                        Log.e(
+                          "io.github.triniwiz.fancycamera",
+                          "Error while saving to Device Photos",
+                        )
+                      }
                       listener?.onCameraError("startRecording() Error", e)
                     }
                   }
-                  Log.d(
-                    "io.github.triniwiz.fancycamera",
-                    "calling listener with file",
-                  )
+                  if (debug) {
+                    Log.d(
+                      "io.github.triniwiz.fancycamera",
+                      "calling listener with file",
+                    )
+                  }
                   listener?.onCameraVideo(file)
                 }
               }
@@ -1130,7 +1180,9 @@ class Camera2
           }
       } catch (e: Exception) {
         listener?.onCameraError("Failed to record video.", e)
-        Log.d("io.github.triniwiz.fancycamera", "ERROR in startRecording() ", e)
+        if (debug) {
+          Log.d("io.github.triniwiz.fancycamera", "ERROR in startRecording() ", e)
+        }
         isRecording = false
         stopDurationTimer()
         if (file != null) {
@@ -1150,7 +1202,9 @@ class Camera2
 
     @SuppressLint("RestrictedApi")
     override fun stopRecording() {
-      Log.d("io.github.triniwiz.fancycamera", "stopRecording() ")
+      if (debug) {
+        Log.d("io.github.triniwiz.fancycamera", "stopRecording() ")
+      }
       try {
         if (flashMode == CameraFlashMode.ON) {
           camera?.cameraControl?.enableTorch(false)
@@ -1158,13 +1212,17 @@ class Camera2
         recording?.stop()
         listener?.onCameraVideoStop()
       } catch (e: Exception) {
-        Log.d("io.github.triniwiz.fancycamera", "ERROR in stopRecording() ", e)
+        if (debug) {
+          Log.d("io.github.triniwiz.fancycamera", "ERROR in stopRecording() ", e)
+        }
         listener?.onCameraError("stopRecording() Error", e)
       }
     }
 
     override fun takePhoto() {
-      Log.d("io.github.triniwiz.fancycamera", "takePhoto() ")
+      if (debug) {
+        Log.d("io.github.triniwiz.fancycamera", "takePhoto() ")
+      }
       val df = SimpleDateFormat("yyyyMMddHHmmss", Locale.US)
       val today = Calendar.getInstance().time
       val fileName = "PIC_" + df.format(today) + ".jpg"
@@ -1291,10 +1349,12 @@ class Camera2
         var offsetWidth = 0
         var offsetHeight = 0
         if (autoSquareCrop) {
-          Log.d(
-            "io.github.triniwiz.fancycamera",
-            "processImageProxy() autoSquareCrop set, resizing image ",
-          )
+          if (debug) {
+            Log.d(
+              "io.github.triniwiz.fancycamera",
+              "processImageProxy() autoSquareCrop set, resizing image ",
+            )
+          }
           if (originalWidth < originalHeight) {
             offsetHeight = (originalHeight - originalWidth) / 2
             originalHeight = originalWidth
@@ -1426,16 +1486,20 @@ class Camera2
                   }
                 }
               } else {
-                Log.e(
-                  "io.github.triniwiz.fancycamera",
-                  "processImageProxy() saveToGallery set, but no permissions granted! ",
-                )
+                if (debug) {
+                  Log.e(
+                    "io.github.triniwiz.fancycamera",
+                    "processImageProxy() saveToGallery set, but no permissions granted! ",
+                  )
+                }
               }
             } catch (e: Exception) {
-              Log.e(
-                "io.github.triniwiz.fancycamera",
-                "Error while saving to Device Photos",
-              )
+              if (debug) {
+                Log.e(
+                  "io.github.triniwiz.fancycamera",
+                  "Error while saving to Device Photos",
+                )
+              }
               listener?.onCameraError("processImageProxy() Error", e)
             }
             listener?.onCameraPhoto(file)
@@ -1551,18 +1615,22 @@ class Camera2
             }
           }
         } catch (e: Exception) {
-          Log.d(
-            "io.github.triniwiz.fancycamera",
-            "Camera2.kt: toggleCamera() caught an error!",
-          )
+          if (debug) {
+            Log.d(
+              "io.github.triniwiz.fancycamera",
+              "Camera2.kt: toggleCamera() caught an error!",
+            )
+          }
           listener?.onCameraError("toggleCamera() Error", e)
         }
       }
       listener?.onCameraToggle()
-      Log.d(
-        "io.github.triniwiz.fancycamera",
-        "Camera2.kt: listener?.onCameraToggle()",
-      )
+      if (debug) {
+        Log.d(
+          "io.github.triniwiz.fancycamera",
+          "Camera2.kt: listener?.onCameraToggle()",
+        )
+      }
     }
 
     override fun getAvailablePictureSizes(ratio: String): Array<Size> {

@@ -272,15 +272,39 @@ export class NSCamera extends NSCameraBase {
     }
   }
 
+  private _doubleTapCameraSwitch = true;
   // @ts-ignore
   get doubleTapCameraSwitch(): boolean {
-    return this._camera ? this._camera.getDoubleTapCameraSwitch() : false;
+    return this._camera ? this._camera.getDoubleTapCameraSwitch() : this._doubleTapCameraSwitch;
   }
 
   set doubleTapCameraSwitch(value: boolean) {
+    if (typeof value != 'boolean') {
+      value = value === 'true';
+    }
+
     if (this._camera) {
       this._camera.setDoubleTapCameraSwitch(value);
+    } else console.log("no camera yet, can't set setDoubleTapCameraSwitch directly!");
+    this._doubleTapCameraSwitch = value;
+  }
+
+  private _debug: boolean = false;
+  // @ts-ignore
+  get debug(): boolean {
+    return this._camera ? this._camera.getDebug() : this._debug;
+  }
+
+  set debug(value: boolean) {
+    if (typeof value != 'boolean') {
+      value = value === 'true';
     }
+
+    if (this._camera) {
+      this._camera.setDebug(value);
+      console.log('setting camera debug to ', value);
+    } else console.log("no camera yet, can't set debug directly!");
+    this._debug = value;
   }
 
   // @ts-ignore
@@ -633,7 +657,9 @@ export class NSCamera extends NSCameraBase {
     this._camera.setListener(listener);
     this.cameraId = this._cameraId;
     this.isRecording = false;
-    this._camera.setDoubleTapCameraSwitch(!!this.doubleTapCameraSwitch);
+    this._camera.setDoubleTapCameraSwitch(this._doubleTapCameraSwitch);
+    this._camera.setDebug(this._debug);
+    console.log('Camera debug set to ', this._debug);
     // try {
     //   console.log('this._camera.setEnableVideo()', this._enableVideo);
     //   this._camera.setEnableVideo(this._enableVideo); //sets initial mode for android camera plugin

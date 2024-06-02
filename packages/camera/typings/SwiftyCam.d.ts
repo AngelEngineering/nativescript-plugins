@@ -286,6 +286,8 @@ declare class SwiftyCamViewController
 
   gestureRecognizerShouldRequireFailureOfGestureRecognizer(gestureRecognizer: UIGestureRecognizer, otherGestureRecognizer: UIGestureRecognizer): boolean;
 
+  getDebug(): boolean;
+
   getEnableVideo(): boolean;
 
   getImageOrientationForCamera(forCamera: CameraSelection): UIImageOrientation;
@@ -335,6 +337,8 @@ declare class SwiftyCamViewController
   self(): this;
 
   setBackgroundAudioPreference(): void;
+
+  setDebugWithValue(value: boolean): void;
 
   setEnableVideoWithValue(value: boolean): void;
 

@@ -164,6 +164,9 @@ export class DemoModel extends DemoSharedCamera {
       //enableVideo
       console.log(' video enabled?:', this.cam.enableVideo);
 
+      //debug
+      console.log(' debug enabled?:', this.cam.debug);
+
       //ensure the UI is correct if user has set an XML property for mode
       this.refreshUI();
     });

@@ -18,6 +18,7 @@ declare module io {
           public setMaxVideoFrameRate(param0: number): void;
           public getAutoFocus(): boolean;
           public setAllowExifRotation(param0: boolean): void;
+          public getDebug(): boolean;
           public getMaxAudioBitRate(): number;
           public startPreview(): void;
           public constructor(param0: globalAndroid.content.Context, param1: globalAndroid.util.AttributeSet);
@@ -51,6 +52,7 @@ declare module io {
           public setPictureSize(param0: string): void;
           public setQuality(param0: number): void;
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
+          public setDebug(param0: boolean): void;
           public getMaxZoomRatio(): number;
           public setDb(param0: number): void;
           public getDoubleTapCameraSwitch(): boolean;
@@ -137,6 +139,7 @@ declare module io {
           public setRetrieveLatestImage(param0: boolean): void;
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
           public setQuality(param0: number): void;
+          public setDebug(param0: boolean): void;
           public isGettingAudioLevels$camera_release(): boolean;
           public setCurrentFrame$camera_release(param0: number): void;
           public getProcessEveryNthFrame(): number;
@@ -176,6 +179,7 @@ declare module io {
           public initListener$camera_release(param0: globalAndroid.media.MediaRecorder): void;
           public toggleFlash(): void;
           public getMTimer$camera_release(): java.util.Timer;
+          public getDebug(): boolean;
           public requestCameraPermission(): void;
           public getMaxAudioBitRate(): number;
           public getWhiteBalance(): io.github.triniwiz.fancycamera.WhiteBalance;
@@ -435,6 +439,7 @@ declare module io {
           public toggleFlash(): void;
           public getAutoFocus(): boolean;
           public setAllowExifRotation(param0: boolean): void;
+          public getDebug(): boolean;
           public requestCameraPermission(): void;
           public getMaxAudioBitRate(): number;
           public startPreview(): void;
@@ -475,6 +480,7 @@ declare module io {
           public getPosition(): io.github.triniwiz.fancycamera.CameraPosition;
           public setQuality(param0: number): void;
           public setEnableAudio(param0: boolean): void;
+          public setDebug(param0: boolean): void;
           public getProcessEveryNthFrame(): number;
           public getFlashMode(): io.github.triniwiz.fancycamera.CameraFlashMode;
           public getDoubleTapCameraSwitch(): boolean;

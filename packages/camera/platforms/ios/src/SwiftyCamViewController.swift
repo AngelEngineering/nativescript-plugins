@@ -139,6 +139,8 @@ import UIKit
 
   private var enableVideo: Bool = false
 
+  private var debug: Bool = false  //enable this for debug logging
+
   /// Variable for storing current zoom scale
   @objc public var zoomScale: CGFloat = .init(1.0)
 
@@ -295,7 +297,9 @@ import UIKit
     if #available(iOS 11.1, *) {
       self.addSystemObervers()
     } else {
-      NSLog("[SwiftyCam]: iOS 11.1+ required for observers")
+      if debug {
+        NSLog("[SwiftyCam]: iOS 11.1+ required for observers")
+      }
     }
 
     sessionPrimaryQueue.setSpecific(key: sessionPrimaryQueueSpecificKey, value: ())
@@ -375,7 +379,9 @@ import UIKit
 
       case .notAuthorized:
         // Prompt to App Settings
-        // NSLog("[SwiftyCam]: Not Authorized!, Sending error and showing alert!")
+        if self.debug {
+          NSLog("[SwiftyCam]: Not Authorized!, Sending error and showing alert!")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "No permissions granted, requesting from user")
@@ -383,8 +389,11 @@ import UIKit
         self.promptToAppSettings()
       case .configurationFailed:
         // Unknown Error
-        // NSLog(
-        //   "[SwiftyCam]: Unknown error while checking permissions, Sending error and showing alert!")
+        if self.debug {
+          NSLog(
+            "[SwiftyCam]: Unknown error while checking permissions, Sending error and showing alert!"
+          )
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "Unknown error while checking permissions to use the camera")
@@ -427,20 +436,32 @@ import UIKit
 
   // MARK: Public Functions
 
+  @objc public func getDebug() -> Bool {
+    return debug
+  }
+
+  @objc public func setDebug(value: Bool) {
+    debug = value
+  }
+
   @objc public func getEnableVideo() -> Bool {
     return enableVideo
   }
 
   @objc public func setEnableVideo(value: Bool) {
     guard let device: AVCaptureDevice = videoDevice else {
-      NSLog("!!!!   NO Camera Device setup yet!!!!! Saving preference for when inited")
+      if debug {
+        NSLog("!!!!   NO Camera Device setup yet!!!!! Saving preference for when inited")
+      }
       enableVideo = value
       return
     }
 
     if enableVideo != value {
       if !value && isRecording {
-        NSLog("currently recording, cannot change to photo mode")
+        if debug {
+          NSLog("currently recording, cannot change to photo mode")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "setEnableVideo() currently recording, cannot change to photo mode")
@@ -449,19 +470,25 @@ import UIKit
         enableVideo = value
 
         if value {
-          // NSLog("Changing to Video mode")
+          if debug {
+            NSLog("Changing to Video mode")
+          }
           session.beginConfiguration()
           configureSessionQuality()
           session.commitConfiguration()
         } else {
-          // NSLog("Changing to Photo mode")
+          if debug {
+            NSLog("Changing to Photo mode")
+          }
           session.beginConfiguration()
           configureSessionQuality()
           session.commitConfiguration()
         }
       }
     } else {
-      // NSLog("Same value for enableVideo, ignoring")
+      if debug {
+        NSLog("Same value for enableVideo, ignoring")
+      }
     }
   }
 
@@ -471,7 +498,9 @@ import UIKit
      */
   @objc public func takePhoto() {
     guard let device: AVCaptureDevice = videoDevice else {
-      NSLog("!!!!   NO Camera Device to capture from!!!!!")
+      if debug {
+        NSLog("!!!!   NO Camera Device to capture from!!!!!")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self, didError: "takePhoto()  NO Camera Device to capture from!")
@@ -480,7 +509,9 @@ import UIKit
     }
     // make sure we're in the right mode
     if enableVideo {
-      NSLog("!!!!   Not in photo mode, cannot capture photo!!!!!")
+      if debug {
+        NSLog("!!!!   Not in photo mode, cannot capture photo!!!!!")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self, didError: "startVideoRecording()  Not in photo mode, cannot capture photo!")
@@ -538,7 +569,9 @@ import UIKit
       "[SwiftyCam]: This function -startRecording must be called on the main thread.")
 
     guard let device: AVCaptureDevice = videoDevice else {
-      NSLog("!!!!   NO Camera Device to capture from!!!!!")
+      if debug {
+        NSLog("!!!!   NO Camera Device to capture from!!!!!")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self, didError: "startVideoRecording()  NO Camera Device to capture from!")
@@ -548,7 +581,9 @@ import UIKit
 
     // make sure we're in the right mode
     if !enableVideo {
-      NSLog("!!!!   Not in video mode, cannot start recording!!!!!")
+      if debug {
+        NSLog("!!!!   Not in video mode, cannot start recording!!!!!")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self, didError: "startVideoRecording()  Not in video mode, cannot start recording!")
@@ -557,12 +592,14 @@ import UIKit
     }
     // make sure we're not currently recording
     if isRecording {
-      NSLog("!!!!  Curently recording video, stop before trying to start recording again!!!!!")
+      if debug {
+        NSLog("!!!!  Curently recording video, stop before trying to start recording again!!!!!")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
           didError:
-            "startVideoRecording()  Curently recording video, stop before trying to start recording again!"
+            "startVideoRecording()  Currently recording video, stop before trying to start recording again!"
         )
       }
       return
@@ -592,7 +629,9 @@ import UIKit
           try self.assetWriter ?? AVAssetWriter(outputURL: outputFileUrl, fileType: fileType)
         self.assetWriter = assetWriter
       } catch let error as NSError {
-        NSLog("[SwiftyCam]: error setting up avassetwrtter: \(error)")
+        if debug {
+          NSLog("[SwiftyCam]: error setting up avassetwrtter: \(error)")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "startVideoRecording() " + error.localizedDescription)
@@ -722,14 +761,18 @@ import UIKit
       "[SwiftyCam]: This function -stopRecording must be called on the main thread.")
     executeAsync { [weak self] in
       guard let self = self else {
+
         NSLog("stopVideoRecording() Error! Unable to get reference to self")
+
         return
       }
       assert(
         self.shouldStartWritingSession,
         "[SwiftyCam]: Called stopRecording() while video is not being recorded")
       guard let assetWriter = self.assetWriter else {
-        NSLog("stopVideoRecording() Error! Unable to get reference to assetWriter")
+        if debug {
+          NSLog("stopVideoRecording() Error! Unable to get reference to assetWriter")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "stopVideoRecording()  Unable to get reference to assetWriter")
@@ -761,7 +804,9 @@ import UIKit
       self.assetWriterVideoInput = nil
       // disable torch if was on during recording
       guard let device = videoDevice else {
-        NSLog("!!!!   NO Camera Device available to disable torch after stopRecording() ")
+        if debug {
+          NSLog("!!!!   NO Camera Device available to disable torch after stopRecording() ")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "stopVideoRecording()  NO Camera Device available to disable torch")
@@ -890,7 +935,9 @@ import UIKit
         self.videoDevice?.videoZoomFactor = zoomScale
         self.videoDevice?.unlockForConfiguration()
       } catch let error as NSError {
-        NSLog("[SwiftyCam]: Error locking configuration")
+        if debug {
+          NSLog("[SwiftyCam]: Error locking configuration")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self, didError: "switchCamera()  " + error.localizedDescription)
@@ -956,7 +1003,9 @@ import UIKit
     if !UIDevice.current.orientation.isFlat {
       deviceOrientation = UIDevice.current.orientation
     } else {
-      // NSLog("deviceDidRotate, device is flat, ignoring")
+      if debug {
+        NSLog("deviceDidRotate, device is flat, ignoring")
+      }
     }
   }
 
@@ -1024,9 +1073,6 @@ import UIKit
       } else {
         zoomScale = value * videoDevice!.activeFormat.videoMaxZoomFactor
       }
-      NSLog("setZoom called with ")
-      NSLog("%f", value)
-      NSLog("%f", zoomScale)
       //      videoDevice?.videoZoomFactor = zoomScale
       videoDevice?.ramp(toVideoZoomFactor: zoomScale, withRate: 4.0)
 
@@ -1038,7 +1084,9 @@ import UIKit
       videoDevice?.unlockForConfiguration()
 
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Error locking configuration while changing zoom")
+      if debug {
+        NSLog("[SwiftyCam]: Error locking configuration while changing zoom")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self, didError: "setZoom()  " + error.localizedDescription)
@@ -1070,8 +1118,11 @@ import UIKit
     _ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?
   ) {
     if error != nil {
-      NSLog("ERROR while processing photo:")
-      // NSLog(error.localizedDescription)
+      if debug {
+        NSLog(
+          "ERROR while processing photo:"
+            + (error?.localizedDescription ?? "Error while processing photo"))
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1107,7 +1158,9 @@ import UIKit
       photoFileOutput?.isHighResolutionCaptureEnabled = true
       photoFileOutput?.capturePhoto(with: photoSettings, delegate: self)
     } else {
-      NSLog("!!!! Error trying to get photoFileOuput connection")
+      if debug {
+        NSLog("!!!! Error trying to get photoFileOuput connection")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1169,7 +1222,9 @@ import UIKit
       if #available(iOS 9.0, *) {
         return AVCaptureSession.Preset.hd4K3840x2160
       } else {
-        NSLog("[SwiftyCam]: Resolution 3840x2160 not supported on this version of iOS")
+        if debug {
+          NSLog("[SwiftyCam]: Resolution 3840x2160 not supported on this version of iOS")
+        }
         return AVCaptureSession.Preset.high
       }
     }
@@ -1196,7 +1251,9 @@ import UIKit
       device.flashMode = mode
       device.unlockForConfiguration()
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: \(error)")
+      if debug {
+        NSLog("[SwiftyCam]: \(error)")
+      }
 
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
@@ -1212,7 +1269,9 @@ import UIKit
   @objc public func changeTorchSettings(device: AVCaptureDevice, mode: AVCaptureDevice.TorchMode) {
     do {
       guard device.isTorchAvailable else {
-        NSLog("torch not available on tnis device, ignoring changeTorchSettings request ")
+        if debug {
+          NSLog("torch not available on tnis device, ignoring changeTorchSettings request ")
+        }
         return
       }
       try device.lockForConfiguration()
@@ -1225,7 +1284,9 @@ import UIKit
       }
       device.unlockForConfiguration()
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: \(error)")
+      if debug {
+        NSLog("[SwiftyCam]: \(error)")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1274,7 +1335,9 @@ import UIKit
             try device?.setTorchModeOn(level: 1.0)
             isCameraTorchOn = true
           } catch let error as NSError {
-            NSLog("[SwiftyCam]: \(error)")
+            if debug {
+              NSLog("[SwiftyCam]: \(error)")
+            }
             DispatchQueue.main.async {
               self.cameraDelegate?.swiftyCam(
                 self,
@@ -1284,7 +1347,9 @@ import UIKit
         }
         device?.unlockForConfiguration()
       } catch let error as NSError {
-        NSLog("[SwiftyCam]: \(error)")
+        if debug {
+          NSLog("[SwiftyCam]: \(error)")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self,
@@ -1309,7 +1374,9 @@ import UIKit
 
       session.automaticallyConfiguresApplicationAudioSession = false
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Failed to set background audio preference")
+      if debug {
+        NSLog("[SwiftyCam]: Failed to set background audio preference")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1346,7 +1413,9 @@ extension SwiftyCamViewController {
   @objc fileprivate func zoomGesture(pinch: UIPinchGestureRecognizer) {
     guard pinchToZoom == true, currentCamera == .rear else {
       // ignore pinch
-      NSLog("front camera or option disabled, ignoring zoom pinch gesture")
+      if debug {
+        NSLog("front camera or option disabled, ignoring zoom pinch gesture")
+      }
       return
     }
     do {
@@ -1367,7 +1436,9 @@ extension SwiftyCamViewController {
       videoDevice?.unlockForConfiguration()
 
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Error locking configuration")
+      if debug {
+        NSLog("[SwiftyCam]: Error locking configuration")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1462,7 +1533,9 @@ extension SwiftyCamViewController {
       videoDevice?.unlockForConfiguration()
 
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Error locking configuration")
+      if debug {
+        NSLog("[SwiftyCam]: Error locking configuration")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1573,18 +1646,24 @@ extension SwiftyCamViewController {
       switch pressureLevel {
       case .serious, .critical:
         if self.isRecording {
-          NSLog(
-            "[SwiftyCam]: Reached elevated system pressure level: \(pressureLevel). Throttling frame rate."
-          )
+          if debug {
+            NSLog(
+              "[SwiftyCam]: Reached elevated system pressure level: \(pressureLevel). Throttling frame rate."
+            )
+          }
           self.configureFrameRate(toframeRate: 20)
         }
       case .shutdown:
-        NSLog("[SwiftyCam]: Session stopped running due to shutdown system pressure level.")
+        if debug {
+          NSLog("[SwiftyCam]: Session stopped running due to shutdown system pressure level.")
+        }
       default:
         if self.isRecording {
-          NSLog(
-            "[SwiftyCam]: Reached normal system pressure level: \(pressureLevel). Resetting frame rate."
-          )
+          if debug {
+            NSLog(
+              "[SwiftyCam]: Reached normal system pressure level: \(pressureLevel). Resetting frame rate."
+            )
+          }
           self.configureFrameRate()
         }
       }
@@ -1600,13 +1679,19 @@ extension SwiftyCamViewController {
   @objc open func handleApplicationDidBecomeActive(_ notification: Notification) {}
 
   @objc open func handleSessionRuntimeError(_ notification: Notification) {
-    NSLog("[SwiftyCam]: SessionRuntimeError: \(String(describing: notification.userInfo))")
+    if debug {
+      NSLog("[SwiftyCam]: SessionRuntimeError: \(String(describing: notification.userInfo))")
+    }
     if let error = notification.userInfo?[AVCaptureSessionErrorKey] as? AVError {
       switch error.code {
       case .deviceIsNotAvailableInBackground:
-        NSLog("Media services are not available in the background")
+        if debug {
+          NSLog("Media services are not available in the background")
+        }
       case .mediaServicesWereReset:
-        NSLog("Media services were reset")
+        if debug {
+          NSLog("Media services were reset")
+        }
       // self.session.startRunning()
       default:
         break
@@ -1634,7 +1719,6 @@ extension SwiftyCamViewController {
       switch videoQuality {
       case .high:
         preset = AVCaptureSession.Preset.high
-        NSLog("[SwiftyCam] Setting session quality high")
       case .medium:
         preset = AVCaptureSession.Preset.medium
       case .low:
@@ -1643,7 +1727,6 @@ extension SwiftyCamViewController {
         preset = AVCaptureSession.Preset.cif352x288
       case .resolution640x480:
         preset = AVCaptureSession.Preset.vga640x480
-        NSLog("[SwiftyCam] Setting session quality vga640x480")
       case .resolution1280x720:
         preset = AVCaptureSession.Preset.hd1280x720
       case .resolution1920x1080:
@@ -1659,15 +1742,14 @@ extension SwiftyCamViewController {
       }
     } else {
       preset = AVCaptureSession.Preset.photo
-      NSLog(
-        "[SwiftyCam]: Using photo preset for AVCaptureSession"
-      )
     }
 
     guard session.canSetSessionPreset(preset) else {
-      NSLog(
-        "[SwiftyCam]: Error could not set session preset to \(preset), which enables custom video quality control. Defaulting to \(session.sessionPreset)"
-      )
+      if debug {
+        NSLog(
+          "[SwiftyCam]: Error could not set session preset to \(preset), which enables custom video quality control. Defaulting to \(session.sessionPreset)"
+        )
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1679,9 +1761,11 @@ extension SwiftyCamViewController {
     }
     if session.sessionPreset != preset {
       session.sessionPreset = preset
-      NSLog(
-        "[SwiftyCam]:  sessionPreset set to \(preset)."
-      )
+      if debug {
+        NSLog(
+          "[SwiftyCam]:  sessionPreset set to \(preset)."
+        )
+      }
       configureFrameRate()
     }
   }
@@ -1721,14 +1805,18 @@ extension SwiftyCamViewController {
     }
 
     if desiredFrameRate > maxFrameRate {
-      NSLog(
-        "[SwiftyCam]: Desired frame rate is higher than supported frame rates. setting to \(maxFrameRate) instead."
-      )
+      if debug {
+        NSLog(
+          "[SwiftyCam]: Desired frame rate is higher than supported frame rates. setting to \(maxFrameRate) instead."
+        )
+      }
       frameRate = maxFrameRate
     } else if desiredFrameRate < minFrameRate {
-      NSLog(
-        "[SwiftyCam]: Desired frame rate is lower than supported frame rates. setting to \(minFrameRate) instead."
-      )
+      if debug {
+        NSLog(
+          "[SwiftyCam]: Desired frame rate is lower than supported frame rates. setting to \(minFrameRate) instead."
+        )
+      }
       frameRate = minFrameRate
     }
     guard videoDevice.activeVideoMinFrameDuration.timescale != frameRate,
@@ -1745,7 +1833,9 @@ extension SwiftyCamViewController {
 
       self.frameRate = frameRate
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Could not lock device for configuration: \(error)")
+      if debug {
+        NSLog("[SwiftyCam]: Could not lock device for configuration: \(error)")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1769,11 +1859,15 @@ extension SwiftyCamViewController {
       self.addSystemObervers()
     } else {
       // Fallback on earlier versions
-      NSLog("[msCamera]: iOS 11.1+ required for observers")
+      if debug {
+        NSLog("[msCamera]: iOS 11.1+ required for observers")
+      }
     }
 
     guard let videoDevice = videoDevice else {
-      NSLog("[SwiftyCam]: Could not find video device input for the session")
+      if debug {
+        NSLog("[SwiftyCam]: Could not find video device input for the session")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1807,7 +1901,9 @@ extension SwiftyCamViewController {
 
         device.unlockForConfiguration()
       } catch let error as NSError {
-        NSLog("[SwiftyCam]: Error locking configuration")
+        if debug {
+          NSLog("[SwiftyCam]: Error locking configuration")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self,
@@ -1823,7 +1919,9 @@ extension SwiftyCamViewController {
         session.addInput(videoDeviceInput)
         videoInput = videoDeviceInput
       } else {
-        NSLog("[SwiftyCam]: Could not add video device input to the session")
+        if debug {
+          NSLog("[SwiftyCam]: Could not add video device input to the session")
+        }
         setupResult = .configurationFailed
         session.commitConfiguration()
         DispatchQueue.main.async {
@@ -1835,7 +1933,9 @@ extension SwiftyCamViewController {
         return
       }
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Could not create video device input: \(error)")
+      if debug {
+        NSLog("[SwiftyCam]: Could not create video device input: \(error)")
+      }
       setupResult = .configurationFailed
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
@@ -1860,7 +1960,9 @@ extension SwiftyCamViewController {
 
   private func addAudioInput() {
     guard let audioDevice = AVCaptureDevice.default(for: AVMediaType.audio) else {
-      NSLog("[SwiftyCam]: Could not add audio device input to the session")
+      if debug {
+        NSLog("[SwiftyCam]: Could not add audio device input to the session")
+      }
       return
     }
     // configure device AVAudioSession to allow bluetooth for playback and recording
@@ -1871,7 +1973,9 @@ extension SwiftyCamViewController {
       // set this to false to use our preferred selection of audio inputs and options
       session.automaticallyConfiguresApplicationAudioSession = false
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Failed to set AVAudioSEssion preferences")
+      if debug {
+        NSLog("[SwiftyCam]: Failed to set AVAudioSEssion preferences")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1918,7 +2022,9 @@ extension SwiftyCamViewController {
         session.addInput(audioDeviceInput)
         audioInput = audioDeviceInput
       } else {
-        NSLog("[SwiftyCam]: Could not add audio device input to the session")
+        if debug {
+          NSLog("[SwiftyCam]: Could not add audio device input to the session")
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self,
@@ -1927,7 +2033,9 @@ extension SwiftyCamViewController {
         }
       }
     } catch let error as NSError {
-      NSLog("[SwiftyCam]: Could not create audio device input: \(error)")
+      if debug {
+        NSLog("[SwiftyCam]: Could not create audio device input: \(error)")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -1965,7 +2073,9 @@ extension SwiftyCamViewController {
  */
 @objc extension SwiftyCamViewController {
   func didError(_ error: String) {
-    NSLog("[SwiftyCam]: didError()" + error)
+    if debug {
+      NSLog("[SwiftyCam]: didError()" + error)
+    }
     DispatchQueue.main.async {
       self.cameraDelegate?.swiftyCam(self, didError: error)
     }
@@ -1987,8 +2097,10 @@ extension SwiftyCamViewController {
   }
 
   func didFailToProcessVideo(_ error: Error) {
-    NSLog("didFailToProcessVideo")
-    NSLog(error.localizedDescription)
+    if debug {
+      NSLog("didFailToProcessVideo")
+      NSLog(error.localizedDescription)
+    }
     if let currentBackgroundTaskID = backgroundTaskID {
       backgroundTaskID = UIBackgroundTaskIdentifier.invalid.rawValue
 
@@ -2008,7 +2120,9 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
     _ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer,
     from connection: AVCaptureConnection
   ) {
-    NSLog("[SwiftyCam]: Dropped \(output == audioOutput ? "audio" : "video") Frame")
+    if debug {
+      NSLog("[SwiftyCam]: Dropped \(output == audioOutput ? "audio" : "video") Frame")
+    }
   }
 
   public func captureOutput(
@@ -2043,7 +2157,9 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
       if since < 0.05 {
         let success = assetWriterAudioInput.append(sampleBuffer)
         if !success, let error = assetWriter.error {
-          NSLog(error.localizedDescription)
+          if debug {
+            NSLog(error.localizedDescription)
+          }
           DispatchQueue.main.async {
             self.cameraDelegate?.swiftyCam(
               self,
@@ -2092,7 +2208,9 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
       let success = assetWriterInputPixelBufferAdaptor.append(
         pixelBuffer, withPresentationTime: presentationTimeStamp)
       if !success, let error = assetWriter.error {
-        NSLog(error.localizedDescription)
+        if debug {
+          NSLog(error.localizedDescription)
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self,
@@ -2126,7 +2244,9 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
   private func handlePhotoCapture(_ sampleBuffer: CMSampleBuffer) {
     let isDataReady = CMSampleBufferDataIsReady(sampleBuffer)
     guard isDataReady else {
-      NSLog("[SwiftyCam]: SampleBuffer was not ready")
+      if debug {
+        NSLog("[SwiftyCam]: SampleBuffer was not ready")
+      }
       DispatchQueue.main.async {
         self.cameraDelegate?.swiftyCam(
           self,
@@ -2150,7 +2270,9 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
     {
       let success = assetWriterAudioInput.append(sampleBuffer)
       if !success, let error = assetWriter.error {
-        NSLog(error.localizedDescription)
+        if debug {
+          NSLog(error.localizedDescription)
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self,
@@ -2199,7 +2321,9 @@ extension SwiftyCamViewController: AVCaptureVideoDataOutputSampleBufferDelegate,
       let success = assetWriterInputPixelBufferAdaptor.append(
         pixelBuffer, withPresentationTime: presentationTimeStamp)
       if !success, let error = assetWriter.error {
-        NSLog(error.localizedDescription)
+        if debug {
+          NSLog(error.localizedDescription)
+        }
         DispatchQueue.main.async {
           self.cameraDelegate?.swiftyCam(
             self,

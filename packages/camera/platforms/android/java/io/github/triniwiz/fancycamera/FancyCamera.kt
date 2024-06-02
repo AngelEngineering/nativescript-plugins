@@ -169,6 +169,15 @@ class FancyCamera : FrameLayout {
       cameraView.doubleTapCameraSwitch = value
     }
 
+  var debug: Boolean = false
+    get() {
+      return cameraView.debug
+    }
+    set(value) {
+      field = value
+      cameraView.debug = value
+    }
+
   var saveToGallery: Boolean = false
     get() {
       return cameraView.saveToGallery

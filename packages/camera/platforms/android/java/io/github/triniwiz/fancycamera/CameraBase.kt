@@ -38,6 +38,7 @@ abstract class CameraBase
     abstract var autoSquareCrop: Boolean
     abstract var autoFocus: Boolean
     abstract var doubleTapCameraSwitch: Boolean
+    abstract var debug: Boolean
     abstract var enableVideo: Boolean
 
     abstract var saveToGallery: Boolean
