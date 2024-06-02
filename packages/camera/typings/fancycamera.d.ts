@@ -16,7 +16,6 @@ declare module io {
           public setEnablePinchZoom(param0: boolean): void;
           public updateMode(): void;
           public setMaxVideoFrameRate(param0: number): void;
-          public getDisableHEVC(): boolean;
           public getAutoFocus(): boolean;
           public setAllowExifRotation(param0: boolean): void;
           public getMaxAudioBitRate(): number;
@@ -32,7 +31,6 @@ declare module io {
           public getPictureSize(): string;
           public getSaveToGallery(): boolean;
           public startRecording(): void;
-          public setDisableHEVC(param0: boolean): void;
           public getNumberOfCameras(): number;
           public setZoom(param0: number): void;
           public release(): void;
@@ -177,7 +175,6 @@ declare module io {
           public setEnablePinchZoom(param0: boolean): void;
           public initListener$camera_release(param0: globalAndroid.media.MediaRecorder): void;
           public toggleFlash(): void;
-          public getDisableHEVC(): boolean;
           public getMTimer$camera_release(): java.util.Timer;
           public requestCameraPermission(): void;
           public getMaxAudioBitRate(): number;
@@ -190,7 +187,6 @@ declare module io {
           public getPictureSize(): string;
           public getCurrentFrame$camera_release(): number;
           public startRecording(): void;
-          public setDisableHEVC(param0: boolean): void;
           public getNumberOfCameras(): number;
           public setZoom(param0: number): void;
           public getDATETIME_FORMAT$camera_release(): java.lang.ThreadLocal<java.text.SimpleDateFormat>;
@@ -437,7 +433,6 @@ declare module io {
           public updateMode(): void;
           public setMaxVideoFrameRate(param0: number): void;
           public toggleFlash(): void;
-          public getDisableHEVC(): boolean;
           public getAutoFocus(): boolean;
           public setAllowExifRotation(param0: boolean): void;
           public requestCameraPermission(): void;
@@ -458,7 +453,6 @@ declare module io {
           public getPictureSize(): string;
           public getSaveToGallery(): boolean;
           public startRecording(): void;
-          public setDisableHEVC(param0: boolean): void;
           public getLatestImage(): globalAndroid.graphics.Bitmap;
           public getNumberOfCameras(): number;
           public static getForceV1(): boolean;

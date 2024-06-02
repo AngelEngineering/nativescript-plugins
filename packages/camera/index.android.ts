@@ -824,7 +824,6 @@ export class NSCamera extends NSCameraBase {
         videoQuality: options?.videoQuality ? options.videoQuality : this.videoQuality,
         // videoHeight: options?.videoHeight ? options.videoHeight : this.videoHeight, //not supported yet
         // videoWidth: options?.videoWidth ? options.videoWidth : this.videoWidth, //not supported yet
-        // disableHEVC: options?.disableHEVC ? options.disableHEVC : this.disableHEVC, //not supported yet
         //if the following options are not specified, -1 will let Android select based on requested videoQuality
         androidMaxVideoBitRate: options?.androidMaxVideoBitRate ? options.androidMaxVideoBitRate : -1,
         androidMaxFrameRate: options?.androidMaxFrameRate ? options.androidMaxFrameRate : -1,

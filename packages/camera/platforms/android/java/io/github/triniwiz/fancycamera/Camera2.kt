@@ -451,7 +451,6 @@ class Camera2
     override var maxAudioBitRate: Int = -1
     override var maxVideoBitrate: Int = -1
     override var maxVideoFrameRate: Int = -1
-    override var disableHEVC: Boolean = true
 
     override val numberOfCameras: Int
       get() {

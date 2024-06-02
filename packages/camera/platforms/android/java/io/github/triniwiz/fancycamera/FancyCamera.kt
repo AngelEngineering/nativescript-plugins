@@ -186,7 +186,7 @@ class FancyCamera : FrameLayout {
       cameraView.position = value
     }
 
-  var enableVideo: Boolean = false    
+  var enableVideo: Boolean = false
     get() {
       return cameraView.enableVideo
     }
@@ -209,8 +209,6 @@ class FancyCamera : FrameLayout {
   var maxVideoBitrate: Int = -1
 
   var maxVideoFrameRate: Int = -1
-
-  var disableHEVC: Boolean = true
 
   val db: Double
     get() {

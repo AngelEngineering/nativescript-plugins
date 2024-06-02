@@ -44,7 +44,6 @@ abstract class CameraBase
     abstract var maxAudioBitRate: Int
     abstract var maxVideoBitrate: Int
     abstract var maxVideoFrameRate: Int
-    abstract var disableHEVC: Boolean
     abstract var videoQuality: Quality
     abstract var quality: Int
     abstract val db: Double

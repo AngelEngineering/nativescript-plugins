@@ -139,13 +139,6 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
 
   /**
    * TODO: not supported yet
-   * If true, uses h.264 encoding for greater compatibility. If false uses h.265 encoding.
-   */
-  // @GetSetProperty()
-  // public disableHEVC: boolean = true;
-
-  /**
-   * TODO: not supported yet
    * If true the default videorecordingready event will present a confirmation dialog. Default is false.
    */
   // @GetSetProperty()
@@ -467,7 +460,6 @@ export interface IVideoOptions {
   videoQuality?: CameraVideoQuality;
   // videoHeight?: number; //TODO: not supported yet
   // videoWidth?: number; //TODO: not supported yet
-  // disableHEVC?: boolean; //TODO: not supported yet
   androidMaxVideoBitRate?: number;
   androidMaxFrameRate?: number;
   androidMaxAudioBitRate?: number;

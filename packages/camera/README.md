@@ -50,7 +50,6 @@ This nativescript camera plugin works on Android (API 26+) and Apple (iOS 12+) d
 * 🧩 Photo confirmation options with built-in UI to show preview
 
 ## Future Features
-* ⏯️ H265 codec option for video, and custom dimensions for video/photo capture
 * 🌓 Video Confirmation flag and UI (you can use [@angelengineering/videoplayer](packages/videoplayer/README.md) for your own confirmation flow for now)
 * ⚡ Additional options for more control over Camera and Photo/Video capture
 
@@ -317,6 +316,7 @@ export enum CameraVideoQuality {
 
 *Flash Control and Front Cameras on iOS* - iOS devices since the iPhone 6s have a mode called Retina Flash, which will use the device display to display a bright white screen while using the front camera to take a photo if flash mode is enabled. Rear cameras will use the device flash hardware instead. 
 
+*Video Codec* - The videos will be recorded using either h264 or h265 compression depending on the device and OS version.
 ------------------------------
 
 ## Utils
