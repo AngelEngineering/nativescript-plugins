@@ -70,8 +70,6 @@ this.cam = new NSCamera();
 this.cam.id = "nscamera"
 // Decide if the camera should be in video or photo mode and set the enableVideo property.
 this.cam.enableVideo = true;
-// Set other options for the camera
-this.cam.confirmPhotos = true;
 this.cam.defaultCamera = 'front';
     ......
 // Check camera and microphone permissions, then add `this.cam` to a Layout as a child view and voila!
@@ -82,21 +80,23 @@ or
   ......
       <Cam:NSCamera height="{{ cameraHeight }}"
           id="nscamera"
-          defaultCamera="front"
-          enableVideo="true"          
-          saveToGallery="true"
+          debug="true"
+          enableVideo="true"
+          defaultCamera="rear"
           showCaptureIcon="true"
           showToggleIcon="true"
           showFlashIcon="true"
-          confirmPhotos="true"
-          autoSquareCrop="false"
           insetButtons="true"
           insetButtonsPercent="0.02"
-          shouldLockRotation="true"
+          shouldLockRotation="false"
+          confirmPhotos="true"
+          saveToGallery="true"
+          autoSquareCrop="false"
           confirmRetakeText="nah"
-          confirmSaveText="yeah"          
-          quality="90"
-          debug="true">         
+          confirmSaveText="yeah"
+          quality="95"
+          doubleTapCameraSwitch="true"
+          videoQuality="720p">         
         </Cam:NSCamera>
   ......
 ```
@@ -201,7 +201,7 @@ For iOS, both camera and microphone permissions are required for either Photo or
 
 | Name                  | Type    | Default    | Description                                                                                                                  |
 | --------------------- | ------- | -----------|----------------------------------------------------------------------------------------------------------------------------- |
-| **debug**             | boolean | *false*      | If true logs will be output in the console to help debug the Camera plugin.                                           |
+| **debug**             | boolean | *false*      | If true logs will be output in the NS and native consoles to help debug the Camera plugin.                                           |
 | **confirmPhotos**     | boolean | *true*       | If true the default take picture event will present a confirmation dialog before saving.                                   |
 | **confirmRetakeText** | string  | *'Retake'*   | When confirming capture this text will be presented to the user to retake the photo.                                       |
 | **confirmSaveText**   | string  | *'Save'*     | When confirming capture this text will be presented to the user to save the photo.                                         |
@@ -224,7 +224,7 @@ For iOS, both camera and microphone permissions are required for either Photo or
 | **toggleCameraIcon** | string  | Name of app_resource drawable for the toggle camera button.                                 |
 | **takePicIcon**      | string  | Name of app_resource drawable for the take picture (capture) button.                        |
 | **galleryIcon**      | string  | Name of app_resource drawable for the open gallery (image library) button.                  |
-| **autoFocus**        | boolean | If true (defaults to true) the camera will use continuous focus when the camera detects changes of the target. |
+| **autoFocus**        | boolean | If true (defaults to true) the camera will use continuous focus when the camera detects changes of the target. on iOS, auto focus will be enabled if supported|
 | **insetButtons**     | boolean | If true (defaults to false), adjusts the spacing from edge of screen for built-in buttons.                      |
 | **insetButtonsPercent**|number | The percentage to inset by, from 0.0 - 1.0                                                  |
 
@@ -302,7 +302,7 @@ export enum CameraVideoQuality {
 
 *App Suspension and Resume* - You should add event listeners that will tear down the Camera View and re-initialize it to avoid problems with device camera access. You can see an example in the demo application. 
 
-*Pinch to Zoom* - for iOS this is currently only supported for rear cameras. Support for front cameras may be added in the future.
+*Pinch to Zoom* - for iOS this is only supported for rear cameras.
 
 *Main Camera Button* - for both platforms, the main camera button supports both tap and long-press gestures when in video recording mode. Tap to start/stop recording, or long-press the button to record until you stop pressing the button. In photo mode, long-presses are ignored.
 
