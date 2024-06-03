@@ -1,6 +1,6 @@
 {
   "name": "@angelengineering/camera",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Camera plugin for Nativescript applications",
   "main": "index",
   "typings": "index.d.ts",
