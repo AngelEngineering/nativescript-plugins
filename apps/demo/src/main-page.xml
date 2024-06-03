@@ -22,6 +22,8 @@
           tap="{{ viewDemo }}" />
         <Button text="sleepcontrol"
           tap="{{ viewDemo }}" />
+        <Button text="camera"
+          tap="{{ viewCamera }}" />
         <Button text="videoplayer"
           tap="{{ viewDemo }}" />
         <Button text="transcoder"

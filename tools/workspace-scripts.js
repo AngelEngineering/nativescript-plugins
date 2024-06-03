@@ -85,6 +85,13 @@ module.exports = {
           description: '@angelengineering/sleepcontrol: Build',
         },
       },
+      // @angelengineering/camera
+      'camera': {
+        build: {
+          script: 'nx run camera:build.all',
+          description: '@angelengineering/camera: Build',
+        },
+      },
       // @angelengineering/videoplayer
       'videoplayer': {
         build: {
@@ -132,6 +139,10 @@ module.exports = {
       'sleepcontrol': {
         script: 'nx run sleepcontrol:focus',
         description: 'Focus on @angelengineering/sleepcontrol',
+      },
+      'camera': {
+        script: 'nx run camera:focus',
+        description: 'Focus on @angelengineering/camera',
       },
       'videoplayer': {
         script: 'nx run videoplayer:focus',

@@ -58,6 +58,8 @@
 		<string>Requires access to photo library to load and save media.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>This app requires access to your microphone to record audio</string>
+		<key>NSCameraUsageDescription</key>
+		<string>This app requires access to your camera to record video and take pictures</string>
 		<key>NSUbiquitousContainers</key>
 		<dict>
 			<key>iCloud.com.angelengineering.pluginsdemo</key>

@@ -6,6 +6,7 @@
   "dependencies": {
     "@angelengineering/audio-player": "file:../../packages/audio-player",
     "@angelengineering/audio-recorder": "file:../../packages/audio-recorder",
+    "@angelengineering/camera": "file:../../packages/camera",
     "@angelengineering/downloader": "file:../../packages/downloader",
     "@angelengineering/filepicker": "file:../../packages/filepicker",
     "@angelengineering/flashlight": "file:../../packages/flashlight",
@@ -20,6 +21,6 @@
   },
   "devDependencies": {
     "@nativescript/android": "8.7.0",
-    "@nativescript/ios": "8.7.0"
+    "@nativescript/ios": "8.7.1-next.2024-04-16-8705084282"
   }
 }
