@@ -5,7 +5,7 @@
   2024, Angel Engineering - Angel Dominguez
  **********************************************************************************/
 
-import { ContentView, File, Property, booleanConverter, isAndroid } from '@nativescript/core';
+import { ContentView, File, isAndroid } from '@nativescript/core';
 import { NSCamera as NSCameraDefinition } from '.';
 
 export type CameraTypes = 'front' | 'rear';
@@ -296,7 +296,7 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
       const avAsset = AVURLAsset.assetWithURL(filePath);
       const track: AVAssetTrack = avAsset.tracksWithMediaType(AVMediaTypeVideo).firstObject;
       if (!track) {
-        console.warn('No video track found, cannot extract metadata information!');
+        this.CError('No video track found, cannot extract metadata information!');
         return null;
       }
 
@@ -315,7 +315,7 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
       }
     }
     if (!videoFormat) {
-      console.warn('No video track found, cannot extract metadata information!');
+      this.CError('No video track found, cannot extract metadata information!');
     }
     return videoFormat;
   }
@@ -337,7 +337,7 @@ export abstract class NSCameraBase extends ContentView implements NSCameraDefini
       const avAsset = AVURLAsset.assetWithURL(filePath);
       const track = avAsset.tracksWithMediaType(AVMediaTypeVideo).firstObject;
       if (!track) {
-        console.warn('No video track found, cannot extract metadata information!');
+        this.CError('No video track found, cannot extract metadata information!');
         return {
           width: 0,
           height: 0,

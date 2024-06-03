@@ -10,7 +10,6 @@
  **********************************************************************************/
 
 import { Color, ImageAsset, View, File, Screen, Frame, Application, ImageSource, path, knownFolders } from '@nativescript/core';
-import { layout } from '@nativescript/core/utils/layout-helper';
 import { NSCameraBase, CameraTypes, CameraVideoQuality, ICameraOptions, IVideoOptions } from './common';
 import { iOSNativeHelper } from '@nativescript/core/utils';
 export * from './common';
@@ -61,9 +60,7 @@ export class SwiftyDelegate extends NSObject implements SwiftyCamViewControllerD
     this._owner.get().didStartRecording(camera);
   }
 
-  swiftyCamDidChangeZoomLevel(swiftyCam: SwiftyCamViewController, zoom: number) {
-    console.log('camera changed zoom to ', zoom);
-  }
+  swiftyCamDidChangeZoomLevel(swiftyCam: SwiftyCamViewController, zoom: number) {}
 
   swiftyCamDidFinishProcessVideoAt(swiftyCam: SwiftyCamViewController, url: NSURL) {
     this._owner.get().recordingReady(url.path);
@@ -105,8 +102,6 @@ export class MySwifty extends SwiftyCamViewController {
   private _owner: WeakRef<NSCamera>;
   private _snapPicOptions: ICameraOptions;
   public _lastCameraOptions: ICameraOptions[];
-  private _enableVideo: boolean;
-  private _disablePhoto: boolean;
   private _videoOptions: IVideoOptions;
   private _photoToSave: any;
   private _imageConfirmBg: UIView;
@@ -129,10 +124,6 @@ export class MySwifty extends SwiftyCamViewController {
   public cleanup() {
     this._swiftyDelegate = null;
   }
-
-  // public set enableVideo(value: boolean) {
-  //   this._enableVideo = value;
-  // }
 
   viewDidLoad() {
     super.viewDidLoad();
@@ -284,7 +275,7 @@ export class MySwifty extends SwiftyCamViewController {
 
   public snapPicture(options?: ICameraOptions) {
     if (this._owner.get().enableVideo) {
-      console.error('in Video mode, change to photo mode to take a picture!');
+      this._owner.get().CError('in Video mode, change to photo mode to take a picture!');
       return null;
     }
     if (options) {
@@ -311,7 +302,7 @@ export class MySwifty extends SwiftyCamViewController {
 
   public recordVideo(options?: IVideoOptions) {
     if (!this._owner.get().enableVideo) {
-      console.error('in Photo mode, change to video mode to take a picture!');
+      this._owner.get().CError('in Photo mode, change to video mode to take a picture!');
       return null;
     }
     options = {
@@ -364,7 +355,6 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public didStartRecording(camera: CameraSelection) {
-    // console.log('videoRecordingStarted()');
     this._flashBtn.removeFromSuperview(); //Hide the flash icon since we cannot turn torch on or off during recording
     this._owner.get().sendEvent(NSCamera.videoRecordingStartedEvent, camera);
   }
@@ -380,7 +370,6 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public didFinishRecording(camera: CameraSelection) {
-    // console.log('didFinishRecording()');
     this._flashBtnHandler(); //restore flash icon if camera has flash support
     this._owner.get().sendEvent(NSCamera.videoRecordingFinishedEvent, camera);
   }
@@ -391,7 +380,8 @@ export class MySwifty extends SwiftyCamViewController {
 
   public videoDidFinishSavingWithErrorContextInfo(path: string, error: NSError, contextInfo: any) {
     if (error) {
-      console.error(error);
+      this._owner.get().CError(error);
+      this._owner.get().sendEvent(NSCamera.errorEvent, error);
       return;
     }
   }
@@ -402,7 +392,6 @@ export class MySwifty extends SwiftyCamViewController {
   }
 
   public didSwitchCamera(camera: CameraSelection) {
-    // console.log('didSwitchCamera()');
     this._owner.get().sendEvent(NSCamera.toggleCameraEvent, camera);
   }
 
@@ -527,7 +516,6 @@ export class MySwifty extends SwiftyCamViewController {
         //    if we want exact dimensions, need to rescale using native code first
         UIImageWriteToSavedPhotosAlbum(asset.nativeImage, null, null, null);
       }
-      // this._owner.get().sendEvent(NSCamera.photoCapturedEvent, asset);
       this._owner.get().sendEvent(NSCamera.photoCapturedEvent, outFilepath);
       this.resetPreview();
     } else {
@@ -564,7 +552,6 @@ export class MySwifty extends SwiftyCamViewController {
    */
   public buttonWasTapped() {
     if (this._owner.get().enableVideo) {
-      console.log('buttonWasTapped, video is enabled');
       if (this.isRecording) {
         if (this._owner.get().shouldLockRotation) this.enableRotation();
         this._owner.get().stop();
@@ -574,7 +561,6 @@ export class MySwifty extends SwiftyCamViewController {
         this._owner.get().record();
       }
     } else {
-      console.log('buttonWasTapped, photo is enabled');
       this._owner.get().takePicture();
     }
   }
@@ -585,7 +571,6 @@ export class MySwifty extends SwiftyCamViewController {
       if (this._owner.get().shouldLockRotation) this.disableRotation();
       this._owner.get().record();
     }
-    // else console.warn('video not enabled, ignoring long press start');
     //TODO: add rapid photo taking support every 200ms or so while button pressed
   }
 
@@ -595,7 +580,6 @@ export class MySwifty extends SwiftyCamViewController {
       this._owner.get().stop();
       if (this._owner.get().shouldLockRotation) this.enableRotation();
     }
-    // else console.warn('video not enabled, ignoring long press end');
   }
 
   /// Called when the maximum duration is reached
@@ -604,7 +588,6 @@ export class MySwifty extends SwiftyCamViewController {
       this._owner.get().stop();
       if (this._owner.get().shouldLockRotation) this.enableRotation();
     }
-    // else console.warn('video not enabled, ignoring long press max duration');
   }
 
   /// Sets the maximum duration of the video recording
@@ -748,7 +731,7 @@ export class NSCamera extends NSCameraBase {
       if (this._swifty.currentCamera != this._swifty.defaultCamera) {
         this._swifty.switchCamera();
         if (this._swifty.currentCamera != this._swifty.defaultCamera) {
-          this.CError('Uhoh, after switch still not the same camera as defaultCamera!');
+          this.CError('Uh oh, after switch still not the same camera as defaultCamera!');
         }
       }
     }
@@ -761,22 +744,21 @@ export class NSCamera extends NSCameraBase {
     this._detectDevice(); //TODO: is this still useful?
   }
 
-  //Enable debug logging to iOS console
+  //Enable debug logging to NS and iOS console
+  private _debug: boolean = false;
   //@ts-ignore
   set debug(value: boolean) {
     if (typeof value != 'boolean') {
-      console.warn('Passing a non-boolean to set debug!');
       value = value === 'true';
     }
-    console.log('set debug', value);
     if (this._swifty) {
       this._swifty.setDebugWithValue(value);
     }
+    this._debug = value;
   }
+
   get debug() {
-    if (this._swifty) {
-      return this._swifty.getDebug();
-    } else return this.debug;
+    return this._swifty ? this._swifty.getDebug() : this._debug;
   }
 
   // @ts-ignore
@@ -784,33 +766,27 @@ export class NSCamera extends NSCameraBase {
     if (this._swifty) {
       return this._swifty.getEnableVideo();
     } else {
-      console.warn('No native camera instance, returning local value', this._enableVideo);
       return this._enableVideo;
     }
   }
 
   set enableVideo(value: boolean) {
     try {
-      console.log('set enableVideo', value, typeof value);
       if (typeof value != 'boolean') {
-        console.warn('Passing a non-boolean to set enableVideo!');
         value = value === 'true';
       }
       if (this._swifty) {
         if (this._swifty.getEnableVideo() == value) {
-          console.warn('already in mode, ignoring', this._swifty.getEnableVideo());
         } else {
           this._swifty.setEnableVideoWithValue(value);
-          console.warn('Changing mode', value);
+
           if (this._swifty.isRecording && !value) {
-            console.warn('Currently recording, cannot change mode!');
+            this.CError('Currently recording, cannot change mode!');
           }
         }
-      } else {
-        console.error('no native camera to set enableVideo');
       }
     } catch (err) {
-      console.error('set enableVideo ERROR', err);
+      this.CError('set enableVideo ERROR', err);
     }
     this._enableVideo = value;
   }
@@ -873,16 +849,14 @@ export class NSCamera extends NSCameraBase {
 
   //iOS zoom starts at 1.0 to maxZoom for camera, so we will use the zoom float value to scale and the camera zoom between 1 - maxZoom
   set zoom(value: number) {
-    console.log('set zoom', value);
     if (typeof value !== 'number') {
-      console.warn('set zoom value is not a number! casting');
       value = +value;
     }
     if (this._swifty) {
       if (this._swifty.currentCamera == CameraSelection.Front) {
-        console.warn('iOS front cameras do not support zoom');
+        this.CError('iOS front cameras do not support zoom');
       } else this._swifty.setZoomWithValue(value);
-    } else console.error('no native camera to set zoom');
+    }
   }
 
   private _onLayoutChangeFn(args) {
@@ -953,7 +927,7 @@ export class NSCamera extends NSCameraBase {
    */
   public takePicture(options?: ICameraOptions): void {
     if (this._enableVideo) {
-      console.error('Not in photo mode, cannot take photo!');
+      this.CError('Not in photo mode, cannot take photo!');
       return;
     }
 
@@ -974,11 +948,11 @@ export class NSCamera extends NSCameraBase {
    */
   public record(options?: IVideoOptions): Promise<any> {
     if (!this._enableVideo) {
-      console.error('Not in video mode, cannot start recording!');
+      this.CError('Not in video mode, cannot start recording!');
       return;
     }
     if (this._swifty.isRecording) {
-      console.error('Currently recording video, stop before starting another recording!');
+      this.CError('Currently recording video, stop before starting another recording!');
       return;
     }
     this._swifty.recordVideo(options);
@@ -995,7 +969,6 @@ export class NSCamera extends NSCameraBase {
    * @returns true if camera has a flash, false if not
    */
   public hasFlash(): boolean {
-    console.log('hasFlash?', this._swifty.videoDevice.hasFlash, 'hasTorch?', this._swifty.videoDevice.hasTorch);
     return this._swifty.videoDevice.hasFlash;
   }
 
@@ -1007,7 +980,6 @@ export class NSCamera extends NSCameraBase {
    * @returns true if camera has a torch, false if not
    */
   public hasTorch(): boolean {
-    console.log('hasFlash?', this._swifty.videoDevice.hasFlash, 'hasTorch?', this._swifty.videoDevice.hasTorch);
     return this._swifty.videoDevice.hasTorch;
   }
 
@@ -1024,12 +996,12 @@ export class NSCamera extends NSCameraBase {
    */
   public stop(): void {
     if (!this._enableVideo) {
-      console.error('Not in video mode, cannot stop recording!');
+      this.CError('Not in video mode, cannot stop recording!');
       return;
     }
 
     if (!this._swifty.isRecording) {
-      console.error('Not recording video, ignoring stop request!');
+      this.CError('Not recording video, ignoring stop request!');
       return;
     }
     this._swifty.stopVideoRecording();
@@ -1189,7 +1161,7 @@ export class NSCamera extends NSCameraBase {
             const status = PHPhotoLibrary.authorizationStatus();
             if (status === PHAuthorizationStatus.Authorized) {
               UISaveVideoAtPathToSavedPhotosAlbum(outputPath, this, null, null);
-            } else this.CLog('Not authorized for gallery access, cannot save!!!');
+            } else this.CError('Not authorized for gallery access, cannot save!!!');
             resolve(File.fromPath(outputPath));
             break;
         }

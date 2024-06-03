@@ -24,8 +24,6 @@ const FLASH_MODE_ON = 'on';
 const FLASH_MODE_OFF = 'off';
 const CAMERA_FACING_FRONT = 1; // front camera
 const CAMERA_FACING_BACK = 0; // rear camera
-// const CAMERA_PHOTO_MODE = 0;
-// const CAMERA_VIDEO_MODE = 1;
 const DEVICE_INFO_STRING = () => `device: ${Device.manufacturer} ${Device.model} on SDK: ${Device.sdkVersion}`;
 
 export class NSCamera extends NSCameraBase {
@@ -55,11 +53,9 @@ export class NSCamera extends NSCameraBase {
   }
   public set isRecording(val: boolean) {
     this._isRecording = val;
-    console.log('set isRecording: ' + val);
   }
 
   private _videoQuality: CameraVideoQuality = CameraVideoQuality.HIGHEST;
-  // private _enableVideo: number = CAMERA_PHOTO_MODE; //either CAMERA_PHOTO_MODE or CAMERA_VIDEO_MODE
   private _enableVideo = false;
   private _nativeView: android.widget.RelativeLayout;
   private _flashBtn: android.widget.ImageButton = null; // reference to native flash button
@@ -86,149 +82,63 @@ export class NSCamera extends NSCameraBase {
     this._lastCameraOptions = [];
   }
 
-  //@ts-ignore
-  // get enableVideo(): boolean {
-  //   return this._camera ? this._camera.getEnableVideo() : this._enableVideo;
-  // }
-
-  // set enableVideo(value: boolean) {
-  //   console.log('set enableVideo', value);
-  //   if (this._camera) {
-  //     if (value != this.camera.getEnableVideo()) {
-  //       console.log('Changing modes, setting enableVideo to', value);
-  //       this._camera.setEnableVideo(value);
-  //       this._camera.updateMode();
-  //       //if we are currently recording video and changing to photo mode, this will be ignored
-  //       if (this._camera.getCameraRecording() && !value) {
-  //         console.warn('Currently recording, cannot change to photo mode!');
-  //       } else if (value) {
-  //         console.log('changing to video mode');
-  //         // this._camera.setRatio('16:9');
-  //         const takePicDrawable = getImageDrawable(this.takeVideoIcon);
-  //         this._takePicBtn.setImageResource(takePicDrawable); // set the icon
-  //       } else {
-  //         console.log('changing to photo mode');
-  //         // this._camera.setRatio('4:3');
-  //         const takePicDrawable = getImageDrawable(this.takePicIcon);
-  //         this._takePicBtn.setImageResource(takePicDrawable); // set the icon
-  //       }
-  //       // switch (this.videoQuality) {
-  //       //   case CameraVideoQuality.HIGHEST:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
-  //       //     break;
-  //       //   case CameraVideoQuality.LOWEST:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
-  //       //     break;
-  //       //   case CameraVideoQuality.MAX_2160P:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
-  //       //     break;
-  //       //   case CameraVideoQuality.MAX_1080P:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
-  //       //     break;
-  //       //   case CameraVideoQuality.MAX_720P:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-  //       //     break;
-  //       //   case CameraVideoQuality.MAX_480P:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
-  //       //     break;
-  //       //   case CameraVideoQuality.QVGA:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
-  //       //     break;
-  //       //   default:
-  //       //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-  //       //     break;
-  //       // }
-  //     } else console.log('same mode, ignoring');
-  //   } else {
-  //     console.warn("No camera instance yet, can't set enableVideo directly");
-  //   }
-  //   this._enableVideo = value;
-  // }
-
   isVideoEnabled(): boolean {
     if (this._camera) {
-      if (this._enableVideo != !!this._camera.getEnableVideo()) {
-        console.warn('!!!!!! isVideoEnabled() this._enableVideo !== this._camera.getEnableVideo()', this._enableVideo, !!this._camera.getEnableVideo());
-        // this._enableVideo = !!this._camera.getEnableVideo();
-      }
       return !!this._camera.getEnableVideo();
     } else {
       return this._enableVideo;
     }
-
-    // return this._camera ? this._camera.getEnableVideo() : this._enableVideo;
   }
 
   updateModeUI(): void {
     if (this.isVideoEnabled()) {
-      console.log('updating UI to video mode');
       //check permission just in case
       if (!this._camera.hasPermission()) {
-        console.error('missing permission(s), requesting');
+        this.CLog('missing permission(s), requesting');
         this._camera.requestPermission();
         if (!this.camera.hasPermission()) {
-          console.error('not enough permission for video mode!');
+          this.CError('not enough permission for video mode!');
           return;
         }
       }
-      // this._camera.setRatio('16:9');
       const takePicDrawable = getImageDrawable(this.takeVideoIcon);
       this._takePicBtn?.setImageResource(takePicDrawable); // set the icon
     } else {
-      console.log('updating UI to photo mode');
-      // this._camera.setRatio('4:3');
       const takePicDrawable = getImageDrawable(this.takePicIcon);
       this._takePicBtn?.setImageResource(takePicDrawable); // set the icon
     }
     this._ensureCorrectFlashIcon();
-    // this._initTakePicButton();
-    console.log('done updating mode UI');
   }
 
   //@ts-ignore
   get enableVideo(): boolean {
-    console.log('get enableVideo() current mode from camera is: ', !!this._camera.getEnableVideo());
     if (this._camera) {
-      console.log('get enableVideo() have a camera, checking native mode', !!this._camera.getEnableVideo());
       return !!this._camera.getEnableVideo();
     }
-    console.log('get enableVideo() no camera yet,  returning this._enableVideo', this._enableVideo);
     return !!this._enableVideo;
   }
 
   set enableVideo(value: boolean) {
     try {
-      this.CLog('set enableVideo() ', value);
-      if (typeof value !== 'boolean') {
-        console.error('set enableVideo() value is not a boolean!', value);
-      }
       if (typeof value === 'string') {
         value = value === 'true';
       }
       if (this._camera) {
-        console.log('have a camera, checking enableVideo: ', this._camera.getEnableVideo(), typeof this._camera.getEnableVideo());
         if (value && !this._camera.getEnableVideo()) {
-          console.log('setEnableVideo to VIDEO');
-          // this._camera.setEnableVideo(value);
           this._camera.setVideoMode();
           this.updateModeUI();
           this._camera.updateMode();
         } else if (!value && this._camera.getEnableVideo()) {
-          console.log('setEnableVideo to PHOTO');
-          // this._camera.setEnableVideo(value);
           this._camera.setPhotoMode();
           this.updateModeUI();
           this._camera.updateMode();
-        } else {
-          console.log('same mode, ignoring enableVideo setter');
         }
       } else {
         this.CLog('No camera instance yet, enableVideo preference saved for when camera is ready');
       }
-      this._enableVideo = value; // === true ? CAMERA_VIDEO_MODE : CAMERA_PHOTO_MODE;
-      console.log('set enableVideo() this._enableVideo: ', this._enableVideo, 'value', value);
+      this._enableVideo = value;
     } catch (err) {
-      console.error('set enableVideo() error!', err);
+      this.CError('set enableVideo() error!', err);
     }
   }
 
@@ -238,26 +148,23 @@ export class NSCamera extends NSCameraBase {
   }
   set ratio(value: string) {
     if (this._camera) {
-      console.log('setting camera ratio to ', value);
       this._camera.setRatio(value);
     }
   }
 
   // @ts-ignore
   get videoQuality(): CameraVideoQuality {
-    this.CLog('get current VideoQuality()', this._videoQuality);
     return this._videoQuality;
   }
   set videoQuality(value: CameraVideoQuality) {
     this._videoQuality = value;
-    this.CLog('setting VideoQuality to ', this._videoQuality);
     if (this._camera) {
       //check if camera is ready yet, and update quality if so
       this.updateQuality();
       this.CLog('updated camera videoQuality to ', value);
     } else {
       //if camera is not ready yet, save preference in local class property for use later when recording video
-      console.warn('Video quality preference saved, will be used once recording starts. ');
+      this.CLog('Video quality preference saved, will be used once recording starts. ');
     }
   }
 
@@ -285,7 +192,7 @@ export class NSCamera extends NSCameraBase {
 
     if (this._camera) {
       this._camera.setDoubleTapCameraSwitch(value);
-    } else console.log("no camera yet, can't set setDoubleTapCameraSwitch directly!");
+    } else this.CLog('no camera yet, setDoubleTapCameraSwitch will be set on init');
     this._doubleTapCameraSwitch = value;
   }
 
@@ -302,8 +209,7 @@ export class NSCamera extends NSCameraBase {
 
     if (this._camera) {
       this._camera.setDebug(value);
-      console.log('setting camera debug to ', value);
-    } else console.log("no camera yet, can't set debug directly!");
+    } else this.CLog('no camera yet, debug will be set on init!');
     this._debug = value;
   }
 
@@ -325,9 +231,6 @@ export class NSCamera extends NSCameraBase {
 
   set defaultCamera(value: CameraTypes) {
     this._defaultCamera = value;
-    // if (this.cameraId != (value === 'front' ? CAMERA_FACING_FRONT : CAMERA_FACING_BACK)) {
-    //   this.toggleCamera();
-    // }
     this.cameraId = value === 'front' ? CAMERA_FACING_FRONT : CAMERA_FACING_BACK;
   }
 
@@ -428,18 +331,13 @@ export class NSCamera extends NSCameraBase {
     this._nativeView = new android.widget.RelativeLayout(this._context);
     this._camera = new io.github.triniwiz.fancycamera.FancyCamera(this._context);
     try {
-      console.log('createNativeView() this._camera.setEnableVideo() using', this._enableVideo, typeof this._enableVideo);
       if (!!this._enableVideo) {
-        console.log('setting video mode');
         this._camera.setVideoMode();
       } else {
-        console.log('setting photo mode');
         this._camera.setPhotoMode();
       }
-      // this._camera.setEnableVideo(!!this._enableVideo ? true : false); //sets initial mode for android camera plugin
-      console.log('set to this._enableVideo ', this._enableVideo);
     } catch (err) {
-      console.error(err);
+      this.CError(err);
     }
 
     (this._camera as any).setLayoutParams(new android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
@@ -448,7 +346,6 @@ export class NSCamera extends NSCameraBase {
   }
 
   private _onLayoutChangeFn(args) {
-    // const size = this.getActualSize();
     this._initDefaultButtons();
   }
 
@@ -462,28 +359,19 @@ export class NSCamera extends NSCameraBase {
         this._camera.startPreview();
       } else {
         //we need permissions to start the preview
-        console.error('Required permissions not granted yet, cannot show camera view!');
+        this.CError('Required permissions not granted yet, cannot show camera view!');
         this._camera.stopPreview();
       }
     }
   }
 
   initNativeView() {
-    console.log('initNativeView()');
     if ((!this.enableVideo && !this._camera.hasCameraPermission()) || (this.enableVideo && !this._camera.hasPermission())) {
-      console.error('missing permissions!!!!!!');
+      this.CLog('missing permissions, requesting...');
       if (this.enableVideo) {
         this._camera.requestPermission();
-        // if (!this._camera.hasPermission()) {
-        //   console.error('premission request failed!');
-        //   return;
-        // }
       } else if (!this.enableVideo) {
         this._camera.requestCameraPermission();
-        // if (!this._camera.hasCameraPermission()) {
-        //   console.error('premission request failed!');
-        //   return;
-        // }
       }
     }
     const that = this;
@@ -495,8 +383,6 @@ export class NSCamera extends NSCameraBase {
 
       onReady(): void {
         that.CLog('listenerImpl.onReady()');
-        // not working here:
-        // this.owner.camera.whiteBalance = WhiteBalance.Auto;
         that.CLog(DEVICE_INFO_STRING);
       },
 
@@ -507,17 +393,14 @@ export class NSCamera extends NSCameraBase {
       onCameraError(message: string, ex: java.lang.Exception): void {
         that.CError('listenerImpl.onCameraError:', message, ex.getMessage());
         const owner: NSCamera = this.owner ? this.owner.get() : null;
-        console.log('owner', owner, owner.isRecording);
         if (owner) {
           if (owner.isRecording) {
-            console.log('was recording video, stopping');
-            // owner.isRecording = false;
             owner.stopRecording();
-          } else console.log("wasn't recording");
+          }
           owner._lastCameraOptions.shift(); //remove the last set of options used
           owner.sendEvent(NSCamera.errorEvent, ex, message);
         } else {
-          console.error('!!! No owner reference found when handling onCameraError event');
+          that.CError('!!! No owner reference found when handling onCameraError event');
         }
       },
 
@@ -541,16 +424,7 @@ export class NSCamera extends NSCameraBase {
           shouldAutoSquareCrop = options.autoSquareCrop ? options.autoSquareCrop : owner.autoSquareCrop;
           quality = options.quality ? +options.quality : owner.quality;
         }
-        //  else {
-        //   // otherwise, use xml property getters or their defaults
-        //   confirmPic = owner.confirmPhotos;
-        //   saveToGallery = owner.saveToGallery;
-        //   confirmPicRetakeText = owner.confirmRetakeText;
-        //   confirmPicSaveText = owner.confirmSaveText;
-        //   shouldAutoSquareCrop = owner.autoSquareCrop;
-        //   saveToGallery = owner.saveToGallery ? true : false;
-        //   quality = owner.quality ? +owner.quality : 95;
-        // }
+
         that.CLog('onCameraPhotoUI has options', options);
         if (confirmPic === true) {
           that.CLog('confirmPic set, showing confirmation dialog');
@@ -597,21 +471,16 @@ export class NSCamera extends NSCameraBase {
             owner._togglingCamera = true;
           } else {
             setTimeout(() => {
-              let sizes = owner.getAvailablePictureSizes('4:3');
-              console.log('getAvailablePictureSizes()', sizes);
+              //give android a little more time to finish loading
               owner.sendEvent(NSCamera.cameraReadyEvent, owner.camera);
-              // owner.enableVideo = owner._enableVideo;
-              // owner.updateModeUI();
             }, 500);
-            // owner.isRecording = false;
           }
         }
       },
       onCameraVideoStartUI(): void {
         const owner: NSCamera = this.owner ? this.owner.get() : null;
         if (owner) {
-          // owner.isRecording = true;
-          console.log('starting recording', owner, owner.isRecording);
+          that.CLog('starting recording', owner, owner.isRecording);
           owner.sendEvent(NSCamera.videoRecordingStartedEvent, owner.camera);
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoStartUI event');
@@ -620,9 +489,8 @@ export class NSCamera extends NSCameraBase {
       onCameraVideoStopUI(): void {
         const owner: NSCamera = this.owner ? this.owner.get() : null;
         if (owner) {
-          // owner.isRecording = true;
           owner.sendEvent(NSCamera.videoRecordingFinishedEvent, owner.camera);
-          console.log('stopped recording', owner, owner.isRecording);
+          that.CLog('stopped recording', owner, owner.isRecording);
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoStopUI event');
         }
@@ -631,8 +499,7 @@ export class NSCamera extends NSCameraBase {
         const owner: NSCamera = this.owner ? this.owner.get() : null;
         if (owner) {
           owner.sendEvent(NSCamera.videoRecordingReadyEvent, event.getAbsolutePath());
-          // owner.isRecording = false;
-          console.log('recording ready', owner, owner.isRecording);
+          that.CLog('recording ready', owner, owner.isRecording);
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoUI event');
         }
@@ -644,9 +511,7 @@ export class NSCamera extends NSCameraBase {
           // need to check flash mode when toggling...
           // front cam may not have flash - and just ensure the correct icon shows
           owner._ensureCorrectFlashIcon();
-          // try to set focus mode when camera gets toggled
-          owner._ensureFocusMode();
-          console.log('toggled camera', owner.cameraId, owner._cameraId, owner._camera.getPosition());
+          that.CLog('toggled camera', owner.cameraId, owner._cameraId, owner._camera.getPosition());
         } else {
           that.CError('!!! No owner reference found when handling onCameraVideoStopUI event');
         }
@@ -659,16 +524,7 @@ export class NSCamera extends NSCameraBase {
     this.isRecording = false;
     this._camera.setDoubleTapCameraSwitch(this._doubleTapCameraSwitch);
     this._camera.setDebug(this._debug);
-    console.log('Camera debug set to ', this._debug);
-    // try {
-    //   console.log('this._camera.setEnableVideo()', this._enableVideo);
-    //   this._camera.setEnableVideo(this._enableVideo); //sets initial mode for android camera plugin
-    //   // this.enableVideo = this._enableVideo;
-    // } catch (err) {
-    //   console.error(err);
-    // }
     this.updateQuality();
-    console.log('done with initNativeView()');
   }
 
   disposeNativeView() {
@@ -707,7 +563,7 @@ export class NSCamera extends NSCameraBase {
    */
   public takePicture(options?: ICameraOptions): void {
     if (this.isVideoEnabled()) {
-      console.error('in Video mode, change to photo mode to take a picture!');
+      this.CError('Currently in Video mode, change to photo mode to take a picture!');
       return null;
     }
     if (this._camera) {
@@ -733,7 +589,7 @@ export class NSCamera extends NSCameraBase {
 
   private releaseCamera(): void {
     if (this._camera) {
-      // this.CLog('releaseCamera()');
+      this.CLog('releaseCamera()');
       this._camera.release();
     }
   }
@@ -761,12 +617,6 @@ export class NSCamera extends NSCameraBase {
       }
       this._togglingCamera = true;
       this._camera.toggleCamera();
-      // this.sendEvent(NSCamera.toggleCameraEvent, this.camera);
-      // // need to check flash mode when toggling...
-      // // front cam may not have flash - and just ensure the correct icon shows
-      // this._ensureCorrectFlashIcon();
-      // // try to set focus mode when camera gets toggled
-      // this._ensureFocusMode();
     }
   }
 
@@ -837,57 +687,28 @@ export class NSCamera extends NSCameraBase {
   public async record(options?: IVideoOptions): Promise<void> {
     try {
       if (!this.isVideoEnabled()) {
-        console.error('in Photo mode, change to video mode to record!');
+        this.CError('in Photo mode, change to video mode to record!');
         return null;
       }
       if (this.isRecording) {
-        this.CLog('Currently recording, cannot call record()');
+        this.CError('Currently recording, cannot call record()');
         return;
       }
 
       options = {
         saveToGallery: options?.saveToGallery ? options.saveToGallery : this.saveToGallery,
         videoQuality: options?.videoQuality ? options.videoQuality : this.videoQuality,
-        // videoHeight: options?.videoHeight ? options.videoHeight : this.videoHeight, //not supported yet
-        // videoWidth: options?.videoWidth ? options.videoWidth : this.videoWidth, //not supported yet
         //if the following options are not specified, -1 will let Android select based on requested videoQuality
         androidMaxVideoBitRate: options?.androidMaxVideoBitRate ? options.androidMaxVideoBitRate : -1,
         androidMaxFrameRate: options?.androidMaxFrameRate ? options.androidMaxFrameRate : -1,
         androidMaxAudioBitRate: options?.androidMaxAudioBitRate ? options.androidMaxAudioBitRate : -1,
       };
       this.CLog('record options', options);
-      // if (options.saveToGallery) this._camera.setSaveToGallery(true);
-      // else this._camera.setSaveToGallery(false);
 
       if (this._camera) {
         this.isRecording = true;
         this._camera.setSaveToGallery(!!options.saveToGallery);
-        // switch (options.videoQuality) {
-        //   case CameraVideoQuality.HIGHEST:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('HIGHEST'));
-        //     break;
-        //   case CameraVideoQuality.LOWEST:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('LOWEST'));
-        //     break;
-        //   case CameraVideoQuality.MAX_2160P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_2160P'));
-        //     break;
-        //   case CameraVideoQuality.MAX_1080P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_1080P'));
-        //     break;
-        //   case CameraVideoQuality.MAX_720P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-        //     break;
-        //   case CameraVideoQuality.MAX_480P:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_480P'));
-        //     break;
-        //   case CameraVideoQuality.QVGA:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('QVGA'));
-        //     break;
-        //   default:
-        //     this._camera.setVideoQuality(io.github.triniwiz.fancycamera.Quality.valueOf('MAX_720P'));
-        //     break;
-        // }
+
         // -1 uses profile value;
         this._camera.setMaxAudioBitRate(options.androidMaxAudioBitRate || -1);
         this._camera.setMaxVideoBitrate(options.androidMaxVideoBitRate || -1);
@@ -901,16 +722,14 @@ export class NSCamera extends NSCameraBase {
         this._takePicBtn.setImageResource(takePicDrawable); // set the icon
         //if we have a flash button, Hide it while recording since we cannot turn it on/off during recording
         this._flashBtn?.setVisibility(android.view.View.GONE);
-        console.log('starting native recording');
-        this._camera.startRecording();
 
-        console.log('camera isRecording?', this.isRecording);
+        this._camera.startRecording();
       } else {
         this.CError('No camera instance! Make sure this is created and initialized before calling updateQuality');
         return;
       }
     } catch (err) {
-      console.error(err);
+      this.CError(err);
     }
   }
 
@@ -926,7 +745,7 @@ export class NSCamera extends NSCameraBase {
    */
   public stopRecording(): void {
     if (!this.isVideoEnabled()) {
-      console.error('in Photo mode, stop is not available');
+      this.CError('in Photo mode, stop is not available');
       return null;
     }
     if (!this.isRecording) {
@@ -937,10 +756,8 @@ export class NSCamera extends NSCameraBase {
       this.CLog(`*** updating UI ***`);
       const takePicDrawable = getImageDrawable(this.takeVideoIcon);
       this._takePicBtn.setImageResource(takePicDrawable); // set the icon
-      console.log('stopping native recording');
       this._camera.stopRecording();
       //show the flash button again if supported
-      console.log('checking flash button');
       this._ensureCorrectFlashIcon();
       this.isRecording = false;
       if (this.shouldLockRotation) {
@@ -1036,7 +853,6 @@ export class NSCamera extends NSCameraBase {
   _ensureCorrectFlashIcon(): void {
     // get current flash mode and set correct image drawable
     const currentFlashMode = this.getFlashMode();
-    // this.CLog('_ensureCorrectFlashIcon flash mode', currentFlashMode);
 
     // if the flash mode is null then we need to remove the button from the parent layout as camera does not have a flash to use
     if (currentFlashMode === null) {
@@ -1057,15 +873,9 @@ export class NSCamera extends NSCameraBase {
 
     // reset the image in the button first
     this._flashBtn.setImageResource((android as any).R.color.transparent);
-
     const flashIcon = currentFlashMode === FLASH_MODE_OFF ? this.flashOffIcon : this.flashOnIcon;
-    // this.CLog('flash icon is now ', flashIcon, 'off icon is ', this.flashOffIcon);
     const imageDrawable = getImageDrawable(flashIcon);
     this._flashBtn.setImageResource(imageDrawable);
-  }
-
-  private _ensureFocusMode(): void {
-    // TODO: setup autoFocus if possible
   }
 
   private _initFlashButton(): void {
@@ -1088,13 +898,10 @@ export class NSCamera extends NSCameraBase {
     );
     const flashParams = new android.widget.RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
     if (this.insetButtons === true) {
-      // this.CLog('insetButtons set to true, adjusting flash button layout');
       // need to get the width of the screen
       const layoutWidth = this._nativeView.getWidth();
-      // this.CLog(`layoutWidth = ${layoutWidth}`);
       const xMargin = layoutWidth * this.insetButtonsPercent;
       const layoutHeight = this._nativeView.getHeight();
-      // this.CLog(`layoutHeight = ${layoutHeight}`);
       const yMargin = layoutHeight * this.insetButtonsPercent;
       // add margin to left and top where the button is positioned
       flashParams.setMargins(xMargin, yMargin, 8, 8);
@@ -1172,21 +979,17 @@ export class NSCamera extends NSCameraBase {
             //check if we're currently doing a long click for snapchat style recording UI
             if (pEvent.getAction() == android.view.MotionEvent.ACTION_UP) {
               if (this.isButtonLongPressed) {
-                console.log('handling longpress action up, calling stop()');
                 //Note: if scrollview moves with this view inside, this will trigger false positives
                 this.isButtonLongPressed = false;
                 this.stop();
-                // owner.isRecording = false;
                 return false;
               } else {
                 return true;
               }
             } else if (pEvent.getAction() == android.view.MotionEvent.ACTION_DOWN) {
               if (!this.isButtonLongPressed && !owner.isRecording) {
-                console.log('handling longpress action up, calling record()');
                 this.record();
-                // owner.isRecording = true;
-              } else console.log('nothing to do?', this.isButtonLongPressed, owner.isRecording);
+              }
             }
           } else {
             //Photo Capture
@@ -1329,7 +1132,6 @@ export class NSCamera extends NSCameraBase {
           let trackDuration = 0;
           try {
             trackDuration = +mediadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
-            // this.CLog('trackDuration ', trackDuration); //returned in milliseconds
             const orientation = mediadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
             outRotation = +orientation;
           } catch (err) {
