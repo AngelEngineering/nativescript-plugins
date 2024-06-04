@@ -6,6 +6,7 @@ import { MessageData, Transcoder } from '@angelengineering/transcoder';
 import { check as checkPermission, request, request as requestPermission, checkMultiple } from '@nativescript-community/perms';
 import { VideoPlayer } from '@angelengineering/videoplayer';
 import { executeOnMainThread } from '@nativescript/core/utils';
+import { AudioPlayer, AudioPlayerOptions } from '@angelengineering/audio-player';
 
 export function navigatingTo(args: EventData) {
   const page = <Page>args.object;
@@ -15,8 +16,11 @@ export function navigatingTo(args: EventData) {
   }
 }
 
+type AudioPlayerEventData = EventData & { data: any };
+
 export class DemoModel extends DemoSharedTranscoder {
   pickedFile: File | undefined = undefined;
+  pickedAudio: File | undefined = undefined;
   transcoder: Transcoder;
   count = 0;
   timeStarted = 0;
@@ -88,6 +92,55 @@ export class DemoModel extends DemoSharedTranscoder {
 				*/
       });
     });
+
+    this.player = new AudioPlayer();
+    this.player.on(AudioPlayer.completeEvent, () => {
+      console.log('playback complete event');
+    });
+    this.player.on(AudioPlayer.seekEvent, () => {
+      console.log('seek event');
+    });
+    this.player.on(AudioPlayer.startedEvent, () => {
+      console.log('playback started event');
+    });
+    this.player.on(AudioPlayer.pausedEvent, () => {
+      console.log('playback paused event');
+    });
+    this.player.on(AudioPlayer.errorEvent, (event: AudioPlayerEventData) => {
+      console.error('Error event!', event.data);
+    });
+  }
+
+  async pickAudio() {
+    this.pickedFile = undefined;
+    let canPick = true;
+    if (isAndroid && +Device.sdkVersion > 32) {
+      const result = await checkMultiple({ audio: {} });
+      if (result['audio'] != 'authorized') {
+        console.log('No audio permission, requesting...');
+        await request('audio').then(result => {
+          console.log('Request result', result);
+          if (result[0] != 'authorized') canPick = false;
+        });
+      }
+      console.log('canPick?:', canPick);
+    } else if (isAndroid) {
+      //just request external_storage perms otherwise
+      const result = await checkPermission('storage');
+      if (result['storage'] != 'authorized') console.log('No storage permission, requesting...');
+      await request('storage').then(result => {
+        console.log('Request result', result);
+        if (result['android.permission.READ_EXTERNAL_STORAGE'] != 'authorized') canPick = false;
+      });
+    }
+
+    if (canPick) {
+      const files = await filePicker(MediaType.AUDIO, false);
+      console.log('files', files);
+      if (files.length) this.pickedAudio = files[0];
+
+      console.log('Selected file', this?.pickedAudio, this?.pickedAudio?.path);
+    } else alert('Need permissions to pick files from device storage');
   }
 
   //Pick video from device files
@@ -169,6 +222,85 @@ export class DemoModel extends DemoSharedTranscoder {
     this.processVideo(1080);
   }
 
+  protected player: AudioPlayer;
+
+  processAudio() {
+    if (!this.pickedAudio) {
+      const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');
+      console.error('No audio file selected to process');
+      outputDetailsLabel.visibility = 'visible';
+      outputDetailsLabel.text = `Error: No audio file selected to process!`;
+      outputDetailsLabel.textWrap = true;
+      outputDetailsLabel.fontSize = 16;
+      outputDetailsLabel.color = new Color('#C70300');
+      return;
+    }
+    const tempPath = knownFolders.documents().getFile(`audio-${this.count}.mp4`).path;
+    this.count += 1;
+    if (File.exists(tempPath)) {
+      const file = File.fromPath(tempPath);
+      file.removeSync();
+    }
+
+    this.timeStarted = new Date().getTime();
+    const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');
+
+    this.transcoder
+      .convertMp3ToMp4(this.pickedAudio.path, tempPath)
+      .then(transcodedFile => {
+        if (!transcodedFile) {
+          console.error('transcode did not return a file, error occurred!');
+          return;
+        }
+        const timeTaken = (new Date().getTime() - this.timeStarted) / 1000;
+        const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
+
+        progressBar.value = 100;
+        console.log('[PROCCESSING COMPLETED]', transcodedFile.path);
+        let inputFile = File.fromPath(this.pickedAudio.path);
+        console.log('[Original Size]', inputFile.size);
+        let outputFile = File.fromPath(transcodedFile.path);
+        console.log('[Transcoded Size]', outputFile.size);
+        console.log('[Time Taken]', `${timeTaken} seconds`);
+
+        this._playOptions.audioFile = transcodedFile.path;
+        this.player.prepareAudio(this._playOptions).then(status => {
+          console.log('done preparing');
+          if (status) {
+            console.log('duration:', this.player.duration);
+            this.player.play().then(() => {
+              console.log('done playing (promise complete)');
+            });
+            const file = File.fromPath(this._playOptions.audioFile);
+            console.log('playing file ', file.path, ' with size', file.size);
+          } else {
+            console.log('ERROR! Unable to prepare audio!');
+          }
+        });
+      })
+      .catch(error => {
+        console.error('[Error Transcoding]', error);
+        outputDetailsLabel.visibility = 'visible';
+        outputDetailsLabel.text = `Error: ${error}`;
+        outputDetailsLabel.textWrap = true;
+        outputDetailsLabel.fontSize = 16;
+        outputDetailsLabel.color = new Color('#C70300');
+      });
+  }
+  protected _playOptions: AudioPlayerOptions = {
+    audioFile: '',
+    loop: false,
+    audioMixing: false,
+    completeCallback: async result => {
+      console.log('AudioPlayer - Audio file playback complete.', result);
+    },
+    errorCallback: errorObject => {
+      console.error('AudioPlayer error!', JSON.stringify(errorObject));
+    },
+    infoCallback: infoObject => {
+      console.info('AudioPlayer info: ', JSON.stringify(infoObject));
+    },
+  };
   processVideo(height: number, frameRate?: number) {
     if (!this.pickedFile) {
       const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');

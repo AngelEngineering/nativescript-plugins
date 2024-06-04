@@ -122,6 +122,88 @@ export class Transcoder extends TranscoderCommon {
     });
   }
 
+  convertMp3ToMp4(inputPath: string, outputPath: string): Promise<File> {
+    return new Promise((resolve, reject) => {
+      if (File.exists(outputPath)) {
+        const file = File.fromPath(outputPath);
+        file.removeSync();
+      }
+
+      if (!File.exists(inputPath)) {
+        console.error('Input file does not exist!', inputPath);
+        return reject('Input file does not exist!');
+      }
+
+      const emit = (event: string, data: any) => {
+        this.notify({ eventName: event, object: this, data });
+      };
+
+      const audioProcessors = new com.google.common.collect.ImmutableList.Builder<androidx.media3.common.audio.AudioProcessor>().build();
+      // const videoEffects = com.google.common.collect.ImmutableList.of(androidx.media3.effect.Presentation.createForWidthAndHeight(width, height, 1));
+      const videoEffects = new com.google.common.collect.ImmutableList.Builder<androidx.media3.common.Effect>().build();
+      // Presentation.createForHeight(height));
+      //if you only want to select a height and have media3 handle the width, use the following instead
+      // const videoEffects = com.google.common.collect.ImmutableList.of(androidx.media3.effect.Presentation.createForHeight(height));
+      const inputMediaItem: androidx.media3.common.MediaItem = androidx.media3.common.MediaItem.fromUri(inputPath);
+
+      const editedMediaItem: androidx.media3.transformer.EditedMediaItem = new androidx.media3.transformer.EditedMediaItem.Builder(inputMediaItem)
+        //@ts-ignore
+        .setEffects(new androidx.media3.transformer.Effects(/* audioProcessors= */ audioProcessors, /* videoEffects= */ videoEffects))
+        .build();
+
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      const that = this;
+      const listener: androidx.media3.transformer.Transformer.Listener = new androidx.media3.transformer.Transformer.Listener({
+        onTransformationCompleted: (inputMediaItem: androidx.media3.common.MediaItem) => {
+          that.log('onTransformationCompleted');
+          emit(TranscoderCommon.TRANSCODING_COMPLETE, {});
+          resolve(File.fromPath(outputPath));
+          clearInterval(progressUpdater);
+        },
+        onCompleted: (composition: androidx.media3.transformer.Composition, exportResult: androidx.media3.transformer.ExportResult) => {
+          that.log('onCompleted');
+          emit(TranscoderCommon.TRANSCODING_COMPLETE, { output: outputPath });
+          resolve(File.fromPath(outputPath));
+          clearInterval(progressUpdater);
+        },
+        //@ts-ignore
+        onTransformationError: (inputMediaItem: androidx.media3.common.MediaItem, exception: androidx.media3.transformer.TransformationException) => {
+          that.log('onTransformationError!', exception);
+          emit(TranscoderCommon.TRANSCODING_ERROR, { error: exception });
+          reject(exception);
+          clearInterval(progressUpdater);
+        },
+        onError: (composition: androidx.media3.transformer.Composition, exportResult: androidx.media3.transformer.ExportResult, exportException: androidx.media3.transformer.ExportException) => {
+          that.log('onError', exportException);
+          emit(TranscoderCommon.TRANSCODING_ERROR, { error: exportException });
+          reject(exportException);
+          clearInterval(progressUpdater);
+        },
+        //@ts-ignore
+        onFallbackApplied: (
+          inputMediaItem: androidx.media3.common.MediaItem,
+          originalTransformationRequest: androidx.media3.transformer.TransformationRequest,
+          fallbackTransformationRequest: androidx.media3.transformer.TransformationRequest
+        ) => {
+          this.log('onFallbackApplied');
+        },
+      });
+      const transformer: androidx.media3.transformer.Transformer = new androidx.media3.transformer.Transformer.Builder(this.getAndroidContext())
+        .setVideoMimeType(androidx.media3.common.MimeTypes.VIDEO_H264)
+        .setAudioMimeType(androidx.media3.common.MimeTypes.AUDIO_AAC)
+        .addListener(listener)
+        .build();
+      transformer.start(editedMediaItem, outputPath);
+      emit(TranscoderCommon.TRANSCODING_STARTED, null);
+      const progressHolder: androidx.media3.transformer.ProgressHolder = new androidx.media3.transformer.ProgressHolder();
+      const progressUpdater = setInterval(() => {
+        transformer.getProgress(progressHolder);
+        this.log('Progress: ' + progressHolder.progress / 100);
+        emit(TranscoderCommon.TRANSCODING_PROGRESS, { progress: progressHolder.progress / 100 });
+      }, 200);
+    });
+  }
+
   /**
    *  UTILITIES
    */

@@ -20,6 +20,8 @@ export declare class Transcoder extends TranscoderCommon {
    */
   transcode(inputPath: string, outputPath: string, videoConfig?: VideoConfig): Promise<File>;
 
+  convertMp3ToMp4(inputPath: string, outputPath: string): Promise<File>;
+
   /***********************
    Utility Functions:
    **********************/
