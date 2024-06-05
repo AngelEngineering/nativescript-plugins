@@ -12,6 +12,10 @@ Note: Only available system video/audio codecs/formats are supported, so the tra
 
 For both Android and iOS, the transcoded video files will be saved as an MP4 file using h264 and AAC encoding for maximum compatibility. 
 
+
+For Android, this plugin also provides a function *convertAudioToMp4* which will convert an audio file or url to an mp4 file with AAC audio. 
+
+
 ## Installation
 
 ```bash

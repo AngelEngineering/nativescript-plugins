@@ -116,6 +116,11 @@ export class Transcoder extends TranscoderCommon {
     });
   }
 
+  convertAudioToMp4(inputPath: string, outputPath: string): Promise<File> {
+    console.error('convertMp3ToMp4 is only supported on Android!');
+    return null;
+  }
+
   getURLFromFilePath(filePath: string): NSURL {
     if (filePath.includes('assets-library://')) {
       return NSURL.URLWithString(filePath);

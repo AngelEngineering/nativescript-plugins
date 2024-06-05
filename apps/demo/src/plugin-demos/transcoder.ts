@@ -13,6 +13,9 @@ export function navigatingTo(args: EventData) {
   page.bindingContext = new DemoModel();
   if (isIOS) {
     (page.getViewById('ios-gallery-button') as Button).visibility = 'visible';
+    (page.getViewById('audio-convert-button') as Button).visibility = 'collapsed';
+    (page.getViewById('audio-picker-button') as Button).visibility = 'collapsed';
+    (page.getViewById('mp3-picker-button') as Button).visibility = 'collapsed';
   }
 }
 
@@ -235,6 +238,14 @@ export class DemoModel extends DemoSharedTranscoder {
       outputDetailsLabel.color = new Color('#C70300');
       return;
     }
+    this.convertAudio(this.pickedAudio.path);
+  }
+
+  processURL() {
+    this.convertAudio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+  }
+
+  convertAudio(inputPath: string) {
     const tempPath = knownFolders.documents().getFile(`audio-${this.count}.mp4`).path;
     this.count += 1;
     if (File.exists(tempPath)) {
@@ -246,7 +257,7 @@ export class DemoModel extends DemoSharedTranscoder {
     const outputDetailsLabel: Label = Frame.topmost().getViewById('outputDetails');
 
     this.transcoder
-      .convertMp3ToMp4(this.pickedAudio.path, tempPath)
+      .convertAudioToMp4(inputPath, tempPath)
       .then(transcodedFile => {
         if (!transcodedFile) {
           console.error('transcode did not return a file, error occurred!');
@@ -257,8 +268,8 @@ export class DemoModel extends DemoSharedTranscoder {
 
         progressBar.value = 100;
         console.log('[PROCCESSING COMPLETED]', transcodedFile.path);
-        let inputFile = File.fromPath(this.pickedAudio.path);
-        console.log('[Original Size]', inputFile.size);
+        // let inputFile = File.fromPath(this.pickedAudio.path);
+        // console.log('[Original Size]', inputFile.size);
         let outputFile = File.fromPath(transcodedFile.path);
         console.log('[Transcoded Size]', outputFile.size);
         console.log('[Time Taken]', `${timeTaken} seconds`);
@@ -287,6 +298,7 @@ export class DemoModel extends DemoSharedTranscoder {
         outputDetailsLabel.color = new Color('#C70300');
       });
   }
+
   protected _playOptions: AudioPlayerOptions = {
     audioFile: '',
     loop: false,

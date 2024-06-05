@@ -1,7 +1,7 @@
 import { EventData, File, Observable, isAndroid } from '@nativescript/core';
 
 export class TranscoderCommon extends Observable {
-  private _logLevel: LogLevel = 'none';
+  private _logLevel: LogLevel = 'verbose';
   /**
    * Enables or diables console logging for debug purposes.
    * @param logLevel LogLevel

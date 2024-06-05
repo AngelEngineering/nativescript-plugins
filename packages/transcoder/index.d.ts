@@ -20,7 +20,15 @@ export declare class Transcoder extends TranscoderCommon {
    */
   transcode(inputPath: string, outputPath: string, videoConfig?: VideoConfig): Promise<File>;
 
-  convertMp3ToMp4(inputPath: string, outputPath: string): Promise<File>;
+  /**
+   * ** ANDROID ONLY **
+   * Transcodes audio from inputPath to outputPath as an MP4 container with AAC audio
+   * @param inputPath string (can be a url or absolute path)
+   * @param outputPath string
+   * @returns Promise<File>
+   *
+   */
+  convertAudioToMp4(inputPath: string, outputPath: string): Promise<File>;
 
   /***********************
    Utility Functions:

@@ -23,9 +23,14 @@
         <Button text="1080p"
           tap="{{ processVideo1080 }}"/>
         <Button text="Pick Audio File"
+          id="audio-picker-button"
           tap="{{ pickAudio }}"/>
-        <Button text="Convert to MP4"
-          tap="{{ processAudio }}"/>
+        <Button text="Convert picked file to MP4"
+          tap="{{ processAudio }}"
+          id="audio-convert-button"/>
+        <Button text="Convert URL to MP4"
+          tap="{{ processURL }}"
+          id="mp3-convert-button"/>
         <Progress id="transcodingProgress"
           maxValue="100"/>
         <Video:VideoPlayer id="nativeVideoPlayer"
