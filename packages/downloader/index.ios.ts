@@ -1,6 +1,6 @@
 import { DownloaderCommon, DownloadOptions } from './common';
 import { File, path, knownFolders, Application, Device } from '@nativescript/core';
-import { iOSNativeHelper } from '@nativescript/core/utils';
+import { Utils } from '@nativescript/core';
 
 const currentDevice = UIDevice.currentDevice;
 const device = currentDevice.userInterfaceIdiom === UIUserInterfaceIdiom.Phone ? 'Phone' : 'Pad';
@@ -84,7 +84,7 @@ export class Downloader extends DownloaderCommon {
           ) {
             completionHandler(NSURLSessionResponseDisposition.Allow);
             this.handle = NSFileHandle.fileHandleForWritingAtPath(downloadedFile.path);
-            if (iOSNativeHelper.MajorVersion > 12) this.handle.truncateAtOffsetError(0); //only on iOS13+
+            if (Utils.SDK_VERSION > 12) this.handle.truncateAtOffsetError(0); //only on iOS13+
             else this.handle.truncateFileAtOffset(0);
             this.contentLength = response.expectedContentLength;
             emit(DownloaderCommon.DOWNLOAD_STARTED, { contentLength: this.contentLength });
@@ -92,7 +92,7 @@ export class Downloader extends DownloaderCommon {
 
           public URLSessionDataTaskDidReceiveData(_session: NSURLSession, _dataTask: NSURLSessionDataTask, data: NSData) {
             try {
-              if (iOSNativeHelper.MajorVersion > 12) {
+              if (Utils.SDK_VERSION > 12) {
                 const written = new interop.Reference(0);
                 if (!this.handle.seekToEndReturningOffsetError(written)) {
                   emit(DownloaderCommon.DOWNLOAD_ERROR, { error: 'Error seeking end of file' });
@@ -126,7 +126,7 @@ export class Downloader extends DownloaderCommon {
 
           public URLSessionTaskDidCompleteWithError(_session: NSURLSession, task: NSURLSessionTask, error: NSError) {
             if (this.handle) {
-              if (iOSNativeHelper.MajorVersion > 12) this.handle.closeAndReturnError();
+              if (Utils.SDK_VERSION > 12) this.handle.closeAndReturnError();
               else this.handle.closeFile();
             }
             if (error) {
@@ -252,7 +252,7 @@ export class Downloader extends DownloaderCommon {
                 );
               }
               if (copyPicker) {
-                if (iOSNativeHelper.MajorVersion < 14) {
+                if (Utils.SDK_VERSION < 14) {
                   console.error('Destination Picker only available on iOS 14+ ');
                   resolve(downloadedFile);
                 } else {

@@ -11,7 +11,7 @@
 
 import { Color, ImageAsset, View, File, Screen, Frame, Application, ImageSource, path, knownFolders } from '@nativescript/core';
 import { NSCameraBase, CameraTypes, CameraVideoQuality, ICameraOptions, IVideoOptions } from './common';
-import { iOSNativeHelper } from '@nativescript/core/utils';
+import { Utils } from '@nativescript/core';
 export * from './common';
 export { CameraVideoQuality, WhiteBalance } from './common';
 
@@ -669,7 +669,7 @@ export class MySwifty extends SwiftyCamViewController {
   public enableRotation(): void {
     if (!this._owner.get().shouldLockRotation) return;
     this.allowRotation = true;
-    if (+iOSNativeHelper.MajorVersion >= 16) {
+    if (Utils.SDK_VERSION >= 16) {
       this.updateiOS16Orientations();
     } else {
       UINavigationController.attemptRotationToDeviceOrientation();
@@ -687,7 +687,7 @@ export class MySwifty extends SwiftyCamViewController {
 
     this.getOrientationMaskForCurrent();
     this.allowRotation = false;
-    if (+iOSNativeHelper.MajorVersion >= 16) {
+    if (Utils.SDK_VERSION >= 16) {
       this.updateiOS16Orientations();
     }
   }
@@ -1034,6 +1034,7 @@ export class NSCamera extends NSCameraBase {
 
       /* tslint:disable-next-line: no-any */
       const buffer: any = interop.alloc(5 * _SYS_NAMELEN);
+      // @ts-expect-error
       uname(buffer);
       let name: string = NSString.stringWithUTF8String(buffer.add(_SYS_NAMELEN * 4)).toString();
       // Get machine name for Simulator

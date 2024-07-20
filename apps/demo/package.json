@@ -20,7 +20,7 @@
     "@angelengineering/transcoder": "file:../../packages/transcoder"
   },
   "devDependencies": {
-    "@nativescript/android": "8.7.0",
-    "@nativescript/ios": "8.7.1-next.2024-04-16-8705084282"
+    "@nativescript/android": "~8.8.0",
+    "@nativescript/ios": "~8.8.0"
   }
 }

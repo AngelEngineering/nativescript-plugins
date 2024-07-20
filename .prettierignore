@@ -6,3 +6,5 @@ native-src
 /.vscode
 *.json
 *.scss
+
+/.nx/workspace-data

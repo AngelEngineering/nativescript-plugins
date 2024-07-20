@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "husky install && npx ts-patch install",
-    "setup": "npx rimraf node_modules package-lock.json dist tmp yarn.lock && yarn config set ignore-engines true && ns package-manager set npm && yarn",
+    "setup": "npx rimraf node_modules package-lock.json dist tmp yarn.lock && yarn",
     "start": "nps",
     "add": "nx g @nativescript/plugin-tools:add-package",
     "config": "nx g @nativescript/plugin-tools:config",
@@ -16,16 +16,16 @@
   },
   "private": true,
   "devDependencies": {
-    "@nativescript/core": "8.7.2",
-    "@nativescript/plugin-tools": "5.2.4",
-    "@nativescript/types": "8.7.0",
-    "@nativescript/webpack": "5.0.21",
-    "husky": "8.0.3",
+    "@nativescript/core": "~8.8.0",
+    "@nativescript/plugin-tools": "5.3.0",
+    "@nativescript/types": "~8.8.0",
+    "@nativescript/webpack": "5.0.22",
+    "husky": "~9.0.0",
     "nativescript-vue": "2.9.3",
     "nativescript-vue-template-compiler": "2.9.3",
-    "ng-packagr": "^16.2.3",
-    "rxjs": "7.5.0",
-    "typescript": "~4.9.0"
+    "ng-packagr": "^18.0.0",
+    "rxjs": "~7.8.0",
+    "typescript": "~5.5.0"
   },
   "lint-staged": {
     "**/*.{js,ts,scss,json,html}": [

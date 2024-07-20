@@ -1,12 +1,9 @@
-import * as platform from '@nativescript/core/platform';
-import * as application from '@nativescript/core/application';
-import * as appSettings from '@nativescript/core/application-settings';
-import { File, knownFolders } from '@nativescript/core';
+import { File, knownFolders, ApplicationSettings, Utils } from '@nativescript/core';
 
 const PATH_LIST_KEY = 'TempFile::deletePathLater';
 
 function getPathList(): string[] {
-  const pathListJSON: string = appSettings.getString(PATH_LIST_KEY, '[]');
+  const pathListJSON: string = ApplicationSettings.getString(PATH_LIST_KEY, '[]');
   let pathList: string[] = [];
   try {
     pathList = JSON.parse(pathListJSON);
@@ -16,7 +13,7 @@ function getPathList(): string[] {
   return pathList;
 }
 function setPathList(pathList: string[]): void {
-  appSettings.setString(PATH_LIST_KEY, JSON.stringify(pathList));
+  ApplicationSettings.setString(PATH_LIST_KEY, JSON.stringify(pathList));
 }
 
 export class TempFile {
@@ -24,14 +21,14 @@ export class TempFile {
   //  be deleted later (e.g. when the app closes)
   public static getPath(prefix: string, suffix: string): string {
     let path: string = null;
-    if (platform.isAndroid) {
-      const context: android.content.Context = application.android.context;
+    if (__ANDROID__) {
+      const context: android.content.Context = Utils.android.getApplicationContext();
       //The system will automatically delete files in the cache directory as disk space is needed elsewhere on the device.
       // we'll attempt to get an external sd card first if one is available
       const dir = context.getExternalCacheDir() || context.getCacheDir();
       const file = java.io.File.createTempFile(prefix, suffix, dir);
       path = file.getAbsolutePath();
-    } else if (platform.isIOS) {
+    } else if (__IOS__) {
       const name: string = NSUUID.UUID().UUIDString;
       path = knownFolders.temp().getFile(prefix + name + suffix).path;
     }
@@ -48,7 +45,7 @@ export class TempFile {
     // NOTE: this only deletes the file on VM exit, which does not cover all
     //  app exit scenarios: https://developer.android.com/reference/java/io/File.html#deleteOnExit()
     // So, we will call cleanup() on app init as well
-    if (platform.isAndroid) {
+    if (__ANDROID__) {
       const file = new java.io.File(path);
       file.deleteOnExit();
     }

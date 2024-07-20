@@ -1,4 +1,4 @@
-/* eslint-disable @nrwl/nx/enforce-module-boundaries */
+/* eslint-disable @nx/enforce-module-boundaries */
 import { EventData, Page, getViewById, View, Label, Button } from '@nativescript/core';
 import { DemoSharedSleepcontrol } from '@demo/shared';
 import { allowSleep, denySleep, isSleepAllowed } from '@angelengineering/sleepcontrol';

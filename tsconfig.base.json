@@ -26,35 +26,35 @@
       "@angelengineering/*": [
         "packages/*"
       ],
-      "@angelengineering/flashlight": [
-        "packages/flashlight/index.d.ts"
-      ],
-      "@demo/shared": [
-        "tools/demo/index.ts"
-      ],
-      "@angelengineering/filepicker": [
-        "packages/filepicker/index.d.ts"
-      ],
-      "@angelengineering/downloader": [
-        "packages/downloader/index.d.ts"
-      ],
       "@angelengineering/audio-player": [
         "packages/audio-player/index.d.ts"
       ],
       "@angelengineering/audio-recorder": [
         "packages/audio-recorder/index.d.ts"
       ],
+      "@angelengineering/camera": [
+        "packages/camera/index.d.ts"
+      ],
+      "@angelengineering/downloader": [
+        "packages/downloader/index.d.ts"
+      ],
+      "@angelengineering/filepicker": [
+        "packages/filepicker/index.d.ts"
+      ],
+      "@angelengineering/flashlight": [
+        "packages/flashlight/index.d.ts"
+      ],
       "@angelengineering/sleepcontrol": [
         "packages/sleepcontrol/index.d.ts"
       ],
-      "@angelengineering/camera": [
-        "packages/camera/index.d.ts"
+      "@angelengineering/transcoder": [
+        "packages/transcoder/index.d.ts"
       ],
       "@angelengineering/videoplayer": [
         "packages/videoplayer/index.d.ts"
       ],
-      "@angelengineering/transcoder": [
-        "packages/transcoder/index.d.ts"
+      "@demo/shared": [
+        "tools/demo/index.ts"
       ]
     }
   },

@@ -1,4 +1,4 @@
-/* eslint-disable @nrwl/nx/enforce-module-boundaries */
+/* eslint-disable @nx/enforce-module-boundaries */
 import { EventData, Page, isAndroid, File, Frame, StackLayout, GridLayout, Color, Label, knownFolders } from '@nativescript/core';
 import { DemoSharedAudioPlayer } from '@demo/shared';
 import { AudioPlayer, AudioPlayerOptions } from '@angelengineering/audio-player';
