@@ -23,21 +23,20 @@ declare module androidx {
 declare module androidx {
   export module media3 {
     export module effect {
-      export class AlphaScaleShaderProgram extends androidx.media3.effect.SingleFrameGlShaderProgram {
+      export class AlphaScaleShaderProgram extends androidx.media3.effect.BaseGlShaderProgram {
         public static class: java.lang.Class<androidx.media3.effect.AlphaScaleShaderProgram>;
-        public constructor(useHighPrecisionColorComponents: boolean);
-        public releaseOutputFrame(param0: androidx.media3.common.GlTextureInfo): void;
-        public release(): void;
-        public configure(inputWidth: number, inputHeight: number): androidx.media3.common.util.Size;
-        public setErrorListener(param0: java.util.concurrent.Executor, param1: androidx.media3.effect.GlShaderProgram.ErrorListener): void;
-        public flush(): void;
         public setInputListener(param0: androidx.media3.effect.GlShaderProgram.InputListener): void;
         public signalEndOfCurrentInputStream(): void;
         public constructor(useHighPrecisionColorComponents: boolean, texturePoolCapacity: number);
+        public releaseOutputFrame(param0: androidx.media3.common.GlTextureInfo): void;
+        public release(): void;
+        public configure(inputWidth: number, inputHeight: number): androidx.media3.common.util.Size;
         public drawFrame(this_: number, inputTexId: number): void;
+        public setErrorListener(param0: java.util.concurrent.Executor, param1: androidx.media3.effect.GlShaderProgram.ErrorListener): void;
         public setOutputListener(param0: androidx.media3.effect.GlShaderProgram.OutputListener): void;
         public queueInputFrame(param0: androidx.media3.common.GlObjectsProvider, param1: androidx.media3.common.GlTextureInfo, param2: number): void;
         public constructor(this_: globalAndroid.content.Context, context: boolean, useHdr: number);
+        public flush(): void;
       }
     }
   }
@@ -88,6 +87,7 @@ declare module androidx {
           overlaySettings: androidx.media3.effect.OverlaySettings
         ): androidx.media3.effect.BitmapOverlay;
         public getTextureSize(presentationTimeUs: number): androidx.media3.common.util.Size;
+        public getVertexTransformation(presentationTimeUs: number): androidNative.Array<number>;
         public static createStaticBitmapOverlay(overlayBitmap: globalAndroid.graphics.Bitmap): androidx.media3.effect.BitmapOverlay;
         public constructor();
         public getBitmap(param0: number): globalAndroid.graphics.Bitmap;
@@ -101,6 +101,8 @@ declare module androidx {
     export module effect {
       export class BitmapTextureManager extends androidx.media3.effect.TextureManager {
         public static class: java.lang.Class<androidx.media3.effect.BitmapTextureManager>;
+        public signalEndOfCurrentInputStream(): void;
+        public getPendingFrameCount(): number;
         public release(): void;
         public onInputFrameProcessed(inputTexture: androidx.media3.common.GlTextureInfo): void;
         public queueInputBitmap(
@@ -110,22 +112,11 @@ declare module androidx {
           useHdr: boolean
         ): void;
         public onFlush(): void;
-        public registerInputFrame(frameInfo: androidx.media3.common.FrameInfo): void;
-        public setDefaultBufferSize(width: number, height: number): void;
-        public signalEndOfCurrentInputStream(): void;
-        public getPendingFrameCount(): number;
-        public constructor(
-          glObjectsProvider: androidx.media3.common.GlObjectsProvider,
-          shaderProgram: androidx.media3.effect.GlShaderProgram,
-          videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor
-        );
-        public setOnFlushCompleteListener(task: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
-        public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
-        public setOnFlushCompleteListener(param0: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
-        public queueInputTexture(inputTexId: number, presentationTimeUs: number): void;
+        public constructor(videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor);
+        public constructor(glObjectsProvider: androidx.media3.common.GlObjectsProvider, videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor);
         public onReadyToAcceptInputFrame(): void;
-        public setInputFrameInfo(inputFrameInfo: androidx.media3.common.FrameInfo): void;
-        public getInputSurface(): globalAndroid.view.Surface;
+        public setSamplingGlShaderProgram(samplingGlShaderProgram: androidx.media3.effect.GlShaderProgram): void;
+        public flush(): void;
       }
       export module BitmapTextureManager {
         export class BitmapFrameSequenceInfo {
@@ -133,17 +124,6 @@ declare module androidx {
           public bitmap: globalAndroid.graphics.Bitmap;
           public constructor(bitmap: globalAndroid.graphics.Bitmap, frameInfo: androidx.media3.common.FrameInfo, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator);
         }
-      }
-    }
-  }
-}
-
-declare module androidx {
-  export module media3 {
-    export module effect {
-      export class BitmapUtil {
-        public static class: java.lang.Class<androidx.media3.effect.BitmapUtil>;
-        public static flipBitmapVertically(bitmap: globalAndroid.graphics.Bitmap): globalAndroid.graphics.Bitmap;
       }
     }
   }
@@ -269,6 +249,25 @@ declare module androidx {
 declare module androidx {
   export module media3 {
     export module effect {
+      export class ConvolutionFunction1D {
+        public static class: java.lang.Class<androidx.media3.effect.ConvolutionFunction1D>;
+        /**
+         * Constructs a new instance of the androidx.media3.effect.ConvolutionFunction1D interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+         */
+        public constructor(implementation: { domainStart(): number; domainEnd(): number; width(): number; value(param0: number): number });
+        public constructor();
+        public domainStart(): number;
+        public width(): number;
+        public value(param0: number): number;
+        public domainEnd(): number;
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
       export class Crop extends androidx.media3.effect.MatrixTransformation {
         public static class: java.lang.Class<androidx.media3.effect.Crop>;
         public configure(inputWidth: number, inputHeight: number): androidx.media3.common.util.Size;
@@ -290,6 +289,7 @@ declare module androidx {
     export module effect {
       export class DebugTraceUtil {
         public static class: java.lang.Class<androidx.media3.effect.DebugTraceUtil>;
+        public static enableTracing: boolean;
         public static EVENT_VIDEO_INPUT_FORMAT: string = 'VideoInputFormat';
         public static EVENT_DECODER_DECODED_FRAME: string = 'Decoder-DecodedFrame';
         public static EVENT_VFP_REGISTER_NEW_INPUT_STREAM: string = 'VFP-RegisterNewInputStream';
@@ -316,7 +316,7 @@ declare module androidx {
         public static EVENT_ENCODER_RECEIVE_EOS: string = 'Encoder-ReceiveEOS';
         public static EVENT_MUXER_TRACK_ENDED_AUDIO: string = 'Muxer-TrackEnded_Audio';
         public static EVENT_MUXER_TRACK_ENDED_VIDEO: string = 'Muxer-TrackEnded_Video';
-        public static logEvent(eventName: string, presentationTimeUs: number, extra: string): void;
+        public static logEvent(eventName: string, presentationTimeUs: number, extraFormat: string, extraArgs: androidNative.Array<any>): void;
         public static logEvent(eventName: string, presentationTimeUs: number): void;
         public static generateTraceSummary(): string;
         public static dumpTsv(eventLog: java.io.Writer): void;
@@ -341,7 +341,7 @@ declare module androidx {
         }
         export class EventLogger {
           public static class: java.lang.Class<androidx.media3.effect.DebugTraceUtil.EventLogger>;
-          public toString(): string;
+          public toJson(eventLog: globalAndroid.util.JsonWriter): void;
           public constructor();
           public getLogs(): com.google.common.collect.ImmutableList<androidx.media3.effect.DebugTraceUtil.EventLog>;
           public addLog(log: androidx.media3.effect.DebugTraceUtil.EventLog): void;
@@ -396,24 +396,13 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.effect.DefaultShaderProgram>;
         public release(): void;
         public releaseOutputFrame(param0: androidx.media3.common.GlTextureInfo): void;
-        public static createWithInternalSampler(
-          context: globalAndroid.content.Context,
-          matrixTransformations: java.util.List<androidx.media3.effect.GlMatrixTransformation>,
-          rgbMatrices: java.util.List<androidx.media3.effect.RgbMatrix>,
-          inputColorInfo: androidx.media3.common.ColorInfo,
-          outputColorInfo: androidx.media3.common.ColorInfo,
-          enableColorTransfers: boolean,
-          inputType: number
-        ): androidx.media3.effect.DefaultShaderProgram;
+        public configure(inputWidth: number, inputHeight: number): androidx.media3.common.util.Size;
         public static createWithExternalSampler(
           context: globalAndroid.content.Context,
-          matrixTransformations: java.util.List<androidx.media3.effect.GlMatrixTransformation>,
-          rgbMatrices: java.util.List<androidx.media3.effect.RgbMatrix>,
           inputColorInfo: androidx.media3.common.ColorInfo,
           outputColorInfo: androidx.media3.common.ColorInfo,
           enableColorTransfers: boolean
         ): androidx.media3.effect.DefaultShaderProgram;
-        public configure(inputWidth: number, inputHeight: number): androidx.media3.common.util.Size;
         public static create(
           context: globalAndroid.content.Context,
           matrixTransformations: java.util.List<androidx.media3.effect.GlMatrixTransformation>,
@@ -435,6 +424,13 @@ declare module androidx {
         public drawFrame(this_: number, inputTexId: number): void;
         public setTextureTransformMatrix(textureTransformMatrix: androidNative.Array<number>): void;
         public getOutputColorTransfer(): number;
+        public static createWithInternalSampler(
+          context: globalAndroid.content.Context,
+          inputColorInfo: androidx.media3.common.ColorInfo,
+          outputColorInfo: androidx.media3.common.ColorInfo,
+          enableColorTransfers: boolean,
+          inputType: number
+        ): androidx.media3.effect.DefaultShaderProgram;
         public setOutputColorTransfer(colorTransfer: number): void;
         public setOutputListener(param0: androidx.media3.effect.GlShaderProgram.OutputListener): void;
         public queueInputFrame(param0: androidx.media3.common.GlObjectsProvider, param1: androidx.media3.common.GlTextureInfo, param2: number): void;
@@ -520,12 +516,12 @@ declare module androidx {
         public registerInputStream(pendingInputStreamInfo: number, this_: java.util.List<androidx.media3.common.Effect>, inputType: androidx.media3.common.FrameInfo): void;
         public setOutputSurfaceInfo(outputSurfaceInfo: androidx.media3.common.SurfaceInfo): void;
         public setInputDefaultBufferSize(width: number, height: number): void;
-        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): boolean;
         public queueInputTexture(textureId: number, presentationTimeUs: number): boolean;
         public registerInputFrame(): boolean;
         public signalEndOfInput(): void;
         public flush(): void;
         public renderOutputFrame(renderTimeNs: number): void;
+        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): boolean;
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
         public getInputSurface(): globalAndroid.view.Surface;
       }
@@ -537,8 +533,7 @@ declare module androidx {
             e: globalAndroid.content.Context,
             this_: androidx.media3.common.DebugViewProvider,
             context: androidx.media3.common.ColorInfo,
-            debugViewProvider: androidx.media3.common.ColorInfo,
-            inputColorInfo: boolean,
+            debugViewProvider: boolean,
             outputColorInfo: java.util.concurrent.Executor,
             renderFramesAutomatically: androidx.media3.common.VideoFrameProcessor.Listener
           ): androidx.media3.effect.DefaultVideoFrameProcessor;
@@ -551,6 +546,7 @@ declare module androidx {
             public build(): androidx.media3.effect.DefaultVideoFrameProcessor.Factory;
             public setExecutorService(executorService: java.util.concurrent.ExecutorService): androidx.media3.effect.DefaultVideoFrameProcessor.Factory.Builder;
             public setEnableColorTransfers(enableColorTransfers: boolean): androidx.media3.effect.DefaultVideoFrameProcessor.Factory.Builder;
+            public setRequireRegisteringAllInputFrames(requireRegisteringAllInputFrames: boolean): androidx.media3.effect.DefaultVideoFrameProcessor.Factory.Builder;
             public setTextureOutput(
               textureOutputListener: androidx.media3.effect.GlTextureProducer.Listener,
               textureOutputCapacity: number
@@ -631,31 +627,18 @@ declare module androidx {
     export module effect {
       export class ExternalTextureManager extends androidx.media3.effect.TextureManager {
         public static class: java.lang.Class<androidx.media3.effect.ExternalTextureManager>;
+        public constructor(this_: androidx.media3.common.GlObjectsProvider, glObjectsProvider: androidx.media3.effect.VideoFrameProcessingTaskExecutor, videoFrameProcessingTaskExecutor: boolean);
         public release(): void;
         public onInputFrameProcessed(inputTexture: androidx.media3.common.GlTextureInfo): void;
-        public queueInputBitmap(
-          inputBitmap: globalAndroid.graphics.Bitmap,
-          frameInfo: androidx.media3.common.FrameInfo,
-          inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator,
-          useHdr: boolean
-        ): void;
         public onFlush(): void;
-        public constructor(
-          this_: androidx.media3.common.GlObjectsProvider,
-          glObjectsProvider: androidx.media3.effect.ExternalShaderProgram,
-          externalShaderProgram: androidx.media3.effect.VideoFrameProcessingTaskExecutor
-        );
+        public constructor(videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor);
         public registerInputFrame(frame: androidx.media3.common.FrameInfo): void;
-        public registerInputFrame(frameInfo: androidx.media3.common.FrameInfo): void;
         public setDefaultBufferSize(width: number, height: number): void;
+        public setSamplingGlShaderProgram(samplingGlShaderProgram: androidx.media3.effect.GlShaderProgram): void;
+        public flush(): void;
         public signalEndOfCurrentInputStream(): void;
         public getPendingFrameCount(): number;
-        public setOnFlushCompleteListener(task: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
-        public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
-        public setOnFlushCompleteListener(param0: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
-        public queueInputTexture(inputTexId: number, presentationTimeUs: number): void;
         public onReadyToAcceptInputFrame(): void;
-        public setInputFrameInfo(inputFrameInfo: androidx.media3.common.FrameInfo): void;
         public getInputSurface(): globalAndroid.view.Surface;
       }
     }
@@ -793,6 +776,58 @@ declare module androidx {
         public static createDefaultFrameDropEffect(targetFrameRate: number): androidx.media3.effect.FrameDropEffect;
         public isNoOp(inputWidth: number, inputHeight: number): boolean;
         public toGlShaderProgram(context: globalAndroid.content.Context, useHdr: boolean): androidx.media3.effect.GlShaderProgram;
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
+      export class GaussianBlur extends androidx.media3.effect.SeparableConvolution {
+        public static class: java.lang.Class<androidx.media3.effect.GaussianBlur>;
+        public constructor(sigma: number, numStandardDeviations: number);
+        public toGlShaderProgram(param0: globalAndroid.content.Context, param1: boolean): androidx.media3.effect.GlShaderProgram;
+        public getConvolution(presentationTimeUs: number): androidx.media3.effect.ConvolutionFunction1D;
+        public isNoOp(inputWidth: number, inputHeight: number): boolean;
+        public constructor(sigma: number);
+        public constructor();
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
+      export class GaussianBlurWithFrameOverlaid extends androidx.media3.effect.SeparableConvolution {
+        public static class: java.lang.Class<androidx.media3.effect.GaussianBlurWithFrameOverlaid>;
+        public constructor(scaleWidth: number, scaleHeight: number);
+        public constructor(sigma: number, numStandardDeviations: number, scaleSharpX: number, scaleSharpY: number);
+        public constructor(sigma: number, scaleSharpX: number, scaleSharpY: number);
+        public toGlShaderProgram(param0: globalAndroid.content.Context, param1: boolean): androidx.media3.effect.GlShaderProgram;
+        public getConvolution(presentationTimeUs: number): androidx.media3.effect.ConvolutionFunction1D;
+        public isNoOp(inputWidth: number, inputHeight: number): boolean;
+        public toGlShaderProgram(context: globalAndroid.content.Context, useHdr: boolean): androidx.media3.effect.GlShaderProgram;
+        public constructor();
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
+      export class GaussianFunction extends androidx.media3.effect.ConvolutionFunction1D {
+        public static class: java.lang.Class<androidx.media3.effect.GaussianFunction>;
+        public domainStart(): number;
+        public width(): number;
+        public value(samplePosition: number): number;
+        public constructor(sigma: number, numStandardDeviations: number);
+        public value(param0: number): number;
+        public hashCode(): number;
+        public equals(o: any): boolean;
+        public domainEnd(): number;
       }
     }
   }
@@ -991,14 +1026,7 @@ declare module androidx {
     export module effect {
       export class InputSwitcher {
         public static class: java.lang.Class<androidx.media3.effect.InputSwitcher>;
-        public registerInput(textureManager: androidx.media3.common.ColorInfo, samplingShaderProgram: number): void;
         public signalEndOfInputStream(): void;
-        public activeTextureManager(): androidx.media3.effect.TextureManager;
-        public release(): void;
-        public switchToInput(input: number, i: androidx.media3.common.FrameInfo): void;
-        public hasActiveInput(): boolean;
-        public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
-        public setInputDefaultBufferSize(width: number, height: number): void;
         public constructor(
           context: globalAndroid.content.Context,
           outputColorInfo: androidx.media3.common.ColorInfo,
@@ -1006,8 +1034,15 @@ declare module androidx {
           videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor,
           errorListenerExecutor: java.util.concurrent.Executor,
           samplingShaderProgramErrorListener: androidx.media3.effect.GlShaderProgram.ErrorListener,
-          enableColorTransfers: boolean
+          enableColorTransfers: boolean,
+          repeatLastRegisteredFrame: boolean
         );
+        public activeTextureManager(): androidx.media3.effect.TextureManager;
+        public release(): void;
+        public switchToInput(input: number, i: androidx.media3.common.FrameInfo): void;
+        public hasActiveInput(): boolean;
+        public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
+        public setInputDefaultBufferSize(width: number, height: number): void;
         public setDownstreamShaderProgram(downstreamShaderProgram: androidx.media3.effect.GlShaderProgram): void;
         public getInputSurface(): globalAndroid.view.Surface;
       }
@@ -1030,11 +1065,14 @@ declare module androidx {
         export class Input {
           public static class: java.lang.Class<androidx.media3.effect.InputSwitcher.Input>;
           public textureManager: androidx.media3.effect.TextureManager;
-          public samplingGlShaderProgram: androidx.media3.effect.GlShaderProgram;
+          public constructor(textureManager: androidx.media3.effect.TextureManager);
+          public getSamplingGlShaderProgram(): androidx.media3.effect.ExternalShaderProgram;
+          public setSamplingGlShaderProgram(samplingGlShaderProgram: androidx.media3.effect.ExternalShaderProgram): void;
           public setChainingListener(gatedChainingListenerWrapper: androidx.media3.effect.InputSwitcher.GatedChainingListenerWrapper): void;
           public release(): void;
+          public setInputColorInfo(inputColorInfo: androidx.media3.common.ColorInfo): void;
+          public getInputColorInfo(): androidx.media3.common.ColorInfo;
           public setActive(active: boolean): void;
-          public constructor(textureManager: androidx.media3.effect.TextureManager, samplingGlShaderProgram: androidx.media3.effect.GlShaderProgram);
         }
       }
     }
@@ -1258,6 +1296,7 @@ declare module androidx {
     export module effect {
       export class PreviewingSingleInputVideoGraph extends androidx.media3.effect.SingleInputVideoGraph {
         public static class: java.lang.Class<androidx.media3.effect.PreviewingSingleInputVideoGraph>;
+        public renderOutputFrame(renderTimeNs: number): void;
       }
       export module PreviewingSingleInputVideoGraph {
         export class Factory {
@@ -1272,6 +1311,7 @@ declare module androidx {
             listener: java.util.List<androidx.media3.common.Effect>,
             listenerExecutor: number
           ): androidx.media3.common.PreviewingVideoGraph;
+          public constructor();
           public constructor(videoFrameProcessorFactory: androidx.media3.common.VideoFrameProcessor.Factory);
         }
       }
@@ -1384,6 +1424,67 @@ declare module androidx {
           public setScale(scaleX: number, scaleY: number): androidx.media3.effect.ScaleAndRotateTransformation.Builder;
           public setRotationDegrees(rotationDegrees: number): androidx.media3.effect.ScaleAndRotateTransformation.Builder;
         }
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
+      export abstract class SeparableConvolution extends androidx.media3.effect.GlEffect {
+        public static class: java.lang.Class<androidx.media3.effect.SeparableConvolution>;
+        public constructor(scaleWidth: number, scaleHeight: number);
+        public toGlShaderProgram(param0: globalAndroid.content.Context, param1: boolean): androidx.media3.effect.GlShaderProgram;
+        public isNoOp(inputWidth: number, inputHeight: number): boolean;
+        public getConvolution(param0: number): androidx.media3.effect.ConvolutionFunction1D;
+        public toGlShaderProgram(context: globalAndroid.content.Context, useHdr: boolean): androidx.media3.effect.GlShaderProgram;
+        public constructor();
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
+      export class SeparableConvolutionShaderProgram extends androidx.media3.effect.GlShaderProgram {
+        public static class: java.lang.Class<androidx.media3.effect.SeparableConvolutionShaderProgram>;
+        public onBlurRendered(inputTexture: androidx.media3.common.GlTextureInfo): void;
+        public release(): void;
+        public releaseOutputFrame(param0: androidx.media3.common.GlTextureInfo): void;
+        public queueInputFrame(this_: androidx.media3.common.GlObjectsProvider, glObjectsProvider: androidx.media3.common.GlTextureInfo, inputTexture: number): void;
+        public setErrorListener(param0: java.util.concurrent.Executor, param1: androidx.media3.effect.GlShaderProgram.ErrorListener): void;
+        public setOutputListener(outputListener: androidx.media3.effect.GlShaderProgram.OutputListener): void;
+        public setErrorListener(errorListenerExecutor: java.util.concurrent.Executor, errorListener: androidx.media3.effect.GlShaderProgram.ErrorListener): void;
+        public flush(): void;
+        public signalEndOfCurrentInputStream(): void;
+        public setInputListener(param0: androidx.media3.effect.GlShaderProgram.InputListener): void;
+        public releaseOutputFrame(outputTexture: androidx.media3.common.GlTextureInfo): void;
+        public setInputListener(inputListener: androidx.media3.effect.GlShaderProgram.InputListener): void;
+        public constructor(this_: globalAndroid.content.Context, context: boolean, useHdr: androidx.media3.effect.SeparableConvolution, convolution: number, scaleWidth: number);
+        public setOutputListener(param0: androidx.media3.effect.GlShaderProgram.OutputListener): void;
+        public queueInputFrame(param0: androidx.media3.common.GlObjectsProvider, param1: androidx.media3.common.GlTextureInfo, param2: number): void;
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module effect {
+      export class SharpSeparableConvolutionShaderProgram extends androidx.media3.effect.SeparableConvolutionShaderProgram {
+        public static class: java.lang.Class<androidx.media3.effect.SharpSeparableConvolutionShaderProgram>;
+        public setInputListener(param0: androidx.media3.effect.GlShaderProgram.InputListener): void;
+        public signalEndOfCurrentInputStream(): void;
+        public onBlurRendered(inputTexture: androidx.media3.common.GlTextureInfo): void;
+        public release(): void;
+        public releaseOutputFrame(param0: androidx.media3.common.GlTextureInfo): void;
+        public constructor(this_: globalAndroid.content.Context, context: boolean, useHdr: androidx.media3.effect.SeparableConvolution, convolution: number, scaleSharpX: number);
+        public setErrorListener(param0: java.util.concurrent.Executor, param1: androidx.media3.effect.GlShaderProgram.ErrorListener): void;
+        public setOutputListener(param0: androidx.media3.effect.GlShaderProgram.OutputListener): void;
+        public queueInputFrame(param0: androidx.media3.common.GlObjectsProvider, param1: androidx.media3.common.GlTextureInfo, param2: number): void;
+        public flush(): void;
       }
     }
   }
@@ -1528,29 +1629,17 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.effect.TexIdTextureManager>;
         public release(): void;
         public onInputFrameProcessed(inputTexture: androidx.media3.common.GlTextureInfo): void;
-        public queueInputBitmap(
-          inputBitmap: globalAndroid.graphics.Bitmap,
-          frameInfo: androidx.media3.common.FrameInfo,
-          inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator,
-          useHdr: boolean
-        ): void;
         public onFlush(): void;
-        public registerInputFrame(frameInfo: androidx.media3.common.FrameInfo): void;
-        public setDefaultBufferSize(width: number, height: number): void;
+        public constructor(videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor);
+        public constructor(glObjectsProvider: androidx.media3.common.GlObjectsProvider, videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor);
+        public setSamplingGlShaderProgram(samplingGlShaderProgram: androidx.media3.effect.GlShaderProgram): void;
+        public flush(): void;
         public signalEndOfCurrentInputStream(): void;
         public getPendingFrameCount(): number;
-        public constructor(
-          glObjectsProvider: androidx.media3.common.GlObjectsProvider,
-          shaderProgram: androidx.media3.effect.GlShaderProgram,
-          videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor
-        );
-        public setOnFlushCompleteListener(task: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
-        public setOnFlushCompleteListener(param0: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
         public queueInputTexture(inputTexId: number, presentationTimeUs: number): void;
         public onReadyToAcceptInputFrame(): void;
         public setInputFrameInfo(inputFrameInfo: androidx.media3.common.FrameInfo): void;
-        public getInputSurface(): globalAndroid.view.Surface;
       }
     }
   }
@@ -1581,33 +1670,9 @@ declare module androidx {
 declare module androidx {
   export module media3 {
     export module effect {
-      export class TextureManager extends androidx.media3.effect.GlShaderProgram.InputListener {
+      export abstract class TextureManager extends androidx.media3.effect.GlShaderProgram.InputListener {
         public static class: java.lang.Class<androidx.media3.effect.TextureManager>;
-        /**
-         * Constructs a new instance of the androidx.media3.effect.TextureManager interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
-         */
-        public constructor(implementation: {
-          setDefaultBufferSize(width: number, height: number): void;
-          queueInputBitmap(
-            inputBitmap: globalAndroid.graphics.Bitmap,
-            frameInfo: androidx.media3.common.FrameInfo,
-            inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator,
-            useHdr: boolean
-          ): void;
-          queueInputTexture(inputTexId: number, presentationTimeUs: number): void;
-          setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
-          setInputFrameInfo(inputFrameInfo: androidx.media3.common.FrameInfo): void;
-          getInputSurface(): globalAndroid.view.Surface;
-          registerInputFrame(frameInfo: androidx.media3.common.FrameInfo): void;
-          getPendingFrameCount(): number;
-          signalEndOfCurrentInputStream(): void;
-          setOnFlushCompleteListener(param0: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
-          release(): void;
-          onReadyToAcceptInputFrame(): void;
-          onInputFrameProcessed(inputTexture: androidx.media3.common.GlTextureInfo): void;
-          onFlush(): void;
-        });
-        public constructor();
+        public videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor;
         public release(): void;
         public onInputFrameProcessed(inputTexture: androidx.media3.common.GlTextureInfo): void;
         public queueInputBitmap(
@@ -1617,12 +1682,15 @@ declare module androidx {
           useHdr: boolean
         ): void;
         public onFlush(): void;
+        public constructor(videoFrameProcessingTaskExecutor: androidx.media3.effect.VideoFrameProcessingTaskExecutor);
         public registerInputFrame(frameInfo: androidx.media3.common.FrameInfo): void;
         public setDefaultBufferSize(width: number, height: number): void;
+        public flush(): void;
         public signalEndOfCurrentInputStream(): void;
         public getPendingFrameCount(): number;
+        public setOnFlushCompleteListener(task: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
+        public setSamplingGlShaderProgram(param0: androidx.media3.effect.GlShaderProgram): void;
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
-        public setOnFlushCompleteListener(param0: androidx.media3.effect.VideoFrameProcessingTaskExecutor.Task): void;
         public queueInputTexture(inputTexId: number, presentationTimeUs: number): void;
         public onReadyToAcceptInputFrame(): void;
         public setInputFrameInfo(inputFrameInfo: androidx.media3.common.FrameInfo): void;
@@ -1640,6 +1708,7 @@ declare module androidx {
         public getOverlaySettings(presentationTimeUs: number): androidx.media3.effect.OverlaySettings;
         public release(): void;
         public getTextureId(param0: number): number;
+        public getVertexTransformation(presentationTimeUs: number): androidNative.Array<number>;
         public getTextureSize(param0: number): androidx.media3.common.util.Size;
         public constructor();
         public configure(videoSize: androidx.media3.common.util.Size): void;
@@ -1655,6 +1724,7 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.effect.TexturePool>;
         public freeTexture(textureInfo: androidx.media3.common.GlTextureInfo): void;
         public freeTextureCount(): number;
+        public isUsingTexture(textureInfo: androidx.media3.common.GlTextureInfo): boolean;
         public isConfigured(): boolean;
         public ensureConfigured(glObjectsProvider: androidx.media3.common.GlObjectsProvider, width: number, height: number): void;
         public capacity(): number;
@@ -1701,8 +1771,8 @@ declare module androidx {
         public setInputListener(param0: androidx.media3.effect.GlShaderProgram.InputListener): void;
         public signalEndOfCurrentInputStream(): void;
         public constructor(useHighPrecisionColorComponents: boolean, texturePoolCapacity: number);
-        public drawFrame(this_: number, inputTexId: number): void;
         public constructor(this_: globalAndroid.content.Context, context: boolean, useHdr: androidx.media3.effect.ThumbnailStripEffect);
+        public drawFrame(e: number, this_: number): void;
         public setOutputListener(param0: androidx.media3.effect.GlShaderProgram.OutputListener): void;
         public queueInputFrame(param0: androidx.media3.common.GlObjectsProvider, param1: androidx.media3.common.GlTextureInfo, param2: number): void;
       }

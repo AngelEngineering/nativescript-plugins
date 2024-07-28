@@ -85,10 +85,12 @@ declare module androidx {
     export module transformer {
       export class AudioGraph {
         public static class: java.lang.Class<androidx.media3.transformer.AudioGraph>;
-        public release(): void;
+        public reset(): void;
         public isEnded(): boolean;
+        public configure(requestedAudioFormat: androidx.media3.common.audio.AudioProcessor.AudioFormat): void;
         public registerInput(sourceId: androidx.media3.transformer.EditedMediaItem, e: androidx.media3.common.Format): androidx.media3.transformer.AudioGraphInput;
         public getOutput(): java.nio.ByteBuffer;
+        public static isInputAudioFormatValid(format: androidx.media3.common.audio.AudioProcessor.AudioFormat): boolean;
         public getOutputAudioFormat(): androidx.media3.common.audio.AudioProcessor.AudioFormat;
         public constructor(mixerFactory: androidx.media3.transformer.AudioMixer.Factory);
       }
@@ -103,16 +105,16 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.transformer.AudioGraphInput>;
         public getPendingVideoFrameCount(): number;
         public release(): void;
+        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
         public onMediaItemChanged(param0: androidx.media3.transformer.EditedMediaItem, param1: number, param2: androidx.media3.common.Format, param3: boolean): void;
         public signalEndOfVideoInput(): void;
         public queueInputBuffer(): boolean;
         public onMediaItemChanged(this_: androidx.media3.transformer.EditedMediaItem, editedMediaItem: number, durationUs: androidx.media3.common.Format, trackFormat: boolean): void;
-        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
         public queueInputTexture(texId: number, presentationTimeUs: number): number;
         public getOutputAudioFormat(): androidx.media3.common.audio.AudioProcessor.AudioFormat;
         public isEnded(): boolean;
-        public constructor(i: androidx.media3.transformer.EditedMediaItem, this_: androidx.media3.common.Format);
         public getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
+        public constructor(i: androidx.media3.common.audio.AudioProcessor.AudioFormat, this_: androidx.media3.transformer.EditedMediaItem, requestedOutputAudioFormat: androidx.media3.common.Format);
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
         public getOutput(): java.nio.ByteBuffer;
         public getExpectedInputColorInfo(): androidx.media3.common.ColorInfo;
@@ -204,8 +206,8 @@ declare module androidx {
         public getMuxerInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
         public releaseMuxerInputBuffer(): void;
         public release(): void;
-        public getInput(item: androidx.media3.transformer.EditedMediaItem, format: androidx.media3.common.Format): androidx.media3.transformer.AudioGraphInput;
         public getMuxerInputFormat(): androidx.media3.common.Format;
+        public getInput(editedMediaItem: androidx.media3.transformer.EditedMediaItem, format: androidx.media3.common.Format): androidx.media3.transformer.AudioGraphInput;
         public processDataUpToMuxer(): boolean;
         public constructor(firstInputFormat: androidx.media3.common.Format, muxerWrapper: androidx.media3.transformer.MuxerWrapper);
         public isMuxerInputEnded(): boolean;
@@ -366,8 +368,8 @@ declare module androidx {
           public setTransmuxVideo(transmuxVideo: boolean): androidx.media3.transformer.Composition.Builder;
           public setEffects(effects: androidx.media3.transformer.Effects): androidx.media3.transformer.Composition.Builder;
           public build(): androidx.media3.transformer.Composition;
-          public constructor(sequences: androidNative.Array<androidx.media3.transformer.EditedMediaItemSequence>);
           public experimentalSetForceAudioTrack(forceAudioTrack: boolean): androidx.media3.transformer.Composition.Builder;
+          public constructor(sequence: androidx.media3.transformer.EditedMediaItemSequence, sequences: androidNative.Array<androidx.media3.transformer.EditedMediaItemSequence>);
           public setHdrMode(hdrMode: number): androidx.media3.transformer.Composition.Builder;
         }
         export class HdrMode {
@@ -394,18 +396,20 @@ declare module androidx {
           forceInterpretHdrAsSdr: boolean,
           clock: androidx.media3.common.util.Clock
         );
-        public constructor(
-          context: globalAndroid.content.Context,
-          decoderFactory: androidx.media3.transformer.Codec.DecoderFactory,
-          forceInterpretHdrAsSdr: boolean,
-          clock: androidx.media3.common.util.Clock,
-          mediaSourceFactory: androidx.media3.exoplayer.source.MediaSource.Factory
-        );
+        public constructor(context: globalAndroid.content.Context, forceInterpretHdrAsSdr: boolean, bitmapLoader: androidx.media3.common.util.BitmapLoader);
         public createAssetLoader(
           param0: androidx.media3.transformer.EditedMediaItem,
           param1: globalAndroid.os.Looper,
           param2: androidx.media3.transformer.AssetLoader.Listener
         ): androidx.media3.transformer.AssetLoader;
+        public constructor(
+          context: globalAndroid.content.Context,
+          decoderFactory: androidx.media3.transformer.Codec.DecoderFactory,
+          forceInterpretHdrAsSdr: boolean,
+          clock: androidx.media3.common.util.Clock,
+          mediaSourceFactory: androidx.media3.exoplayer.source.MediaSource.Factory,
+          bitmapLoader: androidx.media3.common.util.BitmapLoader
+        );
         public createAssetLoader(
           editedMediaItem: androidx.media3.transformer.EditedMediaItem,
           looper: globalAndroid.os.Looper,
@@ -522,11 +526,23 @@ declare module androidx {
     export module transformer {
       export class DefaultDecoderFactory extends androidx.media3.transformer.Codec.DecoderFactory {
         public static class: java.lang.Class<androidx.media3.transformer.DefaultDecoderFactory>;
-        public createForVideoDecoding(codecMimeType: androidx.media3.common.Format, mediaCodecName: globalAndroid.view.Surface, e: boolean): androidx.media3.transformer.DefaultCodec;
         public createForAudioDecoding(param0: androidx.media3.common.Format): androidx.media3.transformer.Codec;
         public createForVideoDecoding(param0: androidx.media3.common.Format, param1: globalAndroid.view.Surface, param2: boolean): androidx.media3.transformer.Codec;
         public constructor(context: globalAndroid.content.Context);
-        public createForAudioDecoding(codecMimeType: androidx.media3.common.Format): androidx.media3.transformer.DefaultCodec;
+        public constructor(context: globalAndroid.content.Context, enableDecoderFallback: boolean, listener: androidx.media3.transformer.DefaultDecoderFactory.Listener);
+        public createForAudioDecoding(format: androidx.media3.common.Format): androidx.media3.transformer.DefaultCodec;
+        public createForVideoDecoding(format: androidx.media3.common.Format, outputSurface: globalAndroid.view.Surface, requestSdrToneMapping: boolean): androidx.media3.transformer.DefaultCodec;
+      }
+      export module DefaultDecoderFactory {
+        export class Listener {
+          public static class: java.lang.Class<androidx.media3.transformer.DefaultDecoderFactory.Listener>;
+          /**
+           * Constructs a new instance of the androidx.media3.transformer.DefaultDecoderFactory$Listener interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
+           */
+          public constructor(implementation: { onCodecInitialized(param0: string, param1: java.util.List<androidx.media3.transformer.ExportException>): void });
+          public constructor();
+          public onCodecInitialized(param0: string, param1: java.util.List<androidx.media3.transformer.ExportException>): void;
+        }
       }
     }
   }
@@ -666,7 +682,7 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.transformer.EditedMediaItemSequence>;
         public editedMediaItems: com.google.common.collect.ImmutableList<androidx.media3.transformer.EditedMediaItem>;
         public isLooping: boolean;
-        public constructor(editedMediaItems: androidNative.Array<androidx.media3.transformer.EditedMediaItem>);
+        public constructor(editedMediaItem: androidx.media3.transformer.EditedMediaItem, editedMediaItems: androidNative.Array<androidx.media3.transformer.EditedMediaItem>);
         public constructor(editedMediaItems: java.util.List<androidx.media3.transformer.EditedMediaItem>);
         public constructor(editedMediaItems: java.util.List<androidx.media3.transformer.EditedMediaItem>, isLooping: boolean);
       }
@@ -695,23 +711,24 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.transformer.EncodedSampleExporter>;
         public getPendingVideoFrameCount(): number;
         public release(): void;
+        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
         public onMediaItemChanged(param0: androidx.media3.transformer.EditedMediaItem, param1: number, param2: androidx.media3.common.Format, param3: boolean): void;
         public signalEndOfVideoInput(): void;
         public queueInputBuffer(): boolean;
         public getMuxerInputFormat(): androidx.media3.common.Format;
-        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
         public queueInputTexture(texId: number, presentationTimeUs: number): number;
         public onMediaItemChanged(editedMediaItem: androidx.media3.transformer.EditedMediaItem, durationUs: number, trackFormat: androidx.media3.common.Format, isLast: boolean): void;
+        public constructor(
+          format: androidx.media3.common.Format,
+          transformationRequest: androidx.media3.transformer.TransformationRequest,
+          muxerWrapper: androidx.media3.transformer.MuxerWrapper,
+          fallbackListener: androidx.media3.transformer.FallbackListener,
+          initialTimestampOffsetUs: number
+        );
         public isMuxerInputEnded(): boolean;
         public getMuxerInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
         public releaseMuxerInputBuffer(): void;
         public getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
-        public constructor(
-          i: androidx.media3.common.Format,
-          this_: androidx.media3.transformer.TransformationRequest,
-          format: androidx.media3.transformer.MuxerWrapper,
-          transformationRequest: androidx.media3.transformer.FallbackListener
-        );
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
         public getExpectedInputColorInfo(): androidx.media3.common.ColorInfo;
         public registerVideoFrame(presentationTimeUs: number): boolean;
@@ -842,13 +859,13 @@ declare module androidx {
         ): void;
         public supportsFormat(format: androidx.media3.common.Format): number;
         public isReady(): boolean;
+        public shouldDropInputBuffer(param0: androidx.media3.decoder.DecoderInputBuffer): boolean;
         public feedConsumerFromDecoder(): boolean;
         public onStarted(): void;
         public onReset(): void;
         public onInputFormatRead(inputFormat: androidx.media3.common.Format): void;
         public isEnded(): boolean;
         public onDecoderInputReady(inputBuffer: androidx.media3.decoder.DecoderInputBuffer): void;
-        public shouldDropInputBuffer(inputBuffer: androidx.media3.decoder.DecoderInputBuffer): boolean;
         public constructor(trackType: number, mediaClock: androidx.media3.transformer.TransformerMediaClock, assetLoaderListener: androidx.media3.transformer.AssetLoader.Listener);
         public render(e: number, this_: number): void;
         public onStopped(): void;
@@ -1014,6 +1031,13 @@ declare module androidx {
     export module transformer {
       export class ExportResult {
         public static class: java.lang.Class<androidx.media3.transformer.ExportResult>;
+        public static OPTIMIZATION_NONE: number = 0;
+        public static OPTIMIZATION_SUCCEEDED: number = 1;
+        public static OPTIMIZATION_ABANDONED_KEYFRAME_PLACEMENT_OPTIMAL_FOR_TRIM: number = 2;
+        public static OPTIMIZATION_ABANDONED_TRIM_AND_TRANSCODING_TRANSFORMATION_REQUESTED: number = 3;
+        public static OPTIMIZATION_ABANDONED_OTHER: number = 4;
+        public static OPTIMIZATION_FAILED_EXTRACTION_FAILED: number = 5;
+        public static OPTIMIZATION_FAILED_FORMAT_MISMATCH: number = 6;
         public processedInputs: com.google.common.collect.ImmutableList<androidx.media3.transformer.ExportResult.ProcessedInput>;
         public durationMs: number;
         public fileSizeBytes: number;
@@ -1027,6 +1051,7 @@ declare module androidx {
         public width: number;
         public videoFrameCount: number;
         public videoEncoderName: string;
+        public optimizationResult: number;
         public exportException: androidx.media3.transformer.ExportException;
         public buildUpon(): androidx.media3.transformer.ExportResult.Builder;
         public hashCode(): number;
@@ -1038,14 +1063,14 @@ declare module androidx {
           public build(): androidx.media3.transformer.ExportResult;
           public setAverageAudioBitrate(averageAudioBitrate: number): androidx.media3.transformer.ExportResult.Builder;
           public setAverageVideoBitrate(averageVideoBitrate: number): androidx.media3.transformer.ExportResult.Builder;
+          public reset(): void;
           public setFileSizeBytes(fileSizeBytes: number): androidx.media3.transformer.ExportResult.Builder;
           public setAudioEncoderName(audioEncoderName: string): androidx.media3.transformer.ExportResult.Builder;
+          public addProcessedInputs(processedInputs: java.util.List<androidx.media3.transformer.ExportResult.ProcessedInput>): androidx.media3.transformer.ExportResult.Builder;
           public setWidth(width: number): androidx.media3.transformer.ExportResult.Builder;
           public setSampleRate(sampleRate: number): androidx.media3.transformer.ExportResult.Builder;
           public setColorInfo(colorInfo: androidx.media3.common.ColorInfo): androidx.media3.transformer.ExportResult.Builder;
-          public setProcessedInputs(
-            processedInputs: com.google.common.collect.ImmutableList<androidx.media3.transformer.ExportResult.ProcessedInput>
-          ): androidx.media3.transformer.ExportResult.Builder;
+          public setOptimizationResult(optimizationResult: number): androidx.media3.transformer.ExportResult.Builder;
           public setVideoEncoderName(videoEncoderName: string): androidx.media3.transformer.ExportResult.Builder;
           public constructor();
           public setDurationMs(durationMs: number): androidx.media3.transformer.ExportResult.Builder;
@@ -1124,7 +1149,7 @@ declare module androidx {
         public constructor(implementation: {
           getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
           queueInputBuffer(): boolean;
-          queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
+          queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
           setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
           queueInputTexture(texId: number, presentationTimeUs: number): number;
           getInputSurface(): globalAndroid.view.Surface;
@@ -1139,13 +1164,13 @@ declare module androidx {
         public static INPUT_RESULT_TRY_AGAIN_LATER: number = 2;
         public static INPUT_RESULT_END_OF_STREAM: number = 3;
         public getPendingVideoFrameCount(): number;
+        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
         public onMediaItemChanged(param0: androidx.media3.transformer.EditedMediaItem, param1: number, param2: androidx.media3.common.Format, param3: boolean): void;
         public signalEndOfVideoInput(): void;
         public queueInputBuffer(): boolean;
         public getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
         public getExpectedInputColorInfo(): androidx.media3.common.ColorInfo;
-        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
         public queueInputTexture(texId: number, presentationTimeUs: number): number;
         public registerVideoFrame(presentationTimeUs: number): boolean;
         public getInputSurface(): globalAndroid.view.Surface;
@@ -1179,7 +1204,7 @@ declare module androidx {
             param1: globalAndroid.os.Looper,
             param2: androidx.media3.transformer.AssetLoader.Listener
           ): androidx.media3.transformer.AssetLoader;
-          public constructor(context: globalAndroid.content.Context);
+          public constructor(bitmapLoader: androidx.media3.common.util.BitmapLoader);
         }
       }
     }
@@ -1205,11 +1230,20 @@ declare module androidx {
         export class Factory extends androidx.media3.transformer.Muxer.Factory {
           public static class: java.lang.Class<androidx.media3.transformer.InAppMuxer.Factory>;
           public getSupportedSampleMimeTypes(param0: number): com.google.common.collect.ImmutableList<string>;
-          public constructor(maxDelayBetweenSamplesMs: number, metadataProvider: androidx.media3.transformer.InAppMuxer.MetadataProvider);
-          public constructor();
           public create(param0: string): androidx.media3.transformer.Muxer;
           public getSupportedSampleMimeTypes(trackType: number): com.google.common.collect.ImmutableList<string>;
           public create(e: string): androidx.media3.transformer.InAppMuxer;
+        }
+        export module Factory {
+          export class Builder {
+            public static class: java.lang.Class<androidx.media3.transformer.InAppMuxer.Factory.Builder>;
+            public setFragmentedMp4Enabled(fragmentedMp4Enabled: boolean): androidx.media3.transformer.InAppMuxer.Factory.Builder;
+            public constructor();
+            public setFragmentDurationUs(fragmentDurationUs: number): androidx.media3.transformer.InAppMuxer.Factory.Builder;
+            public build(): androidx.media3.transformer.InAppMuxer.Factory;
+            public setMetadataProvider(metadataProvider: androidx.media3.transformer.InAppMuxer.MetadataProvider): androidx.media3.transformer.InAppMuxer.Factory.Builder;
+            public setMaxDelayBetweenSamplesMs(maxDelayBetweenSamplesMs: number): androidx.media3.transformer.InAppMuxer.Factory.Builder;
+          }
         }
         export class MetadataProvider {
           public static class: java.lang.Class<androidx.media3.transformer.InAppMuxer.MetadataProvider>;
@@ -1228,24 +1262,45 @@ declare module androidx {
 declare module androidx {
   export module media3 {
     export module transformer {
-      export class Mp4ExtractorWrapper {
-        public static class: java.lang.Class<androidx.media3.transformer.Mp4ExtractorWrapper>;
-        public getLastSyncSampleTimestampUs(): number;
-        public constructor(context: globalAndroid.content.Context, filePath: string);
-        public init(): void;
+      export class JsonUtil {
+        public static class: java.lang.Class<androidx.media3.transformer.JsonUtil>;
+        public static processedInputsAsJsonArray(jsonObject: com.google.common.collect.ImmutableList<androidx.media3.transformer.ExportResult.ProcessedInput>): org.json.JSONArray;
+        public static exportResultAsJsonObject(exportResult: androidx.media3.transformer.ExportResult): org.json.JSONObject;
+        public static getDeviceDetailsAsJsonObject(): org.json.JSONObject;
+        public static exceptionAsJsonObject(exception: java.lang.Exception): org.json.JSONObject;
       }
-      export module Mp4ExtractorWrapper {
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module transformer {
+      export class Mp4Info {
+        public static class: java.lang.Class<androidx.media3.transformer.Mp4Info>;
+        public durationUs: number;
+        public lastSyncSampleTimestampUs: number;
+        public firstSyncSampleTimestampUsAfterTimeUs: number;
+        public videoFormat: androidx.media3.common.Format;
+        public audioFormat: androidx.media3.common.Format;
+        public static create(context: globalAndroid.content.Context, filePath: string): androidx.media3.transformer.Mp4Info;
+        public static create(result: globalAndroid.content.Context, firstSyncSampleSeekPoints: string, videoTrackOutput: number): androidx.media3.transformer.Mp4Info;
+      }
+      export module Mp4Info {
         export class ExtractorOutputImpl {
-          public static class: java.lang.Class<androidx.media3.transformer.Mp4ExtractorWrapper.ExtractorOutputImpl>;
+          public static class: java.lang.Class<androidx.media3.transformer.Mp4Info.ExtractorOutputImpl>;
           public videoTrackId: number;
+          public audioTrackId: number;
           public seekMapInitialized: boolean;
           public seekMap(seekMap: androidx.media3.extractor.SeekMap): void;
+          public constructor();
           public track(id: number, type: number): androidx.media3.extractor.TrackOutput;
           public endTracks(): void;
         }
         export module ExtractorOutputImpl {
           export class TrackOutputImpl {
-            public static class: java.lang.Class<androidx.media3.transformer.Mp4ExtractorWrapper.ExtractorOutputImpl.TrackOutputImpl>;
+            public static class: java.lang.Class<androidx.media3.transformer.Mp4Info.ExtractorOutputImpl.TrackOutputImpl>;
+            public constructor();
             public sampleData(bytesRead: androidx.media3.common.DataReader, this_: number, input: boolean, length: number): number;
             public format(format: androidx.media3.common.Format): void;
             public sampleMetadata(timeUs: number, flags: number, size: number, offset: number, cryptoData: androidx.media3.extractor.TrackOutput.CryptoData): void;
@@ -1308,9 +1363,16 @@ declare module androidx {
       export class MuxerWrapper {
         public static class: java.lang.Class<androidx.media3.transformer.MuxerWrapper>;
         public static MUXER_MODE_DEFAULT: number = 0;
-        public static MUXER_MODE_MUX_PARTIAL_VIDEO: number = 1;
-        public static MUXER_MODE_APPEND_VIDEO: number = 2;
+        public static MUXER_MODE_MUX_PARTIAL: number = 1;
+        public static MUXER_MODE_APPEND: number = 2;
         public addTrackFormat(existingFormat: androidx.media3.common.Format): void;
+        public constructor(
+          outputPath: string,
+          muxerFactory: androidx.media3.transformer.Muxer.Factory,
+          listener: androidx.media3.transformer.MuxerWrapper.Listener,
+          muxerMode: number,
+          dropSamplesBeforeFirstVideoSample: boolean
+        );
         public setAdditionalRotationDegrees(additionalRotationDegrees: number): void;
         public setTrackCount(trackCount: number): void;
         public isEnded(): boolean;
@@ -1319,8 +1381,8 @@ declare module androidx {
         public writeSample(trackType: number, data: java.nio.ByteBuffer, isKeyFrame: boolean, presentationTimeUs: number): boolean;
         public getSupportedSampleMimeTypes(trackType: number): com.google.common.collect.ImmutableList<string>;
         public release(forCancellation: boolean): void;
-        public changeToAppendVideoMode(): void;
-        public constructor(outputPath: string, muxerFactory: androidx.media3.transformer.Muxer.Factory, listener: androidx.media3.transformer.MuxerWrapper.Listener, muxerMode: number);
+        public getTrackFormat(trackType: number): androidx.media3.common.Format;
+        public changeToAppendMode(): void;
       }
       export module MuxerWrapper {
         export class Listener {
@@ -1400,7 +1462,7 @@ declare module androidx {
         public constructor(implementation: {
           getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
           queueInputBuffer(): boolean;
-          queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
+          queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
           setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
           queueInputTexture(texId: number, presentationTimeUs: number): number;
           getInputSurface(): globalAndroid.view.Surface;
@@ -1414,12 +1476,12 @@ declare module androidx {
         public static INPUT_RESULT_TRY_AGAIN_LATER: number = 2;
         public static INPUT_RESULT_END_OF_STREAM: number = 3;
         public getPendingVideoFrameCount(): number;
+        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
         public signalEndOfVideoInput(): void;
         public queueInputBuffer(): boolean;
         public getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
         public getExpectedInputColorInfo(): androidx.media3.common.ColorInfo;
-        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
         public queueInputTexture(texId: number, presentationTimeUs: number): number;
         public registerVideoFrame(presentationTimeUs: number): boolean;
         public getInputSurface(): globalAndroid.view.Surface;
@@ -1463,8 +1525,8 @@ declare module androidx {
     export module transformer {
       export class SefSlowMotionFlattener {
         public static class: java.lang.Class<androidx.media3.transformer.SefSlowMotionFlattener>;
+        public dropOrTransformSample(svcExtensionFlag: java.nio.ByteBuffer, layer: number): boolean;
         public getSamplePresentationTimeUs(): number;
-        public dropOrTransformSample(buffer: java.nio.ByteBuffer, bufferTimeUs: number): boolean;
         public constructor(format: androidx.media3.common.Format);
       }
       export module SefSlowMotionFlattener {
@@ -1546,6 +1608,7 @@ declare module androidx {
           public static class: java.lang.Class<androidx.media3.transformer.SequenceAssetLoader.SampleConsumerWrapper>;
           public queueInputBitmap(lastOffsetUs: globalAndroid.graphics.Bitmap, this_: androidx.media3.common.util.TimestampIterator): number;
           public queueInputTexture(texId: number, presentationTimeUs: number): number;
+          public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
           public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
           public getInputSurface(): globalAndroid.view.Surface;
           public getExpectedInputColorInfo(): androidx.media3.common.ColorInfo;
@@ -1554,7 +1617,6 @@ declare module androidx {
           public getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
           public queueInputBuffer(): boolean;
           public signalEndOfVideoInput(): void;
-          public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
           public registerVideoFrame(presentationTimeUs: number): boolean;
         }
       }
@@ -1755,20 +1817,22 @@ declare module androidx {
         public setListener(listener: androidx.media3.transformer.Transformer.Listener): void;
         public start(composition: androidx.media3.transformer.Composition, path: string): void;
         public start(editedMediaItem: androidx.media3.transformer.EditedMediaItem, path: string): void;
+        public addListener(listener: androidx.media3.transformer.Transformer.Listener): void;
+        public removeListener(listener: androidx.media3.transformer.Transformer.Listener): void;
         public start(mediaItem: androidx.media3.common.MediaItem, path: string): void;
         /** @deprecated */
         public startTransformation(mediaItem: androidx.media3.common.MediaItem, path: string): void;
         public buildUpon(): androidx.media3.transformer.Transformer.Builder;
         public cancel(): void;
-        public addListener(listener: androidx.media3.transformer.Transformer.Listener): void;
         public removeAllListeners(): void;
         public getApplicationLooper(): globalAndroid.os.Looper;
         public getProgress(progressHolder: androidx.media3.transformer.ProgressHolder): number;
-        public removeListener(listener: androidx.media3.transformer.Transformer.Listener): void;
+        public resume(composition: androidx.media3.transformer.Composition, outputFilePath: string, oldFilePath: string): void;
       }
       export module Transformer {
         export class Builder {
           public static class: java.lang.Class<androidx.media3.transformer.Transformer.Builder>;
+          public experimentalSetTrimOptimizationEnabled(enabled: boolean): androidx.media3.transformer.Transformer.Builder;
           /** @deprecated */
           public setListener(listener: androidx.media3.transformer.Transformer.Listener): androidx.media3.transformer.Transformer.Builder;
           public addListener(listener: androidx.media3.transformer.Transformer.Listener): androidx.media3.transformer.Transformer.Builder;
@@ -1792,6 +1856,7 @@ declare module androidx {
           /** @deprecated */
           public setTransformationRequest(transformationRequest: androidx.media3.transformer.TransformationRequest): androidx.media3.transformer.Transformer.Builder;
           public constructor(context: globalAndroid.content.Context);
+          public setEnsureFileStartsOnVideoFrameEnabled(enabled: boolean): androidx.media3.transformer.Transformer.Builder;
           /** @deprecated */
           public setRemoveVideo(removeVideo: boolean): androidx.media3.transformer.Transformer.Builder;
           /** @deprecated */
@@ -1818,7 +1883,6 @@ declare module androidx {
           ): void;
           public onCompleted(param0: com.google.common.collect.ImmutableList<androidx.media3.transformer.ExportResult.ProcessedInput>, param1: string, param2: string): void;
           public onTrackEnded(trackType: number, format: androidx.media3.common.Format, averageBitrate: number, sampleCount: number): void;
-          public constructor(composition: androidx.media3.transformer.Transformer, param1: androidx.media3.transformer.Composition);
           public onCompleted(
             processedInputs: com.google.common.collect.ImmutableList<androidx.media3.transformer.ExportResult.ProcessedInput>,
             audioEncoderName: string,
@@ -2105,9 +2169,24 @@ declare module androidx {
       export class TransformerUtil {
         public static class: java.lang.Class<androidx.media3.transformer.TransformerUtil>;
         public static getProcessedTrackType(mimeType: string): number;
-        public static containsSlowMotionData(i: androidx.media3.common.Format): boolean;
-        public static areVideoEffectsAllNoOp(videoEffect: com.google.common.collect.ImmutableList<androidx.media3.common.Effect>, glEffect: androidx.media3.common.Format): boolean;
+        public static shouldTranscodeAudio(
+          inputFormat: androidx.media3.common.Format,
+          composition: androidx.media3.transformer.Composition,
+          sequenceIndex: number,
+          transformationRequest: androidx.media3.transformer.TransformationRequest,
+          encoderFactory: androidx.media3.transformer.Codec.EncoderFactory,
+          muxerWrapper: androidx.media3.transformer.MuxerWrapper
+        ): boolean;
+        public static shouldTranscodeVideo(
+          inputFormat: androidx.media3.common.Format,
+          composition: androidx.media3.transformer.Composition,
+          sequenceIndex: number,
+          transformationRequest: androidx.media3.transformer.TransformationRequest,
+          encoderFactory: androidx.media3.transformer.Codec.EncoderFactory,
+          muxerWrapper: androidx.media3.transformer.MuxerWrapper
+        ): boolean;
         public static getMediaCodecFlags(flags: number): number;
+        public static areVideoEffectsAllNoOp(videoEffect: com.google.common.collect.ImmutableList<androidx.media3.common.Effect>, glEffect: androidx.media3.common.Format): boolean;
       }
     }
   }
@@ -2165,6 +2244,46 @@ declare module androidx {
 declare module androidx {
   export module media3 {
     export module transformer {
+      export class TransmuxTranscodeHelper {
+        public static class: java.lang.Class<androidx.media3.transformer.TransmuxTranscodeHelper>;
+        public static getMp4Info(context: globalAndroid.content.Context, filePath: string, timeUs: number): com.google.common.util.concurrent.ListenableFuture<androidx.media3.transformer.Mp4Info>;
+        public static createVideoOnlyComposition(filePath: string, clippingEndPositionUs: number): androidx.media3.transformer.Composition;
+        public static buildNewCompositionWithClipTimes(
+          oldComposition: androidx.media3.transformer.Composition,
+          startTimeUs: number,
+          endTimeUs: number,
+          mediaDurationUs: number,
+          startsAtKeyFrame: boolean
+        ): androidx.media3.transformer.Composition;
+        public static createAudioTranscodeAndVideoTransmuxComposition(composition: androidx.media3.transformer.Composition, videoFilePath: string): androidx.media3.transformer.Composition;
+        public static getResumeMetadataAsync(
+          context: globalAndroid.content.Context,
+          filePath: string,
+          composition: androidx.media3.transformer.Composition
+        ): com.google.common.util.concurrent.ListenableFuture<androidx.media3.transformer.TransmuxTranscodeHelper.ResumeMetadata>;
+        public static copyFileAsync(source: java.io.File, destination: java.io.File): com.google.common.util.concurrent.ListenableFuture<java.lang.Void>;
+        public static buildUponComposition(
+          clippingConfiguration: androidx.media3.transformer.Composition,
+          currentEditedMediaItem: boolean,
+          newEditedMediaItemBuilder: boolean,
+          mediaItemIndex: androidx.media3.transformer.TransmuxTranscodeHelper.ResumeMetadata
+        ): androidx.media3.transformer.Composition;
+      }
+      export module TransmuxTranscodeHelper {
+        export class ResumeMetadata {
+          public static class: java.lang.Class<androidx.media3.transformer.TransmuxTranscodeHelper.ResumeMetadata>;
+          public lastSyncSampleTimestampUs: number;
+          public firstMediaItemIndexAndOffsetInfo: com.google.common.collect.ImmutableList<globalAndroid.util.Pair<java.lang.Integer, java.lang.Long>>;
+          public constructor(lastSyncSampleTimestampUs: number, firstMediaItemIndexAndOffsetInfo: com.google.common.collect.ImmutableList<globalAndroid.util.Pair<java.lang.Integer, java.lang.Long>>);
+        }
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module transformer {
       export class VideoEncoderSettings {
         public static class: java.lang.Class<androidx.media3.transformer.VideoEncoderSettings>;
         public static NO_VALUE: number = -1;
@@ -2213,6 +2332,7 @@ declare module androidx {
       export class VideoFrameProcessingWrapper extends androidx.media3.transformer.GraphInput {
         public static class: java.lang.Class<androidx.media3.transformer.VideoFrameProcessingWrapper>;
         public getPendingVideoFrameCount(): number;
+        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, timestampIterator: androidx.media3.common.util.TimestampIterator): number;
         public release(): void;
         public onMediaItemChanged(param0: androidx.media3.transformer.EditedMediaItem, param1: number, param2: androidx.media3.common.Format, param3: boolean): void;
         public signalEndOfVideoInput(): void;
@@ -2225,7 +2345,6 @@ declare module androidx {
         );
         public setOutputSurfaceInfo(outputSurfaceInfo: androidx.media3.common.SurfaceInfo): void;
         public onMediaItemChanged(this_: androidx.media3.transformer.EditedMediaItem, editedMediaItem: number, durationUs: androidx.media3.common.Format, trackFormat: boolean): void;
-        public queueInputBitmap(inputBitmap: globalAndroid.graphics.Bitmap, inStreamOffsetsUs: androidx.media3.common.util.TimestampIterator): number;
         public queueInputTexture(texId: number, presentationTimeUs: number): number;
         public getInputBuffer(): androidx.media3.decoder.DecoderInputBuffer;
         public setOnInputFrameProcessedListener(listener: androidx.media3.common.OnInputFrameProcessedListener): void;
