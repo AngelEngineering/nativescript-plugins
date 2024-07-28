@@ -1,11 +1,10 @@
-/* eslint-disable @nrwl/nx/enforce-module-boundaries */
-import { EventData, Page, File, Frame, knownFolders, Button, Label, Color, Device, Progress } from '@nativescript/core';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { EventData, Page, File, Frame, knownFolders, Button, Label, Color, Device, Progress, Utils } from '@nativescript/core';
 import { DemoSharedTranscoder } from '@demo/shared';
 import { filePicker, galleryPicker, MediaType } from '@angelengineering/filepicker';
 import { MessageData, Transcoder } from '@angelengineering/transcoder';
 import { check as checkPermission, request, request as requestPermission, checkMultiple } from '@nativescript-community/perms';
 import { VideoPlayer } from '@angelengineering/videoplayer';
-import { executeOnMainThread } from '@nativescript/core/utils';
 import { AudioPlayer, AudioPlayerOptions } from '@angelengineering/audio-player';
 
 export function navigatingTo(args: EventData) {
@@ -37,7 +36,7 @@ export class DemoModel extends DemoSharedTranscoder {
       console.log('Transcoding started');
     });
     this.transcoder.on(Transcoder.TRANSCODING_PROGRESS, (payload: MessageData) => {
-      executeOnMainThread(() => {
+      Utils.executeOnMainThread(() => {
         // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
         const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
         progressBar.value = 0;
@@ -46,7 +45,7 @@ export class DemoModel extends DemoSharedTranscoder {
       });
     });
     this.transcoder.on(Transcoder.TRANSCODING_ERROR, (payload: MessageData) => {
-      executeOnMainThread(() => {
+      Utils.executeOnMainThread(() => {
         // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
         const progressBar = Frame.topmost().currentPage.getViewById('transcodingProgress') as Progress;
         progressBar.value = 0;
@@ -55,7 +54,7 @@ export class DemoModel extends DemoSharedTranscoder {
       });
     });
     this.transcoder.on(Transcoder.TRANSCODING_COMPLETE, (payload: MessageData) => {
-      executeOnMainThread(() => {
+      Utils.executeOnMainThread(() => {
         // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
         console.log('complete, output file:', payload.data.output);
         /*

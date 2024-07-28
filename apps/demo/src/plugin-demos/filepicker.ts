@@ -1,4 +1,4 @@
-/* eslint-disable @nrwl/nx/enforce-module-boundaries */
+/* eslint-disable @nx/enforce-module-boundaries */
 import { EventData, Page, File, Frame, StackLayout, Color, Label, Image, alert, isAndroid, Device } from '@nativescript/core';
 import { DemoSharedFilepicker } from '@demo/shared';
 import { filePicker, galleryPicker, MediaType, getFreeMBs } from '@angelengineering/filepicker';

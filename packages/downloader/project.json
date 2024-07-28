@@ -5,7 +5,7 @@
   "sourceRoot": "packages/downloader",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "dist/packages/downloader",
         "tsConfig": "packages/downloader/tsconfig.json",
@@ -24,7 +24,7 @@
         "dependsOn": [
           {
             "target": "build.all",
-            "projects": "dependencies"
+            "dependencies": true
           }
         ]
       }
@@ -32,33 +32,35 @@
     "build.all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["node tools/scripts/build-finish.ts downloader"],
+        "commands": [
+          "node tools/scripts/build-finish.ts downloader"
+        ],
         "parallel": false
       },
-      "outputs": ["dist/packages/downloader"],
+      "outputs": [
+        "{workspaceRoot}/dist/packages/downloader"
+      ],
       "dependsOn": [
         {
           "target": "build.all",
-          "projects": "dependencies"
+          "dependencies": true
         },
         {
-          "target": "build",
-          "projects": "self"
+          "target": "build"
         }
       ]
     },
     "focus": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["nx g @nativescript/plugin-tools:focus-packages downloader"],
+        "commands": [
+          "nx g @nativescript/plugin-tools:focus-packages downloader"
+        ],
         "parallel": false
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/downloader/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "tags": []

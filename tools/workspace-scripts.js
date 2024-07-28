@@ -5,7 +5,7 @@ module.exports = {
     default: 'nps-i',
     nx: {
       script: 'nx',
-      description: 'Execute any command with the @nrwl/cli',
+      description: 'Execute any command with the @nx/cli',
     },
     format: {
       script: 'nx format:write',
@@ -153,7 +153,7 @@ module.exports = {
         description: 'Focus on @angelengineering/transcoder',
       },
       reset: {
-        script: 'nx g @angelengineering/plugin-tools:focus-packages',
+        script: 'nx g @nativescript/plugin-tools:focus-packages',
         description: 'Reset Focus',
       },
     },

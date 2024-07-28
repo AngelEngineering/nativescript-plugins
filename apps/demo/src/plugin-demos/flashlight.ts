@@ -1,4 +1,4 @@
-/* eslint-disable @nrwl/nx/enforce-module-boundaries */
+/* eslint-disable @nx/enforce-module-boundaries */
 import { EventData, Page, getViewById, View, Label, Button, TextField } from '@nativescript/core';
 import { DemoSharedFlashlight } from '@demo/shared';
 import { Flashlight } from '@angelengineering/flashlight';

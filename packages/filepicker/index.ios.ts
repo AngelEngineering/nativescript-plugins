@@ -1,7 +1,6 @@
 /* eslint-disable no-var */
 import { MediaType } from './index.common';
-import { Application, File, ImageAsset, ImageSource } from '@nativescript/core';
-import { iOSNativeHelper } from '@nativescript/core/utils';
+import { Application, File, ImageAsset, ImageSource, Utils } from '@nativescript/core';
 import { AssetDownloader, TempFile } from './files';
 
 export { MediaType } from './index.common';
@@ -20,7 +19,7 @@ let _iosPHPickerController: any; //for iOS<14 we use UIImagePicker. ios14+ uses 
 export function galleryPicker(type: MediaType, multiple: boolean): Promise<File[]> {
   //NOTE: iOS 14+ adds new photo/video gallery privacy access restrictions for UIImagePicker, and introduces
   //     the new PHPicker component which doesn't requires perms and supports multiple selections.
-  if (+iOSNativeHelper.MajorVersion >= 14) {
+  if (Utils.SDK_VERSION >= 14) {
     return PHPicker(type, multiple);
   }
   //gallery UIImage Picker version(images and video) for ios<14
@@ -55,7 +54,7 @@ function PHPicker(type: MediaType, multiple: boolean): Promise<[File]> {
   return new Promise((resolve, reject) => {
     const config: PHPickerConfiguration = PHPickerConfiguration.new();
     config.selectionLimit = multiple ? 0 : 1;
-    config.filter = PHPickerFilter.anyFilterMatchingSubfilters(iOSNativeHelper.collections.jsArrayToNSArray(getPHTypes(type)));
+    config.filter = PHPickerFilter.anyFilterMatchingSubfilters(Utils.ios.collections.jsArrayToNSArray(getPHTypes(type)));
     _iosPHPickerController = new PHPickerViewController({ configuration: config });
     const delegate = PHPickerViewControllerDelegateImpl.new().initWithCallbackAndOptions(resolve, reject, this);
     delegate.registerToGlobal();
@@ -75,7 +74,7 @@ function PHPicker(type: MediaType, multiple: boolean): Promise<[File]> {
 function ImgPicker(type: MediaType): Promise<[File]> {
   return new Promise((resolve, reject) => {
     _iosGalleryPickerController = UIImagePickerController.new();
-    const mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
+    const mediaTypes = Utils.ios.collections.jsArrayToNSArray(getMediaTypes(type));
     _iosGalleryPickerController.mediaTypes = mediaTypes;
     //image/video editing not allowed for now as we would need to process changes manually before returning media
     _iosGalleryPickerController.allowsEditing = false;
@@ -97,7 +96,7 @@ function ImgPicker(type: MediaType): Promise<[File]> {
  */
 export function filePicker(type: MediaType, multiple: boolean): Promise<[File]> {
   return new Promise((resolve, reject) => {
-    const mediaTypes = iOSNativeHelper.collections.jsArrayToNSArray(getMediaTypes(type));
+    const mediaTypes = Utils.ios.collections.jsArrayToNSArray(getMediaTypes(type));
     _iosDocumentPickerController = UIDocumentPickerViewController.alloc().initWithDocumentTypesInMode(
       mediaTypes,
       UIDocumentPickerMode.Import
@@ -286,7 +285,7 @@ class UIImagePickerControllerDelegateImpl extends NSObject implements UIImagePic
 // iOS 14+ Image Gallery PHPicker delegate
 @NativeClass()
 class PHPickerViewControllerDelegateImpl extends NSObject implements PHPickerViewControllerDelegate {
-  public static ObjCProtocols = [+iOSNativeHelper.MajorVersion >= 14 ? PHPickerViewControllerDelegate : UIImagePickerControllerDelegate];
+  public static ObjCProtocols = [Utils.SDK_VERSION >= 14 ? PHPickerViewControllerDelegate : UIImagePickerControllerDelegate];
 
   static new(): PHPickerViewControllerDelegateImpl {
     return <PHPickerViewControllerDelegateImpl>super.new();
@@ -574,7 +573,7 @@ var MediaFileTypes: { [index: string]: string[] } = {
     kUTTypeZipArchive,
   ],
 };
-if (+iOSNativeHelper.MajorVersion >= 14) {
+if (Utils.SDK_VERSION >= 14) {
   MediaFileTypes[MediaType.IMAGE] = MediaFileTypes[MediaType.IMAGE].concat([
     UTTypeWebP.identifier,
     UTTypeBMP.identifier,

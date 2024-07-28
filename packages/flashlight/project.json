@@ -5,7 +5,7 @@
   "sourceRoot": "packages/flashlight",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "dist/packages/flashlight",
         "tsConfig": "packages/flashlight/tsconfig.json",
@@ -24,7 +24,7 @@
         "dependsOn": [
           {
             "target": "build.all",
-            "projects": "dependencies"
+            "dependencies": true
           }
         ]
       }
@@ -32,33 +32,35 @@
     "build.all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["node tools/scripts/build-finish.ts flashlight"],
+        "commands": [
+          "node tools/scripts/build-finish.ts flashlight"
+        ],
         "parallel": false
       },
-      "outputs": ["dist/packages/flashlight"],
+      "outputs": [
+        "{workspaceRoot}/dist/packages/flashlight"
+      ],
       "dependsOn": [
         {
           "target": "build.all",
-          "projects": "dependencies"
+          "dependencies": true
         },
         {
-          "target": "build",
-          "projects": "self"
+          "target": "build"
         }
       ]
     },
     "focus": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["nx g @nativescript/plugin-tools:focus-packages flashlight"],
+        "commands": [
+          "nx g @nativescript/plugin-tools:focus-packages flashlight"
+        ],
         "parallel": false
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/flashlight/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "tags": []

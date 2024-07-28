@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Device, File, Utils } from '@nativescript/core';
 import { TranscoderCommon, VideoConfig, VideoResolution } from './common';
-import { clearInterval, setInterval } from '@nativescript/core/timer';
 
 export class Transcoder extends TranscoderCommon {
   /**

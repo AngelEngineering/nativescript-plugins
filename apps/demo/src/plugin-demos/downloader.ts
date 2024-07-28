@@ -2,7 +2,7 @@ import { EventData, Page, File, Frame, StackLayout, Color, Label, Image, alert, 
 import { DemoSharedDownloader } from '@demo/shared';
 import { Downloader, DownloadOptions, MessageData } from '@angelengineering/downloader';
 import { Result, check as checkPermission, request as requestPermission } from '@nativescript-community/perms';
-import { iOSNativeHelper } from '@nativescript/core/utils';
+import { Utils } from '@nativescript/core';
 //note: these two plugins don't work on iOS 12
 import { LoadingIndicator, Mode, OptionsCommon } from '@nstudio/nativescript-loading-indicator';
 import { Feedback, FeedbackType, FeedbackPosition } from '@valor/nativescript-feedback';
@@ -155,9 +155,9 @@ export class DemoModel extends DemoSharedDownloader {
     };
     let indicator;
     //indicator plugin doesn't work on iOS 12
-    if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator = new LoadingIndicator();
+    if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator = new LoadingIndicator();
 
-    if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator.show(options);
+    if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator.show(options);
     console.log('starting download');
     const dp = new Downloader();
 
@@ -171,35 +171,35 @@ export class DemoModel extends DemoSharedDownloader {
     dp.on(Downloader.DOWNLOAD_PROGRESS, (payload: MessageData) => {
       console.log(' >>>>>  ', payload?.data?.progress, payload?.data?.url, payload?.data?.destinationFilename);
       options.progress = +payload.data.progress;
-      if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator.show(options);
+      if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator.show(options);
     });
     dp.on(Downloader.DOWNLOAD_COMPLETE, (payload: MessageData) => {
       console.log('finished', payload?.data?.filepath);
-      if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator.hide();
+      if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator.hide();
     });
 
     dp.on(Downloader.DOWNLOAD_ERROR, (payload: MessageData) => {
       console.log(payload?.data.error);
-      if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator.hide();
+      if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator.hide();
       this.toast('Download FAILED! error: ' + payload?.data.error, ToastStatus.error);
       this.handleFiles(null);
     });
 
     dp.download(dlopts).then((file: File) => {
       if (!file) {
-        if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator.hide();
+        if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator.hide();
         this.toast('No file resolved!', ToastStatus.error);
         return console.error('Failed to download file!');
       }
       console.log('Finished downloading file ', file.path, file.size);
-      if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) indicator.hide();
+      if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) indicator.hide();
       this.toast('File downloaded!', ToastStatus.success);
       this.handleFiles(file);
     });
   }
 
   toast(message: string, status: ToastStatus, position: ToastPosition = ToastPosition.TOP, title?: string) {
-    if (isAndroid || (isIOS && iOSNativeHelper.MajorVersion > 12)) {
+    if (isAndroid || (isIOS && Utils.SDK_VERSION > 12)) {
       //this plugin doesn't work on iOS 12
       try {
         const options: any = {
