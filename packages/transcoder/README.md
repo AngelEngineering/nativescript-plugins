@@ -4,13 +4,17 @@
 
 [![npm](https://img.shields.io/npm/v/@angelengineering/audio-recorder?style=flat-square)](https://www.npmjs.com/package/@angelengineering/transcoder)
 
-This plugin provides basic video transcoding functionality for Android API 21+ and iOS 4+ and supports modifying the video's resolution on both platforms. iOS supports a few extra options such as AVNumberOfChannelsKey, AVSampleRateKey and AVEncoderBitRateKey.
+This plugin provides a few audio/video transcoding functions for Android API 21+ and iOS 4+. 
 
-The plugin is currently only for scaling a video to a user-specified height and/or width. If only one dimension is passed,  the other will be scaled in the same ratio (based on the original video dimensions). If neither is specified, the transcoder will use a height of 720 with a scaled width based on the input video. 
+*transcode* allows you to transcode an input video/audio file to a specified height/width and produces an Mp4 file with H264 video and AAC audio encoding.  iOS also supports modifying the video frame rate along with some audio settings.
 
-Note: Only available system video/audio codecs/formats are supported, so the transcode will fail immediately for unsupported inputs. It may also fail during transcode if the video file has corrupted frame data. 
+*mergeMp4Files* will merge a series of Mp4 files to produce a single Mp4 file from all input Mp4 files provided. For iOS, this function currently requires that all mp4 input files have audio and video tracks, but there is an additional function *mergeAudioMp4Files* for iOS which can be used to merge onll audio tracks from a set of input mp4 files.
 
-For both Android and iOS, the transcoded video files will be saved as an MP4 file using h264 and AAC encoding for maximum compatibility. 
+For Android, *convertAudioToMp4* will convert natively supported audio files to an Mp4 file with AAC audio encoding. 
+
+For both Android and iOS, all function outputs will be saved as an Mp4 file using h264 and AAC encoding. 
+
+
 
 ## Installation
 
@@ -80,7 +84,7 @@ You can listen to these events by attaching the `on` listener to the `transcoder
 ```typescript
   const transcoder = new NativescriptTranscoder()
   transcoder.on(NativescriptTranscoder.TRANSCODING_PROGRESS, (payload: MessageData) => {
-      // IMPORTANT! You'll have to wrap any UI updates in `executeOnMainThread` for iOS as the events are emitted from a different thread
+      // IMPORTANT! For iOS  you'll have to wrap any UI updates in `executeOnMainThread` as the events are emitted from a different thread
       executeOnMainThread(() => {
         progressBar.value = payload.data.progress * 100;
       });
@@ -100,12 +104,16 @@ export interface VideoConfig {
 }
 ```
 
-## Utilities
+## Functions
 
-The transcoder plugin also contains some utilities to help you when working with videos:
+The transcoder plugin provides the following functions for working with Mp4 files:
 
 | Function    | Description | Return Type | iOS | Android |
 | ----------- | ----------- | ----------- | ----------- | ----------- |
+| transcode(inputPath: string, outputPath: string, videoConfig?: VideoConfig)      | Returns the transcoded video file| Promise\<File\> | ✅ | ✅ |
+| convertAudioToMp4(inputPath: string, outputPath: string)      | Returns the transcoded audio file| Promise\<File\> | ❌ | ✅ |
+| mergeMp4Files(inputFiles: string[], outputPath: string)      | Returns the merged video file| Promise\<File\> | ✅ | ✅ |
+| mergeAudioMp4Files(inputFiles: string[], outputPath: string)      | Returns the merged audio file| Promise\<File\> | ✅ | ❌ |
 | getVideoResolution(videoPath: string)      | Returns the video resolution (e.g. `1920x1080`) | `{ width: string, height: string }` | ✅ | ✅ |
 | getVideoSize(videoPath: string)      | Returns the video size in bytes | number | ✅ | ✅ |
 | getVideoSizeString(videoPath: string)      | Returns the video size in human readable format (e.g. `5.5 mb`) | string | ✅ | ✅ |

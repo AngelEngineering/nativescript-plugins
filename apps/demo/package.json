@@ -11,13 +11,13 @@
     "@angelengineering/filepicker": "file:../../packages/filepicker",
     "@angelengineering/flashlight": "file:../../packages/flashlight",
     "@angelengineering/sleepcontrol": "file:../../packages/sleepcontrol",
+    "@angelengineering/transcoder": "file:../../packages/transcoder",
+    "@angelengineering/videoplayer": "file:../../packages/videoplayer",
     "@nativescript-community/perms": "2.3.3",
     "@nativescript/core": "file:../../node_modules/@nativescript/core",
     "@nstudio/nativescript-checkbox": "2.0.5",
     "@nstudio/nativescript-loading-indicator": "4.3.4",
-    "@valor/nativescript-feedback": "2.0.2",
-    "@angelengineering/videoplayer": "file:../../packages/videoplayer",
-    "@angelengineering/transcoder": "file:../../packages/transcoder"
+    "@valor/nativescript-feedback": "2.0.2"
   },
   "devDependencies": {
     "@nativescript/android": "~8.8.0",

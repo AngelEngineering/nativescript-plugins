@@ -60,7 +60,6 @@ export function filePicker(type: MediaType, multiple: boolean): Promise<File[]> 
     // callback for androidActivity.showActivityForResult
     function onResult(e: AndroidActivityResultEventData): void {
       if (e.requestCode != FILE_PICKER_CODE) return;
-      if (e.resultCode == android.app.Activity.RESULT_CANCELED) return;
       if (e.resultCode != android.app.Activity.RESULT_OK) {
         removeResultListener();
         reject(new Error('ERROR: FilePicker - ' + e.resultCode));

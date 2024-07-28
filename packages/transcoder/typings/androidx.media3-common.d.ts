@@ -64,10 +64,13 @@ declare module androidx {
         public withPlayedAd(adGroupIndex: number, adIndexInAdGroup: number): androidx.media3.common.AdPlaybackState;
         public getAdGroupIndexAfterPositionUs(positionUs: number, periodDurationUs: number): number;
         public withAdGroupTimeUs(adGroupIndex: number, adGroupTimeUs: number): androidx.media3.common.AdPlaybackState;
+        /** @deprecated */
+        public withAvailableAdUri(adGroupIndex: number, adIndexInAdGroup: number, uri: globalAndroid.net.Uri): androidx.media3.common.AdPlaybackState;
         public withOriginalAdCount(adGroupIndex: number, originalAdCount: number): androidx.media3.common.AdPlaybackState;
         public withSkippedAd(adGroupIndex: number, adIndexInAdGroup: number): androidx.media3.common.AdPlaybackState;
         public withAdResumePositionUs(adResumePositionUs: number): androidx.media3.common.AdPlaybackState;
         public withSkippedAdGroup(adGroupIndex: number): androidx.media3.common.AdPlaybackState;
+        public static fromBundle(adGroups: globalAndroid.os.Bundle): androidx.media3.common.AdPlaybackState;
         public hashCode(): number;
         public equals(o: any): boolean;
         public constructor(adsId: any, adGroupTimesUs: androidNative.Array<number>);
@@ -75,6 +78,7 @@ declare module androidx {
         public withRemovedAdGroupCount(this_: number): androidx.media3.common.AdPlaybackState;
         public withResetAdGroup(adGroupIndex: number): androidx.media3.common.AdPlaybackState;
         public endsWithLivePostrollPlaceHolder(): boolean;
+        public withAvailableAdMediaItem(adGroupIndex: number, adIndexInAdGroup: number, mediaItem: androidx.media3.common.MediaItem): androidx.media3.common.AdPlaybackState;
         public withAvailableAd(adGroupIndex: number, adIndexInAdGroup: number): androidx.media3.common.AdPlaybackState;
         public withLastAdRemoved(adGroupIndex: number): androidx.media3.common.AdPlaybackState;
         public withLivePostrollPlaceholderAppended(): androidx.media3.common.AdPlaybackState;
@@ -90,7 +94,6 @@ declare module androidx {
         public withContentResumeOffsetUs(adGroupIndex: number, contentResumeOffsetUs: number): androidx.media3.common.AdPlaybackState;
         public withContentDurationUs(contentDurationUs: number): androidx.media3.common.AdPlaybackState;
         public withIsServerSideInserted(adGroupIndex: number, isServerSideInserted: boolean): androidx.media3.common.AdPlaybackState;
-        public withAvailableAdUri(adGroupIndex: number, adIndexInAdGroup: number, uri: globalAndroid.net.Uri): androidx.media3.common.AdPlaybackState;
         public static fromAdPlaybackState(adGroup: any, i: androidx.media3.common.AdPlaybackState): androidx.media3.common.AdPlaybackState;
       }
       export module AdPlaybackState {
@@ -100,6 +103,7 @@ declare module androidx {
           public count: number;
           public originalCount: number;
           public uris: androidNative.Array<globalAndroid.net.Uri>;
+          public mediaItems: androidNative.Array<androidx.media3.common.MediaItem>;
           public states: androidNative.Array<number>;
           public durationsUs: androidNative.Array<number>;
           public contentResumeOffsetUs: number;
@@ -114,8 +118,10 @@ declare module androidx {
           public toBundle(): globalAndroid.os.Bundle;
           public withOriginalAdCount(originalCount: number): androidx.media3.common.AdPlaybackState.AdGroup;
           public equals(o: any): boolean;
-          public withAdUri(uri: globalAndroid.net.Uri, index: number): androidx.media3.common.AdPlaybackState.AdGroup;
+          public withAdMediaItem(mediaItem: androidx.media3.common.MediaItem, index: number): androidx.media3.common.AdPlaybackState.AdGroup;
           public withAdState(state: number, index: number): androidx.media3.common.AdPlaybackState.AdGroup;
+          /** @deprecated */
+          public withAdUri(uri: globalAndroid.net.Uri, index: number): androidx.media3.common.AdPlaybackState.AdGroup;
           public withAdCount(count: number): androidx.media3.common.AdPlaybackState.AdGroup;
           public withIsServerSideInserted(isServerSideInserted: boolean): androidx.media3.common.AdPlaybackState.AdGroup;
           public getFirstAdIndexToPlay(): number;
@@ -124,6 +130,7 @@ declare module androidx {
           public shouldPlayAdGroup(): boolean;
           public hashCode(): number;
           public withTimeUs(timeUs: number): androidx.media3.common.AdPlaybackState.AdGroup;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.AdPlaybackState.AdGroup;
         }
         export class AdState {
           public static class: java.lang.Class<androidx.media3.common.AdPlaybackState.AdState>;
@@ -168,6 +175,7 @@ declare module androidx {
         public spatializationBehavior: number;
         public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.AudioAttributes>;
         public equals(obj: any): boolean;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.AudioAttributes;
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public getAudioAttributesV21(): androidx.media3.common.AudioAttributes.AudioAttributesV21;
@@ -478,9 +486,9 @@ declare module androidx {
         public static ENCODING_PCM_8BIT: number = 3;
         public static ENCODING_PCM_16BIT: number = 2;
         public static ENCODING_PCM_16BIT_BIG_ENDIAN: number = 268435456;
-        public static ENCODING_PCM_24BIT: number = 536870912;
+        public static ENCODING_PCM_24BIT: number = 21;
         public static ENCODING_PCM_24BIT_BIG_ENDIAN: number = 1342177280;
-        public static ENCODING_PCM_32BIT: number = 805306368;
+        public static ENCODING_PCM_32BIT: number = 22;
         public static ENCODING_PCM_32BIT_BIG_ENDIAN: number = 1610612736;
         public static ENCODING_PCM_FLOAT: number = 4;
         public static ENCODING_MP3: number = 9;
@@ -950,13 +958,11 @@ declare module androidx {
         public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.ColorInfo>;
         public static isoTransferCharacteristicsToColorTransfer(isoTransferCharacteristics: number): number;
         public buildUpon(): androidx.media3.common.ColorInfo.Builder;
-        /** @deprecated */
-        public constructor(colorSpace: number, colorRange: number, colorTransfer: number, hdrStaticInfo: androidNative.Array<number>, lumaBitdepth: number, chromaBitdepth: number);
+        public static isEquivalentToAssumedSdrDefault(colorInfo: androidx.media3.common.ColorInfo): boolean;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.ColorInfo;
         public toBundle(): globalAndroid.os.Bundle;
         public isValid(): boolean;
         public toString(): string;
-        /** @deprecated */
-        public constructor(colorSpace: number, colorRange: number, colorTransfer: number, hdrStaticInfo: androidNative.Array<number>);
         public static isoColorPrimariesToColorSpace(isoColorPrimaries: number): number;
         public static isTransferHdr(colorInfo: androidx.media3.common.ColorInfo): boolean;
         public equals(obj: any): boolean;
@@ -1035,6 +1041,7 @@ declare module androidx {
         /** @deprecated */
         public constructor(playbackType: number, minVolume: number, maxVolume: number);
         public equals(obj: any): boolean;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.DeviceInfo;
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
       }
@@ -1223,6 +1230,7 @@ declare module androidx {
         public static OFFSET_SAMPLE_RELATIVE: number = 9223372036854775807;
         public id: string;
         public label: string;
+        public labels: java.util.List<androidx.media3.common.Label>;
         public language: string;
         public selectionFlags: number;
         public roleFlags: number;
@@ -1267,6 +1275,7 @@ declare module androidx {
         public static toLogString(schemeUuid: androidx.media3.common.Format): string;
         public getPixelCount(): number;
         public toBundle(this_: boolean): globalAndroid.os.Bundle;
+        public static fromBundle(data: globalAndroid.os.Bundle): androidx.media3.common.Format;
       }
       export module Format {
         export class Builder {
@@ -1288,6 +1297,7 @@ declare module androidx {
           public setMaxInputSize(maxInputSize: number): androidx.media3.common.Format.Builder;
           public setCueReplacementBehavior(cueReplacementBehavior: number): androidx.media3.common.Format.Builder;
           public setStereoMode(stereoMode: number): androidx.media3.common.Format.Builder;
+          public setLabels(labels: java.util.List<androidx.media3.common.Label>): androidx.media3.common.Format.Builder;
           public setContainerMimeType(containerMimeType: string): androidx.media3.common.Format.Builder;
           public setLabel(label: string): androidx.media3.common.Format.Builder;
           public setLanguage(language: string): androidx.media3.common.Format.Builder;
@@ -1585,6 +1595,7 @@ declare module androidx {
     export module common {
       export class FrameInfo {
         public static class: java.lang.Class<androidx.media3.common.FrameInfo>;
+        public colorInfo: androidx.media3.common.ColorInfo;
         public width: number;
         public height: number;
         public pixelWidthHeightRatio: number;
@@ -1597,9 +1608,10 @@ declare module androidx {
           public setWidth(width: number): androidx.media3.common.FrameInfo.Builder;
           public setHeight(height: number): androidx.media3.common.FrameInfo.Builder;
           public setOffsetToAddUs(offsetToAddUs: number): androidx.media3.common.FrameInfo.Builder;
+          public setColorInfo(colorInfo: androidx.media3.common.ColorInfo): androidx.media3.common.FrameInfo.Builder;
           public setPixelWidthHeightRatio(pixelWidthHeightRatio: number): androidx.media3.common.FrameInfo.Builder;
           public build(): androidx.media3.common.FrameInfo;
-          public constructor(width: number, height: number);
+          public constructor(colorInfo: androidx.media3.common.ColorInfo, width: number, height: number);
         }
       }
     }
@@ -1655,12 +1667,14 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.common.HeartRating>;
         public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.HeartRating>;
         public constructor(isHeart: boolean);
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.HeartRating;
         public equals(obj: any): boolean;
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public isHeart(): boolean;
         public isRated(): boolean;
         public constructor();
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Rating;
       }
     }
   }
@@ -1675,6 +1689,23 @@ declare module androidx {
         public windowIndex: number;
         public positionMs: number;
         public constructor(timeline: androidx.media3.common.Timeline, windowIndex: number, positionMs: number);
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module common {
+      export class Label {
+        public static class: java.lang.Class<androidx.media3.common.Label>;
+        public language: string;
+        public value: string;
+        public hashCode(): number;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Label;
+        public toBundle(): globalAndroid.os.Bundle;
+        public constructor(language: string, value: string);
+        public equals(o: any): boolean;
       }
     }
   }
@@ -1701,6 +1732,7 @@ declare module androidx {
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public static fromUri(uri: string): androidx.media3.common.MediaItem;
+        public static fromBundle(liveConfiguration: globalAndroid.os.Bundle): androidx.media3.common.MediaItem;
         public buildUpon(): androidx.media3.common.MediaItem.Builder;
         public static fromUri(uri: globalAndroid.net.Uri): androidx.media3.common.MediaItem;
       }
@@ -1712,6 +1744,7 @@ declare module androidx {
           public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.MediaItem.AdsConfiguration>;
           public equals(obj: any): boolean;
           public buildUpon(): androidx.media3.common.MediaItem.AdsConfiguration.Builder;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.AdsConfiguration;
           public toBundle(): globalAndroid.os.Bundle;
           public hashCode(): number;
         }
@@ -1796,7 +1829,9 @@ declare module androidx {
           public static class: java.lang.Class<androidx.media3.common.MediaItem.ClippingConfiguration>;
           public static UNSET: androidx.media3.common.MediaItem.ClippingConfiguration;
           public startPositionMs: number;
+          public startPositionUs: number;
           public endPositionMs: number;
+          public endPositionUs: number;
           public relativeToLiveWindow: boolean;
           public relativeToDefaultPosition: boolean;
           public startsAtKeyFrame: boolean;
@@ -1804,6 +1839,7 @@ declare module androidx {
           public buildUpon(): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
           public equals(obj: any): boolean;
           public toBundle(): globalAndroid.os.Bundle;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.ClippingProperties;
           public hashCode(): number;
         }
         export module ClippingConfiguration {
@@ -1813,7 +1849,9 @@ declare module androidx {
             /** @deprecated */
             public buildClippingProperties(): androidx.media3.common.MediaItem.ClippingProperties;
             public setRelativeToDefaultPosition(relativeToDefaultPosition: boolean): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
+            public setStartPositionUs(startPositionUs: number): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
             public setRelativeToLiveWindow(relativeToLiveWindow: boolean): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
+            public setEndPositionUs(endPositionUs: number): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
             public setStartsAtKeyFrame(startsAtKeyFrame: boolean): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
             public setStartPositionMs(startPositionMs: number): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
             public setEndPositionMs(endPositionMs: number): androidx.media3.common.MediaItem.ClippingConfiguration.Builder;
@@ -1843,6 +1881,7 @@ declare module androidx {
           public buildUpon(): androidx.media3.common.MediaItem.DrmConfiguration.Builder;
           public toBundle(): globalAndroid.os.Bundle;
           public hashCode(): number;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.DrmConfiguration;
         }
         export module DrmConfiguration {
           export class Builder {
@@ -1878,6 +1917,7 @@ declare module androidx {
           /** @deprecated */
           public constructor(targetOffsetMs: number, minOffsetMs: number, maxOffsetMs: number, minPlaybackSpeed: number, maxPlaybackSpeed: number);
           public hashCode(): number;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.LiveConfiguration;
         }
         export module LiveConfiguration {
           export class Builder {
@@ -1904,6 +1944,7 @@ declare module androidx {
           public tag: any;
           public imageDurationMs: number;
           public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.MediaItem.LocalConfiguration>;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.LocalConfiguration;
           public equals(obj: any): boolean;
           public toBundle(): globalAndroid.os.Bundle;
           public hashCode(): number;
@@ -1915,6 +1956,7 @@ declare module androidx {
           public searchQuery: string;
           public extras: globalAndroid.os.Bundle;
           public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.MediaItem.RequestMetadata>;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.RequestMetadata;
           public buildUpon(): androidx.media3.common.MediaItem.RequestMetadata.Builder;
           public toBundle(): globalAndroid.os.Bundle;
           public equals(o: any): boolean;
@@ -1952,6 +1994,7 @@ declare module androidx {
           public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.MediaItem.SubtitleConfiguration>;
           public buildUpon(): androidx.media3.common.MediaItem.SubtitleConfiguration.Builder;
           public equals(obj: any): boolean;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.MediaItem.SubtitleConfiguration;
           public toBundle(): globalAndroid.os.Bundle;
           public hashCode(): number;
         }
@@ -1980,9 +2023,9 @@ declare module androidx {
       export class MediaLibraryInfo {
         public static class: java.lang.Class<androidx.media3.common.MediaLibraryInfo>;
         public static TAG: string = 'AndroidXMedia3';
-        public static VERSION: string = '1.2.1';
-        public static VERSION_SLASHY: string = 'AndroidXMedia3/1.2.1';
-        public static VERSION_INT: number = 1002001300;
+        public static VERSION: string = '1.3.1';
+        public static VERSION_SLASHY: string = 'AndroidXMedia3/1.3.1';
+        public static VERSION_INT: number = 1003001300;
         public static ASSERTIONS_ENABLED: boolean = 1;
         public static TRACE_ENABLED: boolean = 1;
         public static registeredModules(): string;
@@ -2102,6 +2145,7 @@ declare module androidx {
         public equals(obj: any): boolean;
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
+        public static fromBundle(fieldBundle: globalAndroid.os.Bundle): androidx.media3.common.MediaMetadata;
       }
       export module MediaMetadata {
         export class Builder {
@@ -2409,11 +2453,13 @@ declare module androidx {
         public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.PercentageRating>;
         public getPercent(): number;
         public equals(obj: any): boolean;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.PercentageRating;
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public constructor(percent: number);
         public isRated(): boolean;
         public constructor();
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Rating;
       }
     }
   }
@@ -2450,6 +2496,7 @@ declare module androidx {
         public static ERROR_CODE_AUDIO_TRACK_INIT_FAILED: number = 5001;
         public static ERROR_CODE_AUDIO_TRACK_WRITE_FAILED: number = 5002;
         public static ERROR_CODE_AUDIO_TRACK_OFFLOAD_WRITE_FAILED: number = 5003;
+        public static ERROR_CODE_AUDIO_TRACK_OFFLOAD_INIT_FAILED: number = 5004;
         public static ERROR_CODE_DRM_UNSPECIFIED: number = 6000;
         public static ERROR_CODE_DRM_SCHEME_UNSUPPORTED: number = 6001;
         public static ERROR_CODE_DRM_PROVISIONING_FAILED: number = 6002;
@@ -2469,6 +2516,7 @@ declare module androidx {
         public constructor(message: string, cause: java.lang.Throwable, errorCode: number, timestampMs: number);
         public errorInfoEquals(other: androidx.media3.common.PlaybackException): boolean;
         public constructor(message: string, cause: java.lang.Throwable, errorCode: number);
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.PlaybackException;
         public toBundle(): globalAndroid.os.Bundle;
         public constructor(bundle: globalAndroid.os.Bundle);
         public getErrorCodeName(): string;
@@ -2502,6 +2550,7 @@ declare module androidx {
         public equals(obj: any): boolean;
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.PlaybackParameters;
         public constructor(speed: number, pitch: number);
         public withSpeed(speed: number): androidx.media3.common.PlaybackParameters;
         public toString(): string;
@@ -2658,6 +2707,7 @@ declare module androidx {
         public static EVENT_SEEK_FORWARD_INCREMENT_CHANGED: number = 17;
         public static COMMAND_SET_SPEED_AND_PITCH: number = 13;
         public static TIMELINE_CHANGE_REASON_SOURCE_UPDATE: number = 1;
+        public static DISCONTINUITY_REASON_SILENCE_SKIP: number = 6;
         public static COMMAND_SET_DEVICE_VOLUME_WITH_FLAGS: number = 33;
         public static EVENT_AVAILABLE_COMMANDS_CHANGED: number = 13;
         public static EVENT_PLAYBACK_PARAMETERS_CHANGED: number = 12;
@@ -2919,6 +2969,7 @@ declare module androidx {
           public containsAny(commands: androidNative.Array<number>): boolean;
           public buildUpon(): androidx.media3.common.Player.Commands.Builder;
           public hashCode(): number;
+          public static fromBundle(i: globalAndroid.os.Bundle): androidx.media3.common.Player.Commands;
         }
         export module Commands {
           export class Builder {
@@ -3111,6 +3162,7 @@ declare module androidx {
           public filterByAvailableCommands(canAccessCurrentMediaItem: boolean, canAccessTimeline: boolean): androidx.media3.common.Player.PositionInfo;
           public toBundle(controllerInterfaceVersion: number): globalAndroid.os.Bundle;
           public toBundle(): globalAndroid.os.Bundle;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Player.PositionInfo;
           public equals(o: any): boolean;
           public hashCode(): number;
         }
@@ -3152,6 +3204,7 @@ declare module androidx {
          * Constructs a new instance of the androidx.media3.common.PreviewingVideoGraph interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
          */
         public constructor(implementation: {
+          renderOutputFrame(param0: number): void;
           initialize(): void;
           registerInput(): number;
           getProcessor(param0: number): androidx.media3.common.VideoFrameProcessor;
@@ -3165,6 +3218,7 @@ declare module androidx {
         public setOutputSurfaceInfo(param0: androidx.media3.common.SurfaceInfo): void;
         public release(): void;
         public initialize(): void;
+        public renderOutputFrame(param0: number): void;
         public getProcessor(param0: number): androidx.media3.common.VideoFrameProcessor;
       }
       export module PreviewingVideoGraph {
@@ -3232,6 +3286,7 @@ declare module androidx {
         public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.Rating>;
         public toBundle(): globalAndroid.os.Bundle;
         public isRated(): boolean;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Rating;
       }
     }
   }
@@ -3410,6 +3465,7 @@ declare module androidx {
         public increaseDeviceVolume(flags: number): void;
         public handleClearVideoOutput(videoOutput: any): com.google.common.util.concurrent.ListenableFuture<any>;
         public getPlaybackState(): number;
+        public verifyApplicationThread(): void;
         public setDeviceVolume(param0: number, param1: number): void;
         public getCurrentCues(): androidx.media3.common.text.CueGroup;
         public isCurrentMediaItemLive(): boolean;
@@ -3673,7 +3729,9 @@ declare module androidx {
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public isRated(): boolean;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.StarRating;
         public constructor(maxStars: number);
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Rating;
       }
     }
   }
@@ -3731,9 +3789,11 @@ declare module androidx {
         public isThumbsUp(): boolean;
         public equals(obj: any): boolean;
         public hashCode(): number;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.ThumbRating;
         public toBundle(): globalAndroid.os.Bundle;
         public isRated(): boolean;
         public constructor();
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Rating;
       }
     }
   }
@@ -3799,6 +3859,7 @@ declare module androidx {
         public getFirstWindowIndex(shuffleModeEnabled: boolean): number;
         public getNextWindowIndex(windowIndex: number, repeatMode: number, shuffleModeEnabled: boolean): number;
         public getWindow(windowIndex: number, window: androidx.media3.common.Timeline.Window): androidx.media3.common.Timeline.Window;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Timeline;
         public getWindow(param0: number, param1: androidx.media3.common.Timeline.Window, param2: number): androidx.media3.common.Timeline.Window;
         public getPeriod(periodIndex: number, period: androidx.media3.common.Timeline.Period): androidx.media3.common.Timeline.Period;
       }
@@ -3831,6 +3892,7 @@ declare module androidx {
           public getFirstAdIndexToPlay(adGroupIndex: number): number;
           public getAdGroupIndexForPositionUs(positionUs: number): number;
           public getAdCountInAdGroup(adGroupIndex: number): number;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Timeline.Period;
           public getDurationUs(): number;
           public toBundle(): globalAndroid.os.Bundle;
           public set(
@@ -3914,6 +3976,7 @@ declare module androidx {
           public getCurrentUnixTimeMs(): number;
           public constructor();
           public getDurationMs(): number;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Timeline.Window;
           public hashCode(): number;
           public getDefaultPositionMs(): number;
           public getDefaultPositionUs(): number;
@@ -3940,6 +4003,7 @@ declare module androidx {
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public constructor(formats: androidNative.Array<androidx.media3.common.Format>);
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.TrackGroup;
       }
     }
   }
@@ -3959,6 +4023,7 @@ declare module androidx {
         public hashCode(): number;
         public toBundle(): globalAndroid.os.Bundle;
         public constructor(mediaTrackGroup: androidx.media3.common.TrackGroup, trackIndex: number);
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.TrackSelectionOverride;
       }
     }
   }
@@ -3994,6 +4059,7 @@ declare module androidx {
         public preferredTextRoleFlags: number;
         public ignoredTextSelectionFlags: number;
         public selectUndeterminedTextLanguage: boolean;
+        public isPrioritizeImageOverVideoEnabled: boolean;
         public forceLowestBitrate: boolean;
         public forceHighestSupportedBitrate: boolean;
         public overrides: com.google.common.collect.ImmutableMap<androidx.media3.common.TrackGroup, androidx.media3.common.TrackSelectionOverride>;
@@ -4065,6 +4131,7 @@ declare module androidx {
           public build(): androidx.media3.common.TrackSelectionParameters;
           public setMinVideoFrameRate(minVideoFrameRate: number): androidx.media3.common.TrackSelectionParameters.Builder;
           public setPreferredAudioLanguages(preferredAudioLanguages: androidNative.Array<string>): androidx.media3.common.TrackSelectionParameters.Builder;
+          public setPrioritizeImageOverVideoEnabled(isPrioritizeImageOverVideoEnabled: boolean): androidx.media3.common.TrackSelectionParameters.Builder;
           public clearOverridesOfType(this_: number): androidx.media3.common.TrackSelectionParameters.Builder;
           public setMaxVideoBitrate(maxVideoBitrate: number): androidx.media3.common.TrackSelectionParameters.Builder;
           public setForceLowestBitrate(forceLowestBitrate: boolean): androidx.media3.common.TrackSelectionParameters.Builder;
@@ -4102,18 +4169,19 @@ declare module androidx {
         public static class: java.lang.Class<androidx.media3.common.Tracks>;
         public static EMPTY: androidx.media3.common.Tracks;
         public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.Tracks>;
-        public equals(other: any): boolean;
-        public containsType(this_: number): boolean;
-        public hashCode(): number;
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Tracks;
         public toBundle(): globalAndroid.os.Bundle;
         /** @deprecated */
         public isTypeSupportedOrEmpty(trackType: number, allowExceedsCapabilities: boolean): boolean;
+        public isTypeSupported(trackType: number): boolean;
+        public equals(other: any): boolean;
+        public containsType(this_: number): boolean;
+        public hashCode(): number;
         public constructor(groups: java.util.List<androidx.media3.common.Tracks.Group>);
         public isTypeSupported(this_: number, trackType: boolean): boolean;
         public isTypeSelected(i: number): boolean;
         public isEmpty(): boolean;
         public getGroups(): com.google.common.collect.ImmutableList<androidx.media3.common.Tracks.Group>;
-        public isTypeSupported(trackType: number): boolean;
         /** @deprecated */
         public isTypeSupportedOrEmpty(trackType: number): boolean;
       }
@@ -4131,6 +4199,7 @@ declare module androidx {
           public getMediaTrackGroup(): androidx.media3.common.TrackGroup;
           public isTrackSupported(trackIndex: number, allowExceedsCapabilities: boolean): boolean;
           public getTrackFormat(trackIndex: number): androidx.media3.common.Format;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.Tracks.Group;
           public isSupported(this_: boolean): boolean;
           public constructor(mediaTrackGroup: androidx.media3.common.TrackGroup, adaptiveSupported: boolean, trackSupport: androidNative.Array<number>, trackSelected: androidNative.Array<boolean>);
           public isAdaptiveSupported(): boolean;
@@ -4215,10 +4284,9 @@ declare module androidx {
               param0: globalAndroid.content.Context,
               param1: androidx.media3.common.DebugViewProvider,
               param2: androidx.media3.common.ColorInfo,
-              param3: androidx.media3.common.ColorInfo,
-              param4: boolean,
-              param5: java.util.concurrent.Executor,
-              param6: androidx.media3.common.VideoFrameProcessor.Listener
+              param3: boolean,
+              param4: java.util.concurrent.Executor,
+              param5: androidx.media3.common.VideoFrameProcessor.Listener
             ): androidx.media3.common.VideoFrameProcessor;
           });
           public constructor();
@@ -4226,10 +4294,9 @@ declare module androidx {
             param0: globalAndroid.content.Context,
             param1: androidx.media3.common.DebugViewProvider,
             param2: androidx.media3.common.ColorInfo,
-            param3: androidx.media3.common.ColorInfo,
-            param4: boolean,
-            param5: java.util.concurrent.Executor,
-            param6: androidx.media3.common.VideoFrameProcessor.Listener
+            param3: boolean,
+            param4: java.util.concurrent.Executor,
+            param5: androidx.media3.common.VideoFrameProcessor.Listener
           ): androidx.media3.common.VideoFrameProcessor;
         }
         export class InputType {
@@ -4327,6 +4394,7 @@ declare module androidx {
         public toBundle(): globalAndroid.os.Bundle;
         public constructor(width: number, height: number);
         public constructor(width: number, height: number, unappliedRotationDegrees: number, pixelWidthHeightRatio: number);
+        public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.VideoSize;
       }
     }
   }
@@ -4694,9 +4762,14 @@ declare module androidx {
           public shearDegrees: number;
           public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.text.Cue>;
           public equals(obj: any): boolean;
+          /** @deprecated */
+          public toBundle(): globalAndroid.os.Bundle;
+          public static fromBundle(customSpanBundle: globalAndroid.os.Bundle): androidx.media3.common.text.Cue;
           public buildUpon(): androidx.media3.common.text.Cue.Builder;
           public toBundle(): globalAndroid.os.Bundle;
           public hashCode(): number;
+          public toSerializableBundle(): globalAndroid.os.Bundle;
+          public toBinderBasedBundle(): globalAndroid.os.Bundle;
         }
         export module Cue {
           export class AnchorType {
@@ -4784,6 +4857,21 @@ declare module androidx {
           public static CREATOR: androidx.media3.common.Bundleable.Creator<androidx.media3.common.text.CueGroup>;
           public constructor(cues: java.util.List<androidx.media3.common.text.Cue>, presentationTimeUs: number);
           public toBundle(): globalAndroid.os.Bundle;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.text.CueGroup;
+        }
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module common {
+      export module text {
+        export class CustomSpanBundler {
+          public static class: java.lang.Class<androidx.media3.common.text.CustomSpanBundler>;
+          public static bundleCustomSpans(bundle: globalAndroid.text.Spanned): java.util.ArrayList<globalAndroid.os.Bundle>;
+          public static unbundleAndApplyCustomSpan(customSpanBundle: globalAndroid.os.Bundle, text: globalAndroid.text.Spannable): void;
         }
       }
     }
@@ -4829,6 +4917,8 @@ declare module androidx {
           public rubyText: string;
           public position: number;
           public constructor(rubyText: string, position: number);
+          public toBundle(): globalAndroid.os.Bundle;
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.text.RubySpan;
         }
       }
     }
@@ -4889,7 +4979,9 @@ declare module androidx {
           public markShape: number;
           public markFill: number;
           public position: number;
+          public toBundle(): globalAndroid.os.Bundle;
           public constructor(shape: number, fill: number, position: number);
+          public static fromBundle(bundle: globalAndroid.os.Bundle): androidx.media3.common.text.TextEmphasisSpan;
         }
         export module TextEmphasisSpan {
           export class MarkFill {
@@ -4977,16 +5069,39 @@ declare module androidx {
            * Constructs a new instance of the androidx.media3.common.util.BitmapLoader interface with the provided implementation. An empty constructor exists calling super() when extending the interface class.
            */
           public constructor(implementation: {
+            supportsMimeType(param0: string): boolean;
             decodeBitmap(param0: androidNative.Array<number>): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
-            loadBitmap(uri: globalAndroid.net.Uri): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
-            loadBitmap(param0: globalAndroid.net.Uri, param1: globalAndroid.graphics.BitmapFactory.Options): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
+            loadBitmap(param0: globalAndroid.net.Uri): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
             loadBitmapFromMetadata(future: androidx.media3.common.MediaMetadata): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
           });
           public constructor();
-          public loadBitmap(param0: globalAndroid.net.Uri, param1: globalAndroid.graphics.BitmapFactory.Options): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
+          public supportsMimeType(param0: string): boolean;
           public decodeBitmap(param0: androidNative.Array<number>): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
-          public loadBitmap(uri: globalAndroid.net.Uri): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
           public loadBitmapFromMetadata(future: androidx.media3.common.MediaMetadata): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
+          public loadBitmap(param0: globalAndroid.net.Uri): com.google.common.util.concurrent.ListenableFuture<globalAndroid.graphics.Bitmap>;
+        }
+      }
+    }
+  }
+}
+
+declare module androidx {
+  export module media3 {
+    export module common {
+      export module util {
+        export class BundleCollectionUtil {
+          public static class: java.lang.Class<androidx.media3.common.util.BundleCollectionUtil>;
+          public static bundleToStringHashMap(value: globalAndroid.os.Bundle): java.util.HashMap<string, string>;
+          public static getBundleWithDefault(bundle: globalAndroid.os.Bundle, field: string, defaultValue: globalAndroid.os.Bundle): globalAndroid.os.Bundle;
+          public static ensureClassLoader(bundle: globalAndroid.os.Bundle): void;
+          public static toBundleList(item: java.util.List<any>, i: com.google.common.base.Function): com.google.common.collect.ImmutableList;
+          public static fromBundleList(bundle: com.google.common.base.Function, item: java.util.List<any>): com.google.common.collect.ImmutableList;
+          public static toBundleSparseArray(i: globalAndroid.util.SparseArray<any>, items: com.google.common.base.Function): globalAndroid.util.SparseArray<any>;
+          public static getIntegerArrayListWithDefault(bundle: globalAndroid.os.Bundle, field: string, defaultValue: java.util.ArrayList<java.lang.Integer>): java.util.ArrayList<java.lang.Integer>;
+          public static bundleToStringImmutableMap(bundle: globalAndroid.os.Bundle): com.google.common.collect.ImmutableMap<string, string>;
+          public static fromBundleSparseArray(i: com.google.common.base.Function, fromBundleFunc: globalAndroid.util.SparseArray<any>): globalAndroid.util.SparseArray<any>;
+          public static toBundleArrayList(item: java.util.Collection<any>, items: com.google.common.base.Function): java.util.ArrayList<any>;
+          public static stringMapToBundle(entry: java.util.Map<string, string>): globalAndroid.os.Bundle;
         }
       }
     }
@@ -5001,30 +5116,6 @@ declare module androidx {
           public static class: java.lang.Class<androidx.media3.common.util.BundleUtil>;
           public static getBinder(bundle: globalAndroid.os.Bundle, key: string): globalAndroid.os.IBinder;
           public static putBinder(bundle: globalAndroid.os.Bundle, key: string, binder: globalAndroid.os.IBinder): void;
-        }
-      }
-    }
-  }
-}
-
-declare module androidx {
-  export module media3 {
-    export module common {
-      export module util {
-        export class BundleableUtil {
-          public static class: java.lang.Class<androidx.media3.common.util.BundleableUtil>;
-          public static toBundleList(bundleableList: java.util.List<any>): com.google.common.collect.ImmutableList;
-          public static bundleToStringHashMap(value: globalAndroid.os.Bundle): java.util.HashMap<string, string>;
-          public static toBundleSparseArray(i: globalAndroid.util.SparseArray<any>): globalAndroid.util.SparseArray<any>;
-          public static getBundleWithDefault(bundle: globalAndroid.os.Bundle, field: string, defaultValue: globalAndroid.os.Bundle): globalAndroid.os.Bundle;
-          public static ensureClassLoader(bundle: globalAndroid.os.Bundle): void;
-          public static toBundleArrayList(element: java.util.Collection<any>): java.util.ArrayList<any>;
-          public static getIntegerArrayListWithDefault(bundle: globalAndroid.os.Bundle, field: string, defaultValue: java.util.ArrayList<java.lang.Integer>): java.util.ArrayList<java.lang.Integer>;
-          public static fromBundleSparseArray(i: androidx.media3.common.Bundleable.Creator<any>, creator: globalAndroid.util.SparseArray<any>): globalAndroid.util.SparseArray<any>;
-          public static bundleToStringImmutableMap(bundle: globalAndroid.os.Bundle): com.google.common.collect.ImmutableMap<string, string>;
-          public static fromBundleList(bundle: androidx.media3.common.Bundleable.Creator<any>, bundleable: java.util.List<any>): com.google.common.collect.ImmutableList;
-          public static toBundleList(bundleable: java.util.List<any>, i: com.google.common.base.Function): com.google.common.collect.ImmutableList;
-          public static stringMapToBundle(entry: java.util.Map<string, string>): globalAndroid.os.Bundle;
         }
       }
     }
@@ -5131,6 +5222,7 @@ declare module androidx {
         export class ConstantRateTimestampIterator extends androidx.media3.common.util.TimestampIterator {
           public static class: java.lang.Class<androidx.media3.common.util.ConstantRateTimestampIterator>;
           public constructor(durationUs: number, frameRate: number);
+          public constructor(durationUs: number, frameRate: number, startingTimestampUs: number);
           public next(): number;
           public copyOf(): androidx.media3.common.util.ConstantRateTimestampIterator;
           public hasNext(): boolean;
@@ -5294,11 +5386,13 @@ declare module androidx {
           ): void;
           public static createGlSyncFence(): number;
           public static isProtectedContentExtensionSupported(context: globalAndroid.content.Context): boolean;
+          public static createTexture(bitmap: globalAndroid.graphics.Bitmap): number;
           public static isSurfacelessContextExtensionSupported(): boolean;
           public static getCurrentContext(): globalAndroid.opengl.EGLContext;
           public static setToIdentity(matrix: androidNative.Array<number>): void;
           public static deleteSyncObjectQuietly(syncObject: number): void;
           public static createBuffer(data: androidNative.Array<number>): java.nio.FloatBuffer;
+          public static getContextMajorVersion(): number;
           public static destroyEglSurface(eglDisplay: globalAndroid.opengl.EGLDisplay, eglSurface: globalAndroid.opengl.EGLSurface): void;
           public static createTexture(width: number, height: number, useHighPrecisionColorComponents: boolean): number;
           public static createEglContext(
@@ -5314,6 +5408,7 @@ declare module androidx {
           public static deleteRbo(rboId: number): void;
           public static createExternalTexture(): number;
           public static getTextureCoordinateBounds(): androidNative.Array<number>;
+          public static generateTexture(): number;
           public static isBt2020PqExtensionSupported(): boolean;
           public static focusFramebufferUsingCurrentContext(framebuffer: number, width: number, height: number): void;
           public static bindTexture(textureTarget: number, texId: number): void;
@@ -5325,6 +5420,7 @@ declare module androidx {
             configAttributes: boolean
           ): globalAndroid.opengl.EGLSurface;
           public static clearFocusedBuffers(): void;
+          public static setTexture(texId: number, bitmap: globalAndroid.graphics.Bitmap): void;
           public static createVertexBuffer(i: java.util.List<androidNative.Array<number>>): androidNative.Array<number>;
           public static deleteSyncObject(syncObject: number): void;
           public static getNormalizedCoordinateBounds(): androidNative.Array<number>;
@@ -6161,6 +6257,7 @@ declare module androidx {
           public static getAudioContentTypeForStreamType(streamType: number): number;
           public static shouldShowPlayButton(player: androidx.media3.common.Player, playIfSuppressed: boolean): boolean;
           public static isRunningOnEmulator(): boolean;
+          public static crc16(value: androidNative.Array<number>, i: number, bytes: number, start: number): number;
           public static setForegroundServiceNotification(
             service: globalAndroid.app.Service,
             notificationId: number,
@@ -6234,12 +6331,15 @@ declare module androidx {
           public static getStreamTypeForAudioUsage(usage: number): number;
           public static createReadOnlyByteBuffer(byteBuffer: java.nio.ByteBuffer): java.nio.ByteBuffer;
           public static isWear(context: globalAndroid.content.Context): boolean;
+          public static getRoleFlagStrings(roleFlags: number): java.util.List<string>;
+          public static getSelectionFlagStrings(selectionFlags: number): java.util.List<string>;
           public static getAudioFormat(sampleRate: number, channelConfig: number, encoding: number): globalAndroid.media.AudioFormat;
           public static getMaxPendingFramesCountForMediaCodecDecoders(context: globalAndroid.content.Context): number;
           public static isFrameDropAllowedOnSurfaceInput(context: globalAndroid.content.Context): boolean;
           public static compareLong(left: number, right: number): number;
           public static isAutomotive(context: globalAndroid.content.Context): boolean;
           public static getCurrentDisplayModeSize(width: globalAndroid.content.Context, height: globalAndroid.view.Display): globalAndroid.graphics.Point;
+          public static contentEquals(key: globalAndroid.util.SparseArray<any>, index: globalAndroid.util.SparseArray<any>): boolean;
           public static normalizeLanguageCode(language: string): string;
           public static nullSafeArrayAppend(original: androidNative.Array<any>, newElement: any): androidNative.Array<any>;
           public static toByteArray(value: number): androidNative.Array<number>;
@@ -6250,6 +6350,7 @@ declare module androidx {
           public static getAudioTrackChannelConfig(channelCount: number): number;
           public static getNowUnixTimeMs(elapsedRealtimeEpochOffsetMs: number): number;
           public static msToUs(timeMs: number): number;
+          public static contentHashCode(index: globalAndroid.util.SparseArray<any>): number;
           public static getAvailableCommands(player: androidx.media3.common.Player, permanentAvailableCommands: androidx.media3.common.Player.Commands): androidx.media3.common.Player.Commands;
           public static isLinebreak(c: number): boolean;
           public static getTrackTypeString(trackType: number): string;
@@ -6264,7 +6365,9 @@ declare module androidx {
           public static createHandler(looper: globalAndroid.os.Looper, callback: globalAndroid.os.Handler.Callback): globalAndroid.os.Handler;
           public static scaleLargeTimestamp(timestamp: number, multiplier: number, divisor: number): number;
           public static usToMs(timeUs: number): number;
+          public static getPcmFormat(audioFormat: androidx.media3.common.audio.AudioProcessor.AudioFormat): androidx.media3.common.Format;
           public static getStringForTime(builder: java.lang.StringBuilder, formatter: java.util.Formatter, timeMs: number): string;
+          public static isBitmapFactorySupportedMimeType(mimeType: string): boolean;
           public static fromUtf8Bytes(bytes: androidNative.Array<number>, offset: number, length: number): string;
           public static isEncodingLinearPcm(encoding: number): boolean;
           public static castNonNullTypeArray(value: androidNative.Array<any>): androidNative.Array<any>;
