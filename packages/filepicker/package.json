@@ -1,6 +1,6 @@
 {
   "name": "@angelengineering/filepicker",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "File Picker plugin for Nativescript applications",
   "main": "index",
   "typings": "index.d.ts",
