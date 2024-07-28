@@ -1,4 +1,4 @@
-import { EventData, File, Observable, isAndroid } from '@nativescript/core';
+import { EventData, File, Observable } from '@nativescript/core';
 
 export class TranscoderCommon extends Observable {
   private _logLevel: LogLevel = 'verbose';
@@ -27,22 +27,6 @@ export class TranscoderCommon extends Observable {
   public static TRANSCODING_COMPLETE = 'transcoding-complete';
   public static TRANSCODING_ERROR = 'transcoding-error';
 
-  //Default resolutions for 16:9 movie aspect formats
-  private resolutionMap = {
-    '1080': {
-      width: 1920.0,
-      height: 1080.0,
-    },
-    '720': {
-      width: 1280.0,
-      height: 720.0,
-    },
-    '480': {
-      width: 854.0,
-      height: 480.0,
-    },
-  };
-
   /***********************
    Utility Functions:
    **********************/
@@ -66,19 +50,6 @@ export class TranscoderCommon extends Observable {
     return this.formatBytes(fileSize);
   }
 
-  getAllowedTranscodingResolution(videoPath: string): string[] {
-    const videoSize = this.getVideoResolution(videoPath);
-    const resolution = videoSize.width * videoSize.height;
-    const allowedResolution = Object.entries(this.resolutionMap).reduce((acc, [key, val]) => {
-      // only allow transcoding to lower quality
-      if (resolution > val.width * val.height) {
-        acc.push(key);
-      }
-      return acc;
-    }, []);
-    return allowedResolution;
-  }
-
   getVideoResolution(videoPath: string): VideoResolution {
     // implemented separately in ios and android files
     return { width: 0, height: 0 };
@@ -92,7 +63,7 @@ export class TranscoderCommon extends Observable {
   public getVideoCodec(videoPath: string): string {
     let videoFormat: any = null;
     try {
-      if (isAndroid) {
+      if (__ANDROID__) {
         const mediadata = new android.media.MediaMetadataRetriever();
         mediadata.setDataSource(videoPath);
 
@@ -150,7 +121,7 @@ export class TranscoderCommon extends Observable {
   public getAudioCodec(videoPath: string): string {
     let videoFormat: any = null;
     try {
-      if (isAndroid) {
+      if (__ANDROID__) {
         const mediadata = new android.media.MediaMetadataRetriever();
         mediadata.setDataSource(videoPath);
 
@@ -208,7 +179,7 @@ export class TranscoderCommon extends Observable {
   public getVideoDuration(videoPath: string): number {
     let totalTime = 0;
     try {
-      if (isAndroid) {
+      if (__ANDROID__) {
         const mediadata = new android.media.MediaMetadataRetriever();
         mediadata.setDataSource(videoPath);
         totalTime = +mediadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);

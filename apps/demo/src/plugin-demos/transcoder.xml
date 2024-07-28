@@ -2,7 +2,7 @@
   xmlns:Video="@angelengineering/videoplayer"
   navigatingTo="navigatingTo">
   <Page.actionBar>
-    <ActionBar title="Video Processing Basic"
+    <ActionBar title="Audio/Video Transcoding"
       icon="">
     </ActionBar>
   </Page.actionBar>
@@ -28,7 +28,7 @@
         <Button text="Convert picked file to MP4"
           tap="{{ processAudio }}"
           id="audio-convert-button"/>
-        <Button text="Convert URL to MP4"
+        <Button text="Convert Audio URL to MP4"
           tap="{{ processURL }}"
           id="mp3-convert-button"/>
         <Progress id="transcodingProgress"

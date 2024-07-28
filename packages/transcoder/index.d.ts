@@ -1,5 +1,5 @@
 import { File } from '@nativescript/core';
-import { LogLevel, TranscoderCommon, VideoConfig, VideoResolution } from './common';
+import { LogLevel, TranscoderCommon, VideoConfig } from './common';
 export { Asset, Segment, Track, VideoConfig, MessageData } from './common';
 
 export declare class Transcoder extends TranscoderCommon {
@@ -29,6 +29,26 @@ export declare class Transcoder extends TranscoderCommon {
    *
    */
   convertAudioToMp4(inputPath: string, outputPath: string): Promise<File>;
+
+  /**
+   * Merges the mp4 files specified by inputFiles (array of file paths) into an mp4 file at the outputPath.
+   *
+   * On iOS,  input files must all have audio and video tracks with the same codecs used.
+   * @method mergeMp4Files
+   * @param inputFiles
+   * @param outputPath
+   **/
+  mergeMp4Files(inputFiles: string[], outputPath: string): Promise<File>;
+
+  /**
+   * **iOS-ONY** Merges the audio tracks from mp4 files specified by audioFileUrls (array of file paths) into an mp4 audio file
+   *      at the outputPath.
+   * NOTE: input files must all be MP4 files with same audio encoding!
+   * @method mergeAudioMp4Files
+   * @param audioFileUrls
+   * @param outputPath
+   **/
+  public mergeAudioMp4Files(audioFiles: string[], outputPath: string): Promise<File>;
 
   /***********************
    Utility Functions:
