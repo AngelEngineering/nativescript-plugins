@@ -30,6 +30,7 @@
     "**/.DS_Store": true,
     "**/node_modules/**": true,
     "dist/*": true,
+    ".nx/*": true,
   },
   "search.exclude": {},
   "search.useIgnoreFiles": false,

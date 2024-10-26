@@ -715,7 +715,6 @@ export class NSCamera extends NSCameraBase {
   public static useDeviceOrientation = true;
 
   private _swifty: MySwifty;
-  private _isIPhoneX: boolean;
   private _defaultCamera: CameraTypes = 'rear';
   private _enableVideo: boolean;
 
@@ -741,7 +740,6 @@ export class NSCamera extends NSCameraBase {
     this._onLayoutChangeListener = this._onLayoutChangeFn.bind(this);
     this._swifty = MySwifty.initWithOwner(new WeakRef(this), this.defaultCamera);
     this._swifty.shouldUseDeviceOrientation = NSCamera.useDeviceOrientation;
-    this._detectDevice(); //TODO: is this still useful?
   }
 
   //Enable debug logging to NS and iOS console
@@ -897,10 +895,6 @@ export class NSCamera extends NSCameraBase {
     super.onUnloaded();
   }
 
-  public get isIPhoneX() {
-    return this._isIPhoneX;
-  }
-
   /**
    * Toggle Camera front/back
    */
@@ -1026,35 +1020,6 @@ export class NSCamera extends NSCameraBase {
    */
   public isCameraAvailable() {
     return this._swifty.isCameraAvailable();
-  }
-
-  private _detectDevice() {
-    if (typeof this._isIPhoneX === 'undefined') {
-      const _SYS_NAMELEN = 256;
-
-      /* tslint:disable-next-line: no-any */
-      const buffer: any = interop.alloc(5 * _SYS_NAMELEN);
-      // @ts-expect-error
-      uname(buffer);
-      let name: string = NSString.stringWithUTF8String(buffer.add(_SYS_NAMELEN * 4)).toString();
-      // Get machine name for Simulator
-      if (name === 'x86_64' || name === 'i386') {
-        name = NSProcessInfo.processInfo.environment.objectForKey('SIMULATOR_MODEL_IDENTIFIER');
-      }
-      // this.CLog('isIPhoneX name:', name);
-      const parts = name.toLowerCase().split('iphone');
-      if (parts && parts.length > 1) {
-        const versionNumber = parseInt(parts[1]);
-        if (!isNaN(versionNumber)) {
-          // all above or greater than 11 are X devices
-          this._isIPhoneX = versionNumber >= 11;
-        }
-      }
-      if (!this._isIPhoneX) {
-        // consider iphone x global and iphone x gsm
-        this._isIPhoneX = name.indexOf('iPhone10,3') === 0 || name.indexOf('iPhone10,6') === 0;
-      }
-    }
   }
 
   /*
