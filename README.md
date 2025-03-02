@@ -8,6 +8,7 @@
 - [@angelengineering/transcoder](packages/transcoder/README.md)
 - [@angelengineering/videoplayer](packages/videoplayer/README.md)
 
+
 # Overview
 This repo contains source for a number of Nativescript plugins. Check out the individual README's inside each package for more information on each plugin. 
 
@@ -17,9 +18,15 @@ After cloning this repo, run `npm run setup` to configure the NX devdeps otherwi
 
 You'll need yarn installed to run this command. To install, `npm install --global yarn` first.
 
+
 # How to use?
 
-This workspace manages the suite of plugins listed above.
+This workspace manages the suite of plugins listed above. 
+
+## Prerequisites
+
+- Node 18+ is recommended
+- [yarn v1](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) is required
 
 In general, when in doubt with what to do, just `npm start`.
 
@@ -55,7 +62,7 @@ npm start
 - Choose the focus commands for the package you wish to focus on and hit enter.
 - All the demo app's will be updated to isolate that 1 package and for supported IDE's (currently VS Code), the source code will also become isolated in the workspace.
 
-Note: _good to always clean the demo you plan to run after focusing. (You can clean any demo from `npm start` as well)_
+Note: *good to always clean the demo you plan to run after focusing. (You can clean any demo from `npm start` as well)*
 
 ## How to publish packages?
 

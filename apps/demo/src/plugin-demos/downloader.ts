@@ -212,10 +212,10 @@ export class DemoModel extends DemoSharedDownloader {
             status === ToastStatus.success
               ? new Color('#1194B6')
               : status === ToastStatus.warning
-              ? new Color('#FA923C')
-              : status === ToastStatus.error
-              ? new Color('#F17577')
-              : new Color('#2AD3BE') /* normal */,
+                ? new Color('#FA923C')
+                : status === ToastStatus.error
+                  ? new Color('#F17577')
+                  : new Color('#2AD3BE') /* normal */,
           position: position === ToastPosition.TOP ? FeedbackPosition.Top : FeedbackPosition.Bottom,
           duration: status === ToastStatus.error || status === ToastStatus.warning ? 2500 : 1500,
           titleColor: new Color('white'),

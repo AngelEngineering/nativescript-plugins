@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@angelengineering/*": ["../../packages/*"]
+      "@angelengineering/*": [
+        "../../packages/*"
+      ]
     }
   }
 }

@@ -28,7 +28,7 @@ function buildAngular() {
       console.log(`${npmPackageName} angular built successfully.`);
       finishPreparation();
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(error);
       process.exit(1);
     });
@@ -42,7 +42,7 @@ function copyAngularDist() {
       // buildNativeSrc();
       finishPreparation();
     })
-    .catch(err => console.error(err));
+    .catch((err) => console.error(err));
 }
 
 function cleanPackage() {
@@ -70,7 +70,7 @@ function finishPreparation() {
       cleanPackage();
       console.log(`${npmPackageName} ready to publish.`);
     })
-    .catch(err => console.error(err));
+    .catch((err) => console.error(err));
 }
 
 if (fs.existsSync(path.join(rootDir, 'packages', packageName, 'angular'))) {

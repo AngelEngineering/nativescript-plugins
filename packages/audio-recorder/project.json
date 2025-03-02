@@ -24,7 +24,7 @@
         "dependsOn": [
           {
             "target": "build.all",
-            "dependencies": true
+            "projects": "dependencies"
           }
         ]
       }
@@ -43,10 +43,11 @@
       "dependsOn": [
         {
           "target": "build.all",
-          "dependencies": true
+          "projects": "dependencies"
         },
         {
-          "target": "build"
+          "target": "build",
+          "projects": "self"
         }
       ]
     },
@@ -60,7 +61,12 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/audio-recorder/**/*.ts"
+        ]
+      }
     }
   },
   "tags": []

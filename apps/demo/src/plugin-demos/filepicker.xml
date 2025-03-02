@@ -19,6 +19,7 @@
           tap="{{ pickImages }}"
           
           
+          
           textWrap = "true"/>
         <Button text="Pick Video"
           tap="{{ pickVideo }}"/>
@@ -30,6 +31,7 @@
           tap="{{ pickAllOne }}" />
         <Button text="Pick All (Multiple - Android/iOS14+ only)"
           tap="{{ pickAll }}"
+          
           
           
           textWrap = "true"/>

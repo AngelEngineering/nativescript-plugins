@@ -10,24 +10,24 @@
   <StackLayout class="p-20">
     <ScrollView class="h-full">
       <StackLayout>
-        <Button text="flashlight"
-          tap="{{ viewDemo }}" />
-        <Button text="filepicker"
-          tap="{{ viewDemo }}" />
-        <Button text="downloader"
-          tap="{{ viewDemo }}" />
         <Button text="audio-player"
           tap="{{ viewDemo }}" />
         <Button text="audio-recorder"
           tap="{{ viewDemo }}" />
-        <Button text="sleepcontrol"
-          tap="{{ viewDemo }}" />
         <Button text="camera"
           tap="{{ viewCamera }}" />
-        <Button text="videoplayer"
+        <Button text="downloader"
+          tap="{{ viewDemo }}" />
+        <Button text="filepicker"
+          tap="{{ viewDemo }}" />
+        <Button text="flashlight"
+          tap="{{ viewDemo }}" />
+        <Button text="sleepcontrol"
           tap="{{ viewDemo }}" />
         <Button text="transcoder"
-          tap="{{ viewDemo }}"/>
+          tap="{{ viewDemo }}" />
+        <Button text="videoplayer"
+          tap="{{ viewDemo }}" />
       </StackLayout>
     </ScrollView>
   </StackLayout>

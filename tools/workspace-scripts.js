@@ -5,7 +5,7 @@ module.exports = {
     default: 'nps-i',
     nx: {
       script: 'nx',
-      description: 'Execute any command with the @nx/cli',
+      description: 'Execute any command with the @nrwl/cli',
     },
     format: {
       script: 'nx format:write',
@@ -23,15 +23,33 @@ module.exports = {
       },
       demo: {
         clean: {
-          script: 'nx run demo:clean',
+          script: 'nx clean demo',
           description: '⚆  Clean  🧹',
         },
         ios: {
-          script: 'nx run demo:ios',
+          script: 'nx debug demo ios',
           description: '⚆  Run iOS  ',
         },
         android: {
-          script: 'nx run demo:android',
+          script: 'nx debug demo android',
+          description: '⚆  Run Android  🤖',
+        },
+      },
+      '...Angular...': {
+        script: `npx cowsay "Test all the Angles!"`,
+        description: ` 🔻 Angular`,
+      },
+      'demo-angular': {
+        clean: {
+          script: 'nx clean demo-angular',
+          description: '⚆  Clean  🧹',
+        },
+        ios: {
+          script: 'nx debug demo-angular ios',
+          description: '⚆  Run iOS  ',
+        },
+        android: {
+          script: 'nx debug demo-angular android',
           description: '⚆  Run Android  🤖',
         },
       },
@@ -43,70 +61,70 @@ module.exports = {
     // packages
     // build output is always in dist/packages
     '@angelengineering': {
-      // @angelengineering/flashlight
-      flashlight: {
-        build: {
-          script: 'nx run flashlight:build.all',
-          description: '@angelengineering/flashlight: Build',
-        },
-      },
-      // @angelengineering/filepicker
-      filepicker: {
-        build: {
-          script: 'nx run filepicker:build.all',
-          description: '@angelengineering/filepicker: Build',
-        },
-      },
-      // @angelengineering/downloader
-      downloader: {
-        build: {
-          script: 'nx run downloader:build.all',
-          description: '@angelengineering/downloader: Build',
-        },
-      },
       // @angelengineering/audio-player
-      'audio-player': {
-        build: {
-          script: 'nx run audio-player:build.all',
-          description: '@angelengineering/audio-player: Build',
-        },
-      },
-      // @angelengineering/audio-recorder
-      'audio-recorder': {
-        build: {
-          script: 'nx run audio-recorder:build.all',
-          description: '@angelengineering/audio-recorder: Build',
-        },
-      },
-      // @angelengineering/sleepcontrol
-      'sleepcontrol': {
-        build: {
-          script: 'nx run sleepcontrol:build.all',
-          description: '@angelengineering/sleepcontrol: Build',
-        },
-      },
-      // @angelengineering/camera
-      'camera': {
-        build: {
-          script: 'nx run camera:build.all',
-          description: '@angelengineering/camera: Build',
-        },
-      },
-      // @angelengineering/videoplayer
-      'videoplayer': {
-        build: {
-          script: 'nx run videoplayer:build.all',
-          description: '@angelengineering/videoplayer: Build',
-        },
-      },
-      // @angelengineering/transcoder
-      'transcoder': {
-        build: {
-          script: 'nx run transcoder:build.all',
-          description: '@angelengineering/transcoder: Build',
-        },
-      },
-      'build-all': {
+			'audio-player': {
+				build: {
+					script: 'nx run audio-player:build.all',
+					description: '@angelengineering/audio-player: Build',
+				},
+			},
+			// @angelengineering/audio-recorder
+			'audio-recorder': {
+				build: {
+					script: 'nx run audio-recorder:build.all',
+					description: '@angelengineering/audio-recorder: Build',
+				},
+			},
+			// @angelengineering/camera
+			'camera': {
+				build: {
+					script: 'nx run camera:build.all',
+					description: '@angelengineering/camera: Build',
+				},
+			},
+			// @angelengineering/downloader
+			'downloader': {
+				build: {
+					script: 'nx run downloader:build.all',
+					description: '@angelengineering/downloader: Build',
+				},
+			},
+			// @angelengineering/filepicker
+			'filepicker': {
+				build: {
+					script: 'nx run filepicker:build.all',
+					description: '@angelengineering/filepicker: Build',
+				},
+			},
+			// @angelengineering/flashlight
+			'flashlight': {
+				build: {
+					script: 'nx run flashlight:build.all',
+					description: '@angelengineering/flashlight: Build',
+				},
+			},
+			// @angelengineering/sleepcontrol
+			'sleepcontrol': {
+				build: {
+					script: 'nx run sleepcontrol:build.all',
+					description: '@angelengineering/sleepcontrol: Build',
+				},
+			},
+			// @angelengineering/transcoder
+			'transcoder': {
+				build: {
+					script: 'nx run transcoder:build.all',
+					description: '@angelengineering/transcoder: Build',
+				},
+			},
+			// @angelengineering/videoplayer
+			'videoplayer': {
+				build: {
+					script: 'nx run videoplayer:build.all',
+					description: '@angelengineering/videoplayer: Build',
+				},
+			},
+			'build-all': {
         script: 'nx run-many --target=build.all --all',
         description: 'Build all packages',
       },
@@ -116,43 +134,43 @@ module.exports = {
       description: '_____________  Focus (VS Code supported)  _____________',
     },
     focus: {
-      flashlight: {
-        script: 'nx run flashlight:focus',
-        description: 'Focus on @angelengineering/flashlight',
-      },
-      filepicker: {
-        script: 'nx run filepicker:focus',
-        description: 'Focus on @angelengineering/filepicker',
-      },
-      downloader: {
-        script: 'nx run downloader:focus',
-        description: 'Focus on @angelengineering/downloader',
-      },
       'audio-player': {
-        script: 'nx run audio-player:focus',
-        description: 'Focus on @angelengineering/audio-player',
-      },
-      'audio-recorder': {
-        script: 'nx run audio-recorder:focus',
-        description: 'Focus on @angelengineering/audio-recorder',
-      },
-      'sleepcontrol': {
-        script: 'nx run sleepcontrol:focus',
-        description: 'Focus on @angelengineering/sleepcontrol',
-      },
-      'camera': {
-        script: 'nx run camera:focus',
-        description: 'Focus on @angelengineering/camera',
-      },
-      'videoplayer': {
-        script: 'nx run videoplayer:focus',
-        description: 'Focus on @angelengineering/videoplayer',
-      },
-      'transcoder': {
-        script: 'nx run transcoder:focus',
-        description: 'Focus on @angelengineering/transcoder',
-      },
-      reset: {
+				script: 'nx run audio-player:focus',
+				description: 'Focus on @angelengineering/audio-player',
+			},
+			'audio-recorder': {
+				script: 'nx run audio-recorder:focus',
+				description: 'Focus on @angelengineering/audio-recorder',
+			},
+			'camera': {
+				script: 'nx run camera:focus',
+				description: 'Focus on @angelengineering/camera',
+			},
+			'downloader': {
+				script: 'nx run downloader:focus',
+				description: 'Focus on @angelengineering/downloader',
+			},
+			'filepicker': {
+				script: 'nx run filepicker:focus',
+				description: 'Focus on @angelengineering/filepicker',
+			},
+			'flashlight': {
+				script: 'nx run flashlight:focus',
+				description: 'Focus on @angelengineering/flashlight',
+			},
+			'sleepcontrol': {
+				script: 'nx run sleepcontrol:focus',
+				description: 'Focus on @angelengineering/sleepcontrol',
+			},
+			'transcoder': {
+				script: 'nx run transcoder:focus',
+				description: 'Focus on @angelengineering/transcoder',
+			},
+			'videoplayer': {
+				script: 'nx run videoplayer:focus',
+				description: 'Focus on @angelengineering/videoplayer',
+			},
+			reset: {
         script: 'nx g @nativescript/plugin-tools:focus-packages',
         description: 'Reset Focus',
       },
