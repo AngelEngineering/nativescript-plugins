@@ -47,7 +47,7 @@ export function onLoaded(args: EventData) {
   //  iOS will not, and will only detect this when the seekToTime function is used.
   videoPlayer.on(VideoPlayer.seekToTimeCompleteEvent, (args: EventData & { data?: any }) => {
     console.log('>> player done seeking to time', args.data);
-    console.log('>> getCurrentTime', videoPlayer.getCurrentTime());
+    console.log('>> getCurrentTime', videoPlayer?.getCurrentTime());
     console.log('>> playing mp4');
     videoPlayer.play();
   });

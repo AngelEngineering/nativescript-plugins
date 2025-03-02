@@ -1,0 +1,19 @@
+{
+  "main": "./src/main.ts",
+  "dependencies": {
+    "@nativescript/core": "file:../../node_modules/@nativescript/core",
+    "@angelengineering/audio-player": "file:../../dist/packages/audio-player",
+    "@angelengineering/audio-recorder": "file:../../dist/packages/audio-recorder",
+    "@angelengineering/camera": "file:../../dist/packages/camera",
+    "@angelengineering/downloader": "file:../../dist/packages/downloader",
+    "@angelengineering/filepicker": "file:../../dist/packages/filepicker",
+    "@angelengineering/flashlight": "file:../../dist/packages/flashlight",
+    "@angelengineering/sleepcontrol": "file:../../dist/packages/sleepcontrol",
+    "@angelengineering/transcoder": "file:../../dist/packages/transcoder",
+    "@angelengineering/videoplayer": "file:../../dist/packages/videoplayer"
+  },
+  "devDependencies": {
+    "@nativescript/android": "~8.8.0",
+    "@nativescript/ios": "~8.8.0"
+  }
+}

@@ -1,4 +1,8 @@
-// Add your native dependencies here:
+// Add additional native dependencies here, for example:
+
+// dependencies {
+//   implementation 'com.google.android.gms:play-services-location:+'
+// }
 
 // Uncomment to add recyclerview-v7 dependency
 //dependencies {
